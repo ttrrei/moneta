@@ -1,0 +1,18 @@
+# Core Data Engine & Storage
+duckdb
+pyarrow
+
+# Object storage / HTTP
+requests
+
+# AI / LLM SDKs
+google-genai
+
+# Utilities & Scientific Computing
+numpy
+pandas
+PyYAML
+python-dotenv
+
+# Testing
+pytest

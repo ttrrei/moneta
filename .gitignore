@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+﻿# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
 *$py.class
@@ -218,3 +218,16 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Legacy reference directory: keep the README, ignore everything else inside it.
+legacy/*
+!legacy/
+!legacy/README.md
+
+# Data directory: keep the directory and its README, ignore all other contents.
+data/*
+!data/
+!data/README.md
+
+# Config settings
+config/setting.yml
