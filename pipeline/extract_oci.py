@@ -52,18 +52,37 @@ def _build_session() -> requests.Session:
 
 
 def _safe_relative_path(name: str, root: Path) -> Path | None:
-    """Resolve *name* under *root* without allowing path traversal."""
-    # If name starts with / or \, it is absolute, reject it
-    if name.startswith("/") or name.startswith("\\"):
-        return None
+    """Resolve *name* under *root* without allowing path traversal.
+
+    Traversal is judged on path *components*, so a legitimate file name that
+    merely contains ``..`` as a substring (for example ``EUR..USD.csv``) is
+    still accepted.
+    """
     cleaned = name.strip()
-    if not cleaned or ".." in cleaned or cleaned.endswith("/") or cleaned.endswith("\\"):
+    if not cleaned or cleaned.startswith("/") or cleaned.startswith("\\"):
         return None
-    candidate = (root / cleaned).resolve()
-    # Check if candidate is still under root
-    if not str(candidate).startswith(str(root.resolve())):
+
+    # Normalise separators and reject empty / dot / dot-dot *components*.
+    parts = [part for part in cleaned.replace("\\", "/").split("/")]
+    if any(part in ("", ".", "..") for part in parts):
         return None
-    return candidate
+    if any(":" in part for part in parts):
+        return None
+
+    root_resolved = Path(root).resolve()
+    candidate = root_resolved
+    for part in parts:
+        candidate = candidate / part
+    resolved = candidate.resolve()
+
+    # Stay strictly inside *root*.
+    if resolved == root_resolved:
+        return None
+    try:
+        resolved.relative_to(root_resolved)
+    except ValueError:
+        return None
+    return resolved
 
 
 def _list_oci_objects(
@@ -75,7 +94,10 @@ def _list_oci_objects(
     seen_starts: set[str] = set()
 
     while True:
-        params: dict[str, str | int] = {"fields": "name", "limit": page_size}
+        params: dict[str, str | int] = {
+            "fields": "name,size,md5,timeModified",
+            "limit": page_size,
+        }
         if start:
             params["start"] = start
 
@@ -115,6 +137,7 @@ def sync_oci_par(
     """
     save_dir = ensure_dir(target_dir)
     downloaded: list[Path] = []
+    failures: list[str] = []
     close_session = session is None
     session = session or _build_session()
 
@@ -164,9 +187,15 @@ def sync_oci_par(
             downloaded.append(local_path)
         except requests.RequestException as exc:
             print(f"ERROR downloading {object_name}: {exc}")
+            failures.append(object_name)
 
     if close_session:
         session.close()
+
+    if failures:
+        raise RuntimeError(
+            f"Failed to download {len(failures)} object(s): {failures!r}"
+        )
 
     print(f"Successfully downloaded {len(downloaded)} objects to {save_dir.resolve()}")
     return downloaded
@@ -190,15 +219,27 @@ def _unique_target_path(target_dir: Path, preferred_name: str) -> Path:
 def extract_all_zips_to_csv(
     zips_dir: str | Path = DEFAULT_ZIPS_DIR,
     csv_dir: str | Path = DEFAULT_CSV_DIR,
+    *,
+    clean_target: bool = True,
 ) -> list[Path]:
     """Extract every CSV from every zip under *zips_dir* into flat *csv_dir*.
 
     Archives may be nested in arbitrary sub-directories; all CSV files end up
     in the single *csv_dir* directory. Name collisions are resolved by
     appending a numeric suffix.
+
+    When *clean_target* is True (the default) the destination directory is
+    wiped first so that re-running extraction never leaves stale ``_N.csv``
+    copies behind; the caller then owns full provenance of the output files.
     """
     source_dir = ensure_dir(zips_dir)
     target_dir = ensure_dir(csv_dir)
+    if clean_target:
+        for existing in target_dir.iterdir():
+            if existing.is_file():
+                existing.unlink()
+            elif existing.is_dir():
+                shutil.rmtree(existing)
     extracted: list[Path] = []
 
     zip_files = sorted(source_dir.rglob("*.zip"))

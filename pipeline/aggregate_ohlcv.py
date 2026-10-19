@@ -77,6 +77,29 @@ def _resolve_source(
         )
         return "_moneta_one_minute"
 
+    # Prefer an on-disk parquet source when available, so a stale main.all_data
+    # table (left over from a previous run / schema) cannot silently feed
+    # aggregation.
+    md_path = _metadata_parquet_path(conn)
+    candidates = [p for p in (md_path, DEFAULT_INPUT_PARQUET) if p is not None and p.exists()]
+    # De-duplicate while preserving order.
+    seen: set[str] = set()
+    ordered: list[Path] = []
+    for p in candidates:
+        key = str(p)
+        if key in seen:
+            continue
+        seen.add(key)
+        ordered.append(p)
+
+    if ordered:
+        path = ordered[0]
+        conn.execute(
+            f"CREATE OR REPLACE TEMP VIEW _moneta_one_minute AS "
+            f"SELECT * FROM read_parquet({_quote_literal(path.as_posix())});"
+        )
+        return "_moneta_one_minute"
+
     # Fall back to a persisted all_data table if the caller put data in DuckDB.
     try:
         exists = conn.execute(
@@ -88,19 +111,10 @@ def _resolve_source(
     if exists:
         return "main.all_data"
 
-    # Fall back to the path recorded by load_data.py, then to the conventional path.
-    path = _metadata_parquet_path(conn) or DEFAULT_INPUT_PARQUET
-    if not path.exists():
-        raise FileNotFoundError(
-            "Could not locate the 1-minute parquet. "
-            f"Tried {path.resolve()} (and metadata.duckdb). "
-            "Run pipeline.load_data first or pass input_parquet_path."
-        )
-    conn.execute(
-        f"CREATE OR REPLACE TEMP VIEW _moneta_one_minute AS "
-        f"SELECT * FROM read_parquet({_quote_literal(path.as_posix())});"
+    raise FileNotFoundError(
+        "Could not locate the 1-minute parquet. "
+        "Run pipeline.load_data first or pass input_parquet_path."
     )
-    return "_moneta_one_minute"
 
 
 def _resolve_columns(conn: duckdb.DuckDBPyConnection, source: str) -> dict[str, str]:

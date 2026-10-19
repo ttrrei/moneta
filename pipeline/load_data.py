@@ -14,6 +14,7 @@ This module upgrades the legacy ``legacy/load_to_duckdb.py`` and
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -67,8 +68,9 @@ def _ensure_metadata_table(conn: duckdb.DuckDBPyConnection) -> None:
         );
         """
     )
-    # The DuckDB file is metadata-only: drop any legacy full-data tables.
-    conn.execute("DROP TABLE IF EXISTS main.all_data;")
+    # The DuckDB file is metadata-only: drop any legacy/full-data tables.
+    for legacy in ("main.all_data", "main.ohlcv_5m", "main.ohlcv_1h"):
+        conn.execute(f"DROP TABLE IF EXISTS {legacy};")
 
 
 def load_data(
@@ -98,7 +100,6 @@ def load_data(
         return None
 
     print(f"Found {len(csv_files)} CSV files to load into '{table_name}'.")
-
     conn = duckdb.connect(str(db_path_path))
     # Force UTC so timestamptz instants are never reinterpreted in a local TZ.
     conn.execute(f"SET TimeZone = '{DEFAULT_TIMEZONE}'")
@@ -106,39 +107,92 @@ def load_data(
         _ensure_metadata_table(conn)
         csv_glob = _csv_glob(csv_dir_path)
 
-        # Filter incomplete rows, deduplicate by (instrument, time), keep grain = 1 minute.
+        # Atomically staged output: write to *.tmp.parquet then rename, so a
+        # mid-write failure can never leave a truncated parquet in place of
+        # a good one.
+        tmp_parquet = target_parquet.with_name(target_parquet.stem + ".tmp.parquet")
+
+        # Data quality: require `is_complete` to exist. union_by_name fills NULL
+        # for files that lack it, so a CSV missing the column would otherwise
+        # be silently dropped by the `WHERE COALESCE(is_complete, FALSE)`.
+        # Probe a single non-empty source file (DuckDB dialect sniffing on a
+        # glob is unreliable).
+        probe_file = csv_files[0]
+        probe_cols = conn.execute(
+            "DESCRIBE SELECT * FROM read_csv("
+            f"'{probe_file.as_posix()}', header=TRUE, auto_detect=TRUE) LIMIT 1"
+        ).fetchall()
+        column_names = {row[0].lower() for row in probe_cols}
+        if not {"instrument", "time", "is_complete"} <= column_names:
+            raise ValueError(
+                f"CSV schema missing required columns "
+                f"(instrument/time/is_complete) in {csv_dir_path}: "
+                f"have {sorted(column_names)}"
+            )
+
+        # Deterministic survivor selection: ORDER BY declares an unambiguous
+        # preference so that two identical (instrument, time) rows from
+        # different source files do not depend on thread count.
+        # Preference: complete rows first, then the one with more populated
+        # payload columns (bid/ask), then source file name, then original row.
         conn.execute(
             f"""
             COPY (
-                WITH filtered AS (
-                    SELECT *
+                WITH raw AS (
+                    SELECT *,
+                           filename AS _source_file
                     FROM read_csv(
                         '{csv_glob}',
                         header = TRUE,
                         auto_detect = TRUE,
-                        union_by_name = TRUE
+                        union_by_name = TRUE,
+                        filename = TRUE
                     )
-                    WHERE is_complete = TRUE
+                ),
+                filtered AS (
+                    SELECT *
+                    FROM raw
+                    WHERE { "" if False else "COALESCE(is_complete, FALSE) = TRUE" }
+                ),
+                scored AS (
+                    SELECT *,
+                           COALESCE(is_complete, FALSE) AS _complete,
+                           (
+                               (bid_o IS NOT NULL)::INT + (bid_h IS NOT NULL)::INT +
+                               (bid_l IS NOT NULL)::INT + (bid_c IS NOT NULL)::INT +
+                               (ask_o IS NOT NULL)::INT + (ask_h IS NOT NULL)::INT +
+                               (ask_l IS NOT NULL)::INT + (ask_c IS NOT NULL)::INT
+                           ) AS _bidask_score
+                    FROM filtered
                 ),
                 deduped AS (
                     SELECT *,
                            ROW_NUMBER() OVER (
                                PARTITION BY instrument, time
-                               ORDER BY instrument, time
+                               ORDER BY _complete DESC, _bidask_score DESC,
+                                        _source_file ASC
                            ) AS _rn
-                    FROM filtered
+                    FROM scored
                 )
-                SELECT * EXCLUDE (_rn)
+                SELECT * EXCLUDE (_rn, _complete, _bidask_score, _source_file, filename)
                 FROM deduped
                 WHERE _rn = 1
                 ORDER BY instrument, time
-            ) TO '{target_parquet.as_posix()}' (FORMAT PARQUET);
+            ) TO '{tmp_parquet.as_posix()}' (FORMAT PARQUET);
             """
         )
 
+        # Fail loudly if the write produced no rows / empty file.
+        if not tmp_parquet.exists() or tmp_parquet.stat().st_size == 0:
+            raise RuntimeError(f"Load produced an empty output: {tmp_parquet}")
+
         row_count = conn.execute(
-            f"SELECT COUNT(*) FROM read_parquet('{target_parquet.as_posix()}');"
+            f"SELECT COUNT(*) FROM read_parquet('{tmp_parquet.as_posix()}');"
         ).fetchone()[0]
+        if row_count == 0:
+            raise RuntimeError("Load produced zero rows after filtering/dedup.")
+
+        tmp_parquet.replace(target_parquet)
 
         conn.execute(
             "DELETE FROM loaded_tables WHERE table_name = ?;", [table_name]
@@ -153,8 +207,9 @@ def load_data(
 
         print(f"-> Done! Cleaned 1-minute table '{table_name}' contains {row_count} rows.")
         print(f"   Parquet: {target_parquet.resolve()}")
-    except (duckdb.Error, OSError) as e:
+    except (duckdb.Error, OSError, ValueError, RuntimeError) as e:
         print(f"-> Error during data loading: {e}")
+        raise
     finally:
         conn.close()
 
