@@ -1,0 +1,198 @@
+# Indicator metadata for the Nova (moneta) strategy engine.
+#
+# One source of truth for every indicator applied to the 5-minute and 1-hour
+# OHLCV bars.  Each entry describes *what* to compute, its parameters, the
+# lookback/warm-up behaviour and the output column name produced.  The
+# implementation lives in pipeline/indicators.py.
+#
+# Conventions:
+#   - All time references are UTC (bars are bucketed on UTC boundaries).
+#   - `lookback`  = minimum number of input bars needed before a value is valid
+#                   (trading bars; warm-up bars are emitted as NaN).
+#   - `warmup`    = bars additionally discarded after computation (default 0).
+#   - `output`    = column name written into the resulting feature table.
+#   - Parameters use the same units as the bar timeframe unless noted.
+#   - Inputs refer to OHLCV columns: open, high, low, close, volume, n_bars.
+
+timeframes:
+  5m:
+    source_table: ohlcv_5m
+    bar_minutes: 5
+    indicators:
+      # --- Trend (1h context is authoritative, but computed on 5m too) ---
+      - name: ema_fast
+        type: trend
+        inputs: [close]
+        params: { span: 9 }
+        output: ema_9
+        lookback: 9
+      - name: ema_slow
+        type: trend
+        inputs: [close]
+        params: { span: 21 }
+        output: ema_21
+        lookback: 21
+      - name: ema_trend
+        type: trend
+        inputs: [close]
+        params: { span: 50 }
+        output: ema_50
+        lookback: 50
+      - name: sma_200
+        type: trend
+        inputs: [close]
+        params: { window: 200 }
+        output: sma_200
+        lookback: 200
+      - name: macd
+        type: trend
+        inputs: [close]
+        params: { fast: 12, slow: 26, signal: 9 }
+        outputs: [macd, macd_signal, macd_hist]
+        lookback: 35
+      - name: adx
+        type: trend
+        inputs: [high, low, close]
+        params: { window: 14 }
+        outputs: [adx, plus_di, minus_di]
+        lookback: 28
+
+      # --- Momentum ---
+      - name: rsi
+        type: momentum
+        inputs: [close]
+        params: { window: 14 }
+        output: rsi_14
+        lookback: 15
+      - name: stoch
+        type: momentum
+        inputs: [high, low, close]
+        params: { k: 14, d: 3, smooth: 3 }
+        outputs: [stoch_k, stoch_d]
+        lookback: 16
+      - name: cci
+        type: momentum
+        inputs: [high, low, close]
+        params: { window: 20 }
+        output: cci_20
+        lookback: 20
+      - name: roc
+        type: momentum
+        inputs: [close]
+        params: { window: 10 }
+        output: roc_10
+        lookback: 11
+
+      # --- Volatility ---
+      - name: atr
+        type: volatility
+        inputs: [high, low, close]
+        params: { window: 14 }
+        output: atr_14
+        lookback: 15
+      - name: bollinger
+        type: volatility
+        inputs: [close]
+        params: { window: 20, std: 2.0 }
+        outputs: [bb_mid, bb_upper, bb_lower, bb_width, bb_pctb]
+        lookback: 20
+      - name: keltner
+        type: volatility
+        inputs: [high, low, close]
+        params: { ema: 20, atr: 14, mult: 2.0 }
+        outputs: [kc_mid, kc_upper, kc_lower]
+        lookback: 34
+
+      # --- Volume / microstructure ---
+      - name: obv
+        type: volume
+        inputs: [close, volume]
+        output: obv
+        lookback: 1
+      - name: vwap
+        type: volume
+        inputs: [high, low, close, volume]
+        output: vwap
+        lookback: 1
+        reset: session   # cumulative per UTC day
+      - name: volume_sma
+        type: volume
+        inputs: [volume]
+        params: { window: 20 }
+        output: vol_sma_20
+        lookback: 20
+
+  1h:
+    source_table: ohlcv_1h
+    bar_minutes: 60
+    indicators:
+      - name: ema_fast
+        type: trend
+        inputs: [close]
+        params: { span: 9 }
+        output: ema_9
+        lookback: 9
+      - name: ema_slow
+        type: trend
+        inputs: [close]
+        params: { span: 21 }
+        output: ema_21
+        lookback: 21
+      - name: ema_trend
+        type: trend
+        inputs: [close]
+        params: { span: 50 }
+        output: ema_50
+        lookback: 50
+      - name: sma_200
+        type: trend
+        inputs: [close]
+        params: { window: 200 }
+        output: sma_200
+        lookback: 200
+      - name: macd
+        type: trend
+        inputs: [close]
+        params: { fast: 12, slow: 26, signal: 9 }
+        outputs: [macd, macd_signal, macd_hist]
+        lookback: 35
+      - name: adx
+        type: trend
+        inputs: [high, low, close]
+        params: { window: 14 }
+        outputs: [adx, plus_di, minus_di]
+        lookback: 28
+      - name: rsi
+        type: momentum
+        inputs: [close]
+        params: { window: 14 }
+        output: rsi_14
+        lookback: 15
+      - name: atr
+        type: volatility
+        inputs: [high, low, close]
+        params: { window: 14 }
+        output: atr_14
+        lookback: 15
+      - name: bollinger
+        type: volatility
+        inputs: [close]
+        params: { window: 20, std: 2.0 }
+        outputs: [bb_mid, bb_upper, bb_lower, bb_width, bb_pctb]
+        lookback: 20
+      - name: vwap
+        type: volume
+        inputs: [high, low, close, volume]
+        output: vwap
+        lookback: 1
+        reset: session
+
+# Composite features derived from both timeframes (computed later in Gold layer),
+# documented here for discoverability.
+composite:
+  - name: trend_alignment
+    description: 1 when 5m ema_9 > ema_21 and 1h ema_9 > ema_21 else 0 (long-bias gate).
+  - name: atr_ratio_5m_1h
+    description: 5m atr_14 / 1h atr_14 (relative volatility scale).
+  - name: breakout_score
+    description: (close - bb_mid) / (bb_upper - bb_mid) on 5m, gated by 1h adx > 25.
