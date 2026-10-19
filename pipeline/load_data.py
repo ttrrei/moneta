@@ -23,6 +23,8 @@ DEFAULT_CSV_DIR = Path("data/raw_csv")
 DEFAULT_DATA_DIR = Path("data")
 DEFAULT_DB_PATH = Path("data/metadata.duckdb")
 DEFAULT_TABLE_NAME = "all_data"
+# All wall-clock interpretation/output is kept in UTC (no local/DST conversion).
+DEFAULT_TIMEZONE = "UTC"
 
 
 def ensure_data_dirs(data_dir: str | Path = DEFAULT_DATA_DIR) -> Path:
@@ -98,6 +100,8 @@ def load_data(
     print(f"Found {len(csv_files)} CSV files to load into '{table_name}'.")
 
     conn = duckdb.connect(str(db_path_path))
+    # Force UTC so timestamptz instants are never reinterpreted in a local TZ.
+    conn.execute(f"SET TimeZone = '{DEFAULT_TIMEZONE}'")
     try:
         _ensure_metadata_table(conn)
         csv_glob = _csv_glob(csv_dir_path)
@@ -206,6 +210,7 @@ def clean_all_data(
     # Re-clean an existing parquet file in place.
     tmp = target.with_suffix(".tmp.parquet")
     conn = duckdb.connect(str(db_path))
+    conn.execute(f"SET TimeZone = '{DEFAULT_TIMEZONE}'")
     try:
         conn.execute(
             f"""

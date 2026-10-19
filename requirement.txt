@@ -1,6 +1,7 @@
 # Core Data Engine & Storage
 duckdb
 pyarrow
+pytz
 
 # Object storage / HTTP
 requests

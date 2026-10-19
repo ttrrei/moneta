@@ -20,9 +20,20 @@ This directory hosts the **data pipeline (Bronze ingestion)** for Nova.
 
 Run with `python -m pipeline.load_data` (default table name `all_data`).
 
+## Implemented now (continued)
+
+`aggregate_ohlcv.py` implements the **Aggregate** stage:
+
+1. Reads the cleaned 1-minute bars (from Parquet or a DuckDB `main.all_data` table).
+2. Filters out incomplete rows when an `is_complete` column is present.
+3. Buckets bars on UTC boundaries into 5-minute and 1-hour OHLCV bars.
+4. Computes `open`/`close` via `arg_min`/`arg_max` by source time (first/last bar), `high`/`low` via MAX/MIN, `volume` via SUM, and `n_bars` via COUNT for partial-bar detection.
+5. Writes results to `data/parquet/ohlcv_5m.parquet` and `data/parquet/ohlcv_1h.parquet`.
+
+Run with `python -m pipeline.aggregate_ohlcv` (default paths).
+
 ## Planned (not yet implemented)
 
-- **Aggregate** — resample 1-minute data into 5-minute and 1-hour OHLCV bars.
 - **Feature engineering** — technical indicators and engineered features (Silver/Gold).
 
 Treat the unimplemented steps above as placeholders.
