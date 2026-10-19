@@ -17,8 +17,8 @@ import duckdb
 
 DEFAULT_DB_PATH = Path("data/metadata.duckdb")
 DEFAULT_INPUT_PARQUET = Path("data/all_data/all_data.parquet")
-DEFAULT_5M_OUTPUT = Path("data/parquet/ohlcv_5m.parquet")
-DEFAULT_1H_OUTPUT = Path("data/parquet/ohlcv_1h.parquet")
+DEFAULT_5M_OUTPUT = Path("data/ohlcv_5m/ohlcv_5m.parquet")
+DEFAULT_1H_OUTPUT = Path("data/ohlcv_1h/ohlcv_1h.parquet")
 
 REQUIRED_COLUMNS = ("instrument", "time", "mid_o", "mid_h", "mid_l", "mid_c", "volume")
 INTERVALS = (("main.ohlcv_5m", "5 minutes"), ("main.ohlcv_1h", "1 hour"))

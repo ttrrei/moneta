@@ -28,7 +28,7 @@ Run with `python -m pipeline.load_data` (default table name `all_data`).
 2. Filters out incomplete rows when an `is_complete` column is present.
 3. Buckets bars on UTC boundaries into 5-minute and 1-hour OHLCV bars.
 4. Computes `open`/`close` via `arg_min`/`arg_max` by source time (first/last bar), `high`/`low` via MAX/MIN, `volume` via SUM, and `n_bars` via COUNT for partial-bar detection.
-5. Writes results to `data/parquet/ohlcv_5m.parquet` and `data/parquet/ohlcv_1h.parquet`.
+5. Writes results to `data/ohlcv_5m/ohlcv_5m.parquet` and `data/ohlcv_1h/ohlcv_1h.parquet` (one directory per table, consistent with `data/all_data/all_data.parquet`).
 
 Run with `python -m pipeline.aggregate_ohlcv` (default paths).
 
