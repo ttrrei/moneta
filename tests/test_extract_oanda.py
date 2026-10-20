@@ -54,6 +54,8 @@ def test_fetch_candles_paginates_and_requests_all_price_components(monkeypatch) 
     assert session.get.call_count == 2
     first_call, second_call = session.get.call_args_list
     assert first_call.kwargs["params"]["price"] == "MBA"
+    assert "count" not in first_call.kwargs["params"]
+    assert first_call.kwargs["params"]["to"] == "2026-07-08T02:26:00Z"
     assert first_call.kwargs["headers"]["Authorization"] == "Bearer test-token"
     assert second_call.kwargs["params"]["from"] == "2026-07-08T02:27:00Z"
     session.close.assert_not_called()
@@ -91,4 +93,3 @@ def test_config_token_is_available_in_yaml(tmp_path: Path) -> None:
     config_path.write_text("oanda:\n  api_token: test-token\n", encoding="utf-8")
     config = extract_oanda._load_config(config_path)
     assert config["oanda"]["api_token"] == "test-token"
-

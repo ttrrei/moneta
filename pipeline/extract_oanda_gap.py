@@ -19,6 +19,7 @@ Run::
 from __future__ import annotations
 
 import argparse
+import calendar
 import csv
 import json
 import os
@@ -139,6 +140,17 @@ def _granularity_minutes(granularity: str) -> float:
     return float(GRANULARITY_MINUTES.get(granularity.upper(), 1))
 
 
+def _advance_candles(value: datetime, granularity: str, count: int) -> datetime:
+    """Advance by a number of candle intervals."""
+    if granularity.upper() == "M":
+        month_index = value.year * 12 + value.month - 1 + count
+        year, month_offset = divmod(month_index, 12)
+        month = month_offset + 1
+        day = min(value.day, calendar.monthrange(year, month)[1])
+        return value.replace(year=year, month=month, day=day)
+    return value + timedelta(minutes=_granularity_minutes(granularity) * count)
+
+
 def _base_url(practice: bool) -> str:
     host = PRACTICE_HOST if practice else LIVE_HOST
     return f"https://{host}"
@@ -168,7 +180,7 @@ def fetch_candles(
     session = session or _build_session()
     start = _parse_time(time_from)
     end = _parse_time(time_to)
-    step = timedelta(minutes=_granularity_minutes(granularity))
+    _granularity_minutes(granularity)
 
     collected: list[dict[str, Any]] = []
     seen_times: set[str] = set()
@@ -182,13 +194,13 @@ def fetch_candles(
         guard = 0
         while cursor < end and guard < 1000:
             guard += 1
+            chunk_end = min(end, _advance_candles(cursor, granularity, PAGE_SIZE - 1))
             params = {
                 "from": _format_time(cursor),
-                "to": _format_time(end),
+                "to": _format_time(chunk_end),
                 "granularity": granularity,
                 "price": price,
                 "smooth": "true" if smooth else "false",
-                "count": PAGE_SIZE,
             }
             resp = session.get(
                 url,
@@ -210,7 +222,6 @@ def fetch_candles(
             candles = payload.get("candles") if isinstance(payload, dict) else None
             if candles is None:
                 raise RuntimeError(f"unexpected Oanda response: {payload!r}")
-            new_count = 0
             for candle in candles:
                 t = candle.get("time")
                 if t is None or t in seen_times:
@@ -223,23 +234,11 @@ def fetch_candles(
                     continue
                 seen_times.add(t)
                 collected.append(candle)
-                new_count += 1
 
-            if not candles:
-                break
-            # Oanda returns at most ``count`` (default 500 / max 5000) candles.
-            if len(candles) < PAGE_SIZE and new_count == 0:
-                break
-            if not collected:
-                break
-            last_time = _parse_time(collected[-1]["time"])
-            next_cursor = last_time + step
+            next_cursor = _advance_candles(chunk_end, granularity, 1)
             if next_cursor <= cursor:
-                break
+                raise RuntimeError("OANDA time window did not advance")
             cursor = next_cursor
-            # If the page was short we are done.
-            if len(candles) < PAGE_SIZE:
-                break
     finally:
         if close_session:
             session.close()
