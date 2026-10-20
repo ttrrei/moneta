@@ -103,7 +103,36 @@ oci:
   par_url: "https://objectstorage.ap-sydney-1.oraclecloud.com/p/.../n/.../b/.../o/"
 ```
 
-No credentials are stored beyond the pre-authenticated URL.
+Historical OANDA candles can be downloaded with `pipeline.extract_oanda`. Put
+the OANDA API token in the ignored local `config/setting.yml` (start from
+`config/setting.example.yml`):
+
+```yaml
+oanda:
+  api_token: "YOUR_ROTATED_TOKEN"
+  environment: "practice" # or live
+  price: "MBA"
+  smooth: false
+```
+
+Extract either a gap or a historical interval by specifying inclusive UTC
+timestamps:
+
+```bash
+python -m pipeline.extract_oanda --instrument GBP_USD \
+  --from 2026-07-08T02:25:00Z --to 2026-07-08T20:47:00Z
+```
+
+The extractor paginates requests at OANDA's 5,000-candle limit and writes the
+raw CSV schema under `data/raw_csv/<instrument>/`, ready for
+`python -m pipeline.load_data`. Re-running the same interval replaces that
+interval's output file; loading deduplicates overlapping intervals by
+`(instrument, time)`. Use `--output` to select a specific CSV destination or
+`--json-out` to preserve the raw API response. `OANDA_API_TOKEN` and `--token`
+can override the configured token.
+
+Tokens should not be committed. Any token pasted into a chat, command history,
+or other shared location should be revoked and replaced before use.
 
 ## Roadmap
 

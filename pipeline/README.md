@@ -32,6 +32,16 @@ Run with `python -m pipeline.load_data` (default table name `all_data`).
 
 Run with `python -m pipeline.aggregate_ohlcv` (default paths).
 
+`extract_oanda.py` downloads paginated historical OANDA candles for either
+backfills or targeted gap fills. It reads the token and practice/live setting
+from the `oanda` section of `config/setting.yml` and writes loader-compatible
+CSV slices to `data/raw_csv/<instrument>/`.
+
+```bash
+python -m pipeline.extract_oanda --instrument GBP_USD \
+  --from 2026-07-08T02:25:00Z --to 2026-07-08T20:47:00Z
+```
+
 ## Planned (not yet implemented)
 
 - **Feature engineering** — technical indicators and engineered features (Silver/Gold).

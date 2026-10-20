@@ -1,2 +1,9 @@
 oci:
   par_url: ""
+
+# Keep the real token in the ignored config/setting.yml file, never commit it.
+oanda:
+  api_token: ""
+  environment: "practice" # practice or live
+  price: "MBA"
+  smooth: false
