@@ -131,6 +131,23 @@ interval's output file; loading deduplicates overlapping intervals by
 `--json-out` to preserve the raw API response. `OANDA_API_TOKEN` and `--token`
 can override the configured token.
 
+### Backfilling earlier history
+
+List the instruments (and how far back) in `config/history_map.yml`, then:
+
+```bash
+python -m pipeline.extract_oanda --map config/history_map.yml --dry-run
+python -m pipeline.extract_oanda --map config/history_map.yml
+python -m pipeline.load_data
+```
+
+`from` sets how far back to go; `to: auto` (the default) stops just before the
+earliest candle already ingested, so the new files never overlap existing data.
+Output is one CSV per instrument per UTC month; finished months are skipped, so
+re-running resumes an interrupted backfill. After loading, re-run
+`python pipeline/profile_check.py --raw` to confirm the merged data has no gaps
+at the seam and no conflicting duplicates.
+
 Tokens should not be committed. Any token pasted into a chat, command history,
 or other shared location should be revoked and replaced before use.
 

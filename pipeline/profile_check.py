@@ -22,6 +22,7 @@ Run from the repo root::
     python pipeline/profile_check.py                  # all sections except raw
     python pipeline/profile_check.py --only gaps,partial
     python pipeline/profile_check.py --raw
+    python pipeline/profile_check.py --out docs/profile_output.txt   # UTF-8 file, safe on Windows
 
 For the strategy stage, ``safe_mtf_view`` builds a 5m table with the last
 *closed* 1h bar attached (no look-ahead)::
@@ -33,6 +34,7 @@ For the strategy stage, ``safe_mtf_view`` builds a 5m table with the last
 from __future__ import annotations
 
 import argparse
+import contextlib
 import sys
 from pathlib import Path
 
@@ -338,10 +340,20 @@ SECTIONS = {"gaps": gaps, "sessions": sessions, "partial": partial, "lookahead":
             "spread": spread, "quality": quality, "raw": raw}
 
 
+def _run(wanted: list[str]) -> None:
+    conn = duckdb.connect()
+    conn.execute("SET TimeZone = 'UTC'")
+    conn.execute("SET enable_progress_bar = false")
+    conn.execute(f"CREATE VIEW one_min AS SELECT * FROM {_src(ONE_MIN)}")
+    for name in wanted:
+        SECTIONS[name](conn)
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--only", help=f"comma-separated subset of: {','.join(SECTIONS)}")
     ap.add_argument("--raw", action="store_true", help="also run the (slow) raw CSV reconciliation")
+    ap.add_argument("--out", help="write the report to this file (UTF-8) instead of the console")
     args = ap.parse_args()
     wanted = [s.strip() for s in args.only.split(",")] if args.only else [s for s in SECTIONS if s != "raw"]
     if args.raw and "raw" not in wanted:
@@ -349,16 +361,20 @@ def main() -> int:
     unknown = [s for s in wanted if s not in SECTIONS]
     if unknown:
         ap.error(f"unknown section(s): {unknown}")
+    if "sessions" in wanted and "gaps" not in wanted:
+        wanted.insert(wanted.index("sessions"), "gaps")  # sessions reuses the gap table
     if not ONE_MIN.exists():
         print(f"missing: {ONE_MIN}")
         return 1
-    conn = duckdb.connect()
-    conn.execute("SET TimeZone = 'UTC'")
-    conn.execute(f"CREATE VIEW one_min AS SELECT * FROM {_src(ONE_MIN)}")
-    if "sessions" in wanted and "gaps" not in wanted:
-        wanted.insert(wanted.index("sessions"), "gaps")  # sessions reuses the gap table
-    for name in wanted:
-        SECTIONS[name](conn)
+    if args.out:  # write UTF-8 directly: immune to the shell's code page (PowerShell '>' uses cp1252)
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        with open(args.out, "w", encoding="utf-8") as fh, contextlib.redirect_stdout(fh):
+            _run(wanted)
+        print(f"report written to {args.out}")
+    else:
+        if hasattr(sys.stdout, "reconfigure"):  # box-drawing tables need UTF-8 even when redirected
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        _run(wanted)
     return 0
 
 

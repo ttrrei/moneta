@@ -102,3 +102,20 @@ def test_extract_all_zips_to_csv(tmp_path: Path) -> None:
     assert len(extracted) == 1
     assert extracted[0].name == "sample.csv"
     assert "time,price" in extracted[0].read_text(encoding="utf-8")
+
+
+def test_extract_keeps_subdirectories_but_removes_stale_top_level_csv(tmp_path: Path) -> None:
+    """Sub-directories hold other sources (e.g. OANDA backfills) and must survive re-extraction."""
+    zips, target = tmp_path / "zips", tmp_path / "csv"
+    zips.mkdir()
+    (target / "GBP_USD").mkdir(parents=True)
+    (target / "GBP_USD" / "oanda_backfill.csv").write_text("keep\n", encoding="utf-8")
+    (target / "stale.csv").write_text("stale\n", encoding="utf-8")
+    with zipfile.ZipFile(zips / "a.zip", "w") as archive:
+        archive.writestr("prices_x.csv", "new\n")
+
+    extract_all_zips_to_csv(zips, target)
+
+    assert (target / "GBP_USD" / "oanda_backfill.csv").read_text(encoding="utf-8") == "keep\n"
+    assert not (target / "stale.csv").exists()
+    assert (target / "prices_x.csv").exists()

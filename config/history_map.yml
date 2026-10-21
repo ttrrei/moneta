@@ -1,0 +1,46 @@
+# Earlier history to backfill from OANDA: one entry per instrument.
+# Contains no secrets (the token lives in config/setting.yml), so it is committed.
+#
+#   python -m pipeline.extract_oanda --map config/history_map.yml --dry-run   # show the plan
+#   python -m pipeline.extract_oanda --map config/history_map.yml             # download
+#   python -m pipeline.extract_oanda --map config/history_map.yml --only GBP_USD,EUR_USD
+#
+# from  : how far back to go (UTC, ISO-8601).
+# to    : "auto" (default) = stop one candle before the earliest candle already in
+#         data/all_data/all_data.parquet, so the backfill never overlaps what you have.
+#         Or an explicit timestamp.
+# Each instrument inherits `defaults`; give a value only to override it.
+# Output: data/raw_csv/<instrument>/<instrument>_M1_<start>_<end>Z.csv, one file per UTC
+# month.  Finished months are skipped on re-run, so an interrupted run resumes.
+# Afterwards run `python -m pipeline.load_data`.
+
+defaults:
+  granularity: M1
+  from: "2025-01-01T00:00:00Z"
+  to: auto
+
+instruments:
+  AUD_USD:
+  BCO_USD:
+  BTC_USD:
+  CN50_USD:
+  DE30_EUR:
+  ETH_USD:
+  EUR_USD:
+  GBP_USD:
+  HK33_HKD:
+  JP225_USD:
+  NAS100_USD:
+  NZD_USD:
+  SPX500_USD:
+  UK100_GBP:
+  US30_USD:
+  USD_CAD:
+  USD_CHF:
+  USD_JPY:
+  WTICO_USD:
+  XAG_USD:
+  XAU_USD:
+  # Overrides, e.g.:
+  # GBP_USD: {from: "2024-01-01T00:00:00Z"}
+  # ETH_USD: {from: "2025-06-01T00:00:00Z", to: "2025-11-17T23:59:00Z"}

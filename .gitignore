@@ -231,3 +231,6 @@ data/*
 
 # Config settings
 config/setting.yml
+
+# backfill run logs
+logs/

@@ -70,6 +70,8 @@ def check_table(conn, name: str, path: Path, cols: tuple, full_bars: int | None 
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):  # box-drawing tables need UTF-8 even when redirected
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     conn = duckdb.connect()
     conn.execute("SET TimeZone = 'UTC'")
     problems = check_table(conn, "1-minute", ONE_MIN, MIN_COLS)

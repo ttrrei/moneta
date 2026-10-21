@@ -32,15 +32,48 @@ Run with `python -m pipeline.load_data` (default table name `all_data`).
 
 Run with `python -m pipeline.aggregate_ohlcv` (default paths).
 
-`extract_oanda.py` downloads paginated historical OANDA candles for either
-backfills or targeted gap fills. It reads the token and practice/live setting
-from the `oanda` section of `config/setting.yml` and writes loader-compatible
-CSV slices to `data/raw_csv/<instrument>/`.
+`extract_oanda.py` is the single OANDA downloader. It reads the token and
+practice/live setting from the `oanda` section of `config/setting.yml` and
+writes loader-compatible CSVs to `data/raw_csv/<instrument>/`.
+
+Gap fill or one instrument (inclusive UTC window):
 
 ```bash
 python -m pipeline.extract_oanda --instrument GBP_USD \
   --from 2026-07-08T02:25:00Z --to 2026-07-08T20:47:00Z
 ```
+
+Backfill earlier history for many instruments from `config/history_map.yml`
+(one entry per instrument; `to: auto` stops one candle before the earliest
+candle already in `data/all_data/all_data.parquet`, so nothing overlaps):
+
+```bash
+python -m pipeline.extract_oanda --map config/history_map.yml --dry-run  # plan only
+python -m pipeline.extract_oanda --map config/history_map.yml            # download
+python -m pipeline.extract_oanda --map config/history_map.yml --only GBP_USD
+python -m pipeline.load_data                                             # then ingest
+```
+
+Backfill writes one CSV per instrument per UTC month and skips finished months
+on re-run, so an interrupted run resumes.
+Failures are handled in layers: each HTTP request is retried (5 attempts with
+backoff); an instrument that still fails is retried after `--retry-wait` seconds
+(default 60) for up to `--retries` extra passes (default 2), resuming at the month
+that failed; whatever is still failing is reported at the end with a non-zero
+exit code. A month OANDA has no candles for gets
+an `.empty` marker file instead of a header-only CSV. A 401/403 aborts the run;
+any other error stops only that instrument and the exit code is non-zero.
+To backfill, ingest and check in one go (stops at the first failing step):
+
+```bash
+scripts/backfill_and_check.sh                  # or: --only GBP_USD / --dry-run
+```
+
+It runs `extract_oanda --map`, `load_data`, `aggregate_ohlcv`, `sanity_check` and
+`profile_check --raw --out docs/profile_output.txt`.
+
+`extract_oci` leaves sub-directories of `data/raw_csv/` alone, so backfilled
+files survive an OCI re-sync.
 
 ## Planned (not yet implemented)
 

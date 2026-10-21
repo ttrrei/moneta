@@ -228,9 +228,11 @@ def extract_all_zips_to_csv(
     in the single *csv_dir* directory. Name collisions are resolved by
     appending a numeric suffix.
 
-    When *clean_target* is True (the default) the destination directory is
-    wiped first so that re-running extraction never leaves stale ``_N.csv``
-    copies behind; the caller then owns full provenance of the output files.
+    When *clean_target* is True (the default) the CSV files directly inside the
+    destination directory are removed first so that re-running extraction never
+    leaves stale ``_N.csv`` copies behind.  Sub-directories are left alone: they
+    hold data from other sources (e.g. ``<instrument>/`` folders written by
+    ``extract_oanda``) that this extraction did not create.
     """
     source_dir = ensure_dir(zips_dir)
     target_dir = ensure_dir(csv_dir)
@@ -238,8 +240,6 @@ def extract_all_zips_to_csv(
         for existing in target_dir.iterdir():
             if existing.is_file():
                 existing.unlink()
-            elif existing.is_dir():
-                shutil.rmtree(existing)
     extracted: list[Path] = []
 
     zip_files = sorted(source_dir.rglob("*.zip"))
