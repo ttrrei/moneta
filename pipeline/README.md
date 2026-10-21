@@ -45,7 +45,8 @@ python -m pipeline.extract_oanda --instrument GBP_USD \
 
 Backfill earlier history for many instruments from `config/history_map.yml`
 (one entry per instrument; `to: auto` stops one candle before the earliest
-candle already in `data/all_data/all_data.parquet`, so nothing overlaps):
+candle already in `data/all_data/all_data.parquet`, so nothing overlaps. With no
+ingested data yet it fills from `from` up to now):
 
 ```bash
 python -m pipeline.extract_oanda --map config/history_map.yml --dry-run  # plan only

@@ -195,10 +195,27 @@ def test_to_auto_stops_one_candle_before_earliest_ingested_candle(tmp_path: Path
     assert [(j.instrument, j.end) for j in jobs] == [("GBP_USD", _t("2025-11-18T00:30:00Z"))]
     assert "EUR_USD: nothing earlier" in notes[0]  # asked-for start is after what we already have
 
-    with pytest.raises(ValueError, match="run load_data first"):
-        extract_oanda.build_jobs(history, None)
-    with pytest.raises(ValueError, match="no ingested data"):
-        extract_oanda.build_jobs({"defaults": {"from": "2025-01-01T00:00:00Z"}, "instruments": {"XAU_USD": {}}}, earliest)
+
+def test_to_auto_with_no_ingested_data_fills_to_now(tmp_path: Path) -> None:
+    now = _t("2026-03-10T09:45:37Z")
+    history = {"defaults": {"from": "2020-01-01T00:00:00Z", "to": "auto"}, "instruments": {"XAU_USD": {}}}
+
+    # No parquet at all (earliest=None) or an instrument not in the parquet:
+    # both fall back to filling from 'from' up to 'now' (minute precision).
+    for earliest in (None, {"GBP_USD": _t("2025-11-18T00:31:00Z")}):
+        jobs, notes = extract_oanda.build_jobs(history, earliest, now=now)
+        assert [(j.instrument, j.start, j.end) for j in jobs] == [
+            ("XAU_USD", _t("2020-01-01T00:00:00Z"), _t("2026-03-10T09:45:00Z"))
+        ]
+        assert "no ingested data to anchor" in notes[0]
+        assert "to now" in notes[0]
+
+    # An anchor that is NOT the asked-for instrument is ignored; the anchored
+    # instrument still stops one candle before its earliest candle.
+    history2 = {"defaults": {"from": "2020-01-01T00:00:00Z", "to": "auto"}, "instruments": {"GBP_USD": {}}}
+    jobs, notes = extract_oanda.build_jobs(
+        history2, {"GBP_USD": _t("2025-11-18T00:31:00Z")}, now=now)
+    assert jobs[0].end == _t("2025-11-18T00:30:00Z")
     with pytest.raises(ValueError, match="not in the map"):
         extract_oanda.build_jobs(history, earliest, only={"NOPE"})
 

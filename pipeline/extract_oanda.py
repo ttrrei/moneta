@@ -371,12 +371,20 @@ def _earliest_by_instrument(parquet_path: str | Path) -> dict[str, datetime] | N
     return {name: datetime.fromtimestamp(seconds, tz=timezone.utc) for name, seconds in rows}
 
 
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 def build_jobs(
     history: dict[str, Any],
     earliest: dict[str, datetime] | None,
     only: set[str] | None = None,
+    now: datetime | None = None,
 ) -> tuple[list[BackfillJob], list[str]]:
-    """Turn the map into jobs.  ``to: auto`` stops one candle before the earliest ingested candle."""
+    """Turn the map into jobs.  ``to: auto`` stops one candle before the earliest ingested
+    candle, or (when nothing is ingested yet) fills from ``from`` up to ``now``."""
+    if now is None:
+        now = _now()
     jobs: list[BackfillJob] = []
     notes: list[str] = []
     unknown = (only or set()) - set(history["instruments"])
@@ -393,13 +401,16 @@ def build_jobs(
         start = _as_datetime(merged["from"], f"{instrument}.from")
         target = merged.get("to", "auto")
         if isinstance(target, str) and target.strip().lower() == "auto":
-            if earliest is None:
-                raise ValueError(
-                    f"{instrument}: 'to: auto' needs data/all_data/all_data.parquet (run load_data first) "
-                    "or an explicit 'to'")
-            if instrument not in earliest:
-                raise ValueError(f"{instrument}: no ingested data to anchor 'to: auto'; give an explicit 'to'")
-            end = _advance_candles(earliest[instrument], granularity, -1)
+            anchor = earliest.get(instrument) if earliest else None
+            if anchor is not None:
+                end = _advance_candles(anchor, granularity, -1)
+            else:
+                # No ingested data to anchor on (empty/missing parquet): fill up
+                # to "now", so a fresh start works with any 'from' in the past.
+                end = now.replace(second=0, microsecond=0)
+                notes.append(
+                    f"{instrument}: no ingested data to anchor 'to: auto'; filling from "
+                    f"{_format_time(start)} to now ({_format_time(end)})")
         else:
             end = _as_datetime(target, f"{instrument}.to")
         if end < start:

@@ -102,8 +102,12 @@ def test_aggregate_5m_and_1h_basic(tmp_path: Path) -> None:
     assert str(t1.schema.field("time").type) == "timestamp[us, tz=UTC]"
 
 
-def test_aggregate_from_all_data_table(tmp_path: Path) -> None:
+def test_aggregate_from_all_data_table(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     """When main.all_data exists in DuckDB, it is used even without parquet path."""
+    # Isolate from the repo's real data/all_data/all_data.parquet, which the
+    # relative DEFAULT_INPUT_PARQUET would otherwise resolve against the CWD
+    # and take precedence over the main.all_data table under test.
+    monkeypatch.chdir(tmp_path)
     db = tmp_path / "t.duckdb"
     conn = duckdb.connect(str(db))
     conn.execute("SET TimeZone='UTC'")

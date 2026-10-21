@@ -8,7 +8,8 @@
 # from  : how far back to go (UTC, ISO-8601).
 # to    : "auto" (default) = stop one candle before the earliest candle already in
 #         data/all_data/all_data.parquet, so the backfill never overlaps what you have.
-#         Or an explicit timestamp.
+#         If nothing is ingested yet (empty DuckDB / no parquet), "auto" fills from
+#         'from' up to now. Or use an explicit timestamp.
 # Each instrument inherits `defaults`; give a value only to override it.
 # Output: data/raw_csv/<instrument>/<instrument>_M1_<start>_<end>Z.csv, one file per UTC
 # month.  Finished months are skipped on re-run, so an interrupted run resumes.

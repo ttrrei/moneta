@@ -143,6 +143,8 @@ python -m pipeline.load_data
 
 `from` sets how far back to go; `to: auto` (the default) stops just before the
 earliest candle already ingested, so the new files never overlap existing data.
+If nothing is ingested yet (empty DuckDB / no parquet), `to: auto` fills from
+`from` up to now, so a fresh start works with any past start time.
 Output is one CSV per instrument per UTC month; finished months are skipped, so
 re-running resumes an interrupted backfill. After loading, re-run
 `python pipeline/profile_check.py --raw` to confirm the merged data has no gaps
