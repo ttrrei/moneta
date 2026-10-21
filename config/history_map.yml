@@ -17,7 +17,7 @@
 
 defaults:
   granularity: M1
-  from: "2025-01-01T00:00:00Z"
+  from: "2020-01-01T00:00:00Z"
   to: auto
 
 instruments:
