@@ -5,7 +5,7 @@
 > indicator, one rule), not a claim of alpha.
 > **Date:** 2026-10-26 · **Code:** [strategy/code/strategy_rsi.py](../code/strategy_rsi.py) ·
 > **Data:** `data/ohlcv_5m_features/ohlcv_5m_features.parquet` (built 2026-10-26) ·
-> **Registry ID:** S-01 — see [STRATEGY_REGISTRY.md](STRATEGY_REGISTRY.md)
+> **Registry ID:** S-01 — see [STRATEGY_REGISTRY.md](../STRATEGY_REGISTRY.md)
 
 ---
 

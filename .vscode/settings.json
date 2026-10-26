@@ -12,7 +12,7 @@
             "type": "file",
             "path": "/home/ubuntu/work/moneta/data/metadata.duckdb",
             "readOnly": true,
-            "attached": true
+            "attached": false
         }
     ],
     "duckdb.defaultDatabase": "metadata"
