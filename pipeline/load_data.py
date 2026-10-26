@@ -20,6 +20,8 @@ from typing import Optional
 
 import duckdb
 
+from pipeline.table_catalog import ensure_catalog, register_parquet_table
+
 DEFAULT_CSV_DIR = Path("data/raw_csv")
 DEFAULT_DATA_DIR = Path("data")
 DEFAULT_DB_PATH = Path("data/metadata.duckdb")
@@ -68,9 +70,7 @@ def _ensure_metadata_table(conn: duckdb.DuckDBPyConnection) -> None:
         );
         """
     )
-    # The DuckDB file is metadata-only: drop any legacy/full-data tables.
-    for legacy in ("main.all_data", "main.ohlcv_5m", "main.ohlcv_1h"):
-        conn.execute(f"DROP TABLE IF EXISTS {legacy};")
+    ensure_catalog(conn)
 
 
 def load_data(
@@ -204,6 +204,7 @@ def load_data(
             """,
             (table_name, str(csv_dir_path), str(target_parquet), row_count),
         )
+        register_parquet_table(conn, table_name, target_parquet, row_count)
 
         print(f"-> Done! Cleaned 1-minute table '{table_name}' contains {row_count} rows.")
         print(f"   Parquet: {target_parquet.resolve()}")

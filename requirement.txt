@@ -15,5 +15,9 @@ pandas
 PyYAML
 python-dotenv
 
+# Technical Indicators (requires the TA-Lib C library; see docs/indicators.md)
+TA-Lib
+pandas-ta-classic
+
 # Testing
 pytest

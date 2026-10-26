@@ -15,6 +15,8 @@ from typing import Optional
 
 import duckdb
 
+from pipeline.table_catalog import ensure_catalog, register_parquet_table
+
 DEFAULT_DB_PATH = Path("data/metadata.duckdb")
 DEFAULT_INPUT_PARQUET = Path("data/all_data/all_data.parquet")
 DEFAULT_5M_OUTPUT = Path("data/ohlcv_5m/ohlcv_5m.parquet")
@@ -157,7 +159,7 @@ def _build_bars(
 
     conn.execute(
         f"""
-        CREATE OR REPLACE TABLE {table} AS
+        CREATE OR REPLACE TEMP TABLE {table} AS
         SELECT
             instrument,
             CAST(bucket AS TIMESTAMPTZ) AS time,
@@ -212,26 +214,29 @@ def aggregate_ohlcv_data(
         ValueError: If ``main.all_data`` or a required column is missing.
     """
     outputs = [
-        ("main.ohlcv_5m", "5 minutes", Path(parquet_5m_path)),
-        ("main.ohlcv_1h", "1 hour", Path(parquet_1h_path)),
+        ("_moneta_ohlcv_5m", "main.ohlcv_5m", "5 minutes", Path(parquet_5m_path)),
+        ("_moneta_ohlcv_1h", "main.ohlcv_1h", "1 hour", Path(parquet_1h_path)),
     ]
 
     conn = _connect(db_path)
     counts: dict[str, int] = {}
     try:
         conn.execute("SET TimeZone = 'UTC'")
+        ensure_catalog(conn)
         source = _resolve_source(conn, db_path, input_parquet_path)
         cols = _resolve_columns(conn, source)
 
-        for table, interval, target in outputs:
-            _build_bars(conn, table, interval, source, cols)
+        for temp_table, table_name, interval, target in outputs:
+            _build_bars(conn, temp_table, interval, source, cols)
             target.parent.mkdir(parents=True, exist_ok=True)
             conn.execute(
-                f"COPY (SELECT * FROM {table} ORDER BY instrument, time) "
+                f"COPY (SELECT * FROM {temp_table} ORDER BY instrument, time) "
                 f"TO {_quote_literal(target.as_posix())} (FORMAT PARQUET);"
             )
-            counts[table] = int(conn.execute(f"SELECT COUNT(*) FROM {table};").fetchone()[0])
-            print(f"-> Created {table} with {counts[table]} rows; saved to {target}")
+            count = int(conn.execute(f"SELECT COUNT(*) FROM {temp_table};").fetchone()[0])
+            register_parquet_table(conn, table_name.split(".", 1)[1], target, count)
+            counts[table_name] = count
+            print(f"-> Created {table_name} with {count} rows; saved to {target}")
     finally:
         conn.close()
 

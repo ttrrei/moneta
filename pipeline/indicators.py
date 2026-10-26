@@ -1,0 +1,623 @@
+"""Technical indicator & feature engine (spec: docs/indicators.md, v2.0 Final).
+
+Builds the two feature tables consumed by strategy search:
+
+* ``data/ohlcv_5m_features/ohlcv_5m_features.parquet``
+* ``data/ohlcv_1h_features/ohlcv_1h_features.parquet``
+
+Design rules enforced here:
+
+* TA-Lib (C) is the source of truth for every indicator it implements;
+  ``pandas_ta_classic`` is used only for ER/Chop and as the parity oracle.
+* Strict causality: features at bar T use data <= T only.  1h features are
+  joined to 5m with an as-of join on ``close_time`` (no lookahead).
+* CFD parameter grid: N in {6, 12, 24, 60, 120}; pairs (6,24)/(12,60)/(24,120).
+* No synthetic gap filling: rolling windows operate on bar rows as-is; gaps
+  are exposed to downstream models via explicit flag features.
+* float64 throughout computation, float32 at write time.
+"""
+
+from __future__ import annotations
+
+import abc
+import math
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Iterable
+
+import numpy as np
+import pandas as pd
+import talib
+
+import pandas_ta_classic as ptac
+
+# ---------------------------------------------------------------------------
+# Parameter grid (spec section 4.1)
+# ---------------------------------------------------------------------------
+
+N_GRID = (6, 12, 24, 60, 120)
+PAIRS = ((6, 24), (12, 60), (24, 120))
+NORM_ATR_N = 24
+BB_SIGMA = 2.0
+KC_MULT = 2.0
+FASTD_PERIOD = 6
+EPS = 1e-12
+WARMUP_DROP = 3 * max(N_GRID)  # 360 bars (spec section 5)
+
+VALID_N = frozenset(N_GRID)
+VALID_PAIRS = frozenset(PAIRS)
+
+
+def validate_grid(n_grid: Iterable[int], pairs: Iterable[tuple[int, int]]) -> None:
+    """Reject any window/pair outside the CFD whitelist (spec section 4.1)."""
+    bad_n = [n for n in n_grid if n not in VALID_N]
+    if bad_n:
+        raise ValueError(f"Windows outside CFD grid {sorted(VALID_N)}: {bad_n}")
+    bad_pairs = [p for p in pairs if p not in VALID_PAIRS]
+    if bad_pairs:
+        raise ValueError(f"Pairs outside whitelist {sorted(VALID_PAIRS)}: {bad_pairs}")
+
+
+# ---------------------------------------------------------------------------
+# Session reset anchors (spec section 4.2), expressed as (month, UTC hour)
+# (month = 1..12 of the *first* month of the DST-active half-year).
+# ---------------------------------------------------------------------------
+
+DST_EU_START_MONTH = 3
+DST_EU_END_MONTH = 10
+
+
+def _eu_dst_active(month: int) -> bool:
+    return DST_EU_START_MONTH <= month < DST_EU_END_MONTH
+
+
+@dataclass(frozen=True)
+class SessionAnchor:
+    """Day-reset anchor for one instrument, in local market time."""
+
+    local_hour: int
+    local_minute: int
+    utc_offset_winter: float  # hours, local = UTC + offset
+    utc_offset_summer: float
+
+
+SESSION_ANCHORS: dict[str, SessionAnchor] = {
+    # FX & spot metals: 17:00 New York (EST -5 / EDT -4)
+    **{
+        i: SessionAnchor(17, 0, -5.0, -4.0)
+        for i in (
+            "EUR_USD", "GBP_USD", "USD_JPY", "USD_CAD", "USD_CHF", "NZD_USD",
+            "AUD_USD", "XAU_USD", "XAG_USD",
+        )
+    },
+    # US index CFDs: 09:30 New York (regular trading session open)
+    **{
+        i: SessionAnchor(9, 30, -5.0, -4.0)
+        for i in ("US30_USD", "SPX500_USD", "NAS100_USD")
+    },
+    # European index CFDs: 08:00 CET/BST
+    **{
+        i: SessionAnchor(8, 0, 1.0, 2.0)
+        for i in ("DE30_EUR", "UK100_GBP")
+    },
+    # Asia index CFDs: local exchange open
+    "JP225_USD": SessionAnchor(9, 0, 9.0, 9.0),
+    "HK33_HKD": SessionAnchor(9, 30, 8.0, 8.0),
+    "CN50_USD": SessionAnchor(9, 30, 8.0, 8.0),
+    # Commodities & crypto: UTC midnight
+    **{
+        i: SessionAnchor(0, 0, 0.0, 0.0)
+        for i in ("WTICO_USD", "BCO_USD", "BTC_USD", "ETH_USD")
+    },
+}
+
+
+def session_anchor(instrument: str) -> SessionAnchor:
+    try:
+        return SESSION_ANCHORS[instrument]
+    except KeyError:
+        raise KeyError(
+            f"No session anchor configured for {instrument!r}; add it to SESSION_ANCHORS"
+        ) from None
+
+
+def _reset_utc_hour(anchor: SessionAnchor, month: int) -> float:
+    offset = anchor.utc_offset_summer if _eu_dst_active(month) else anchor.utc_offset_winter
+    return (anchor.local_hour + anchor.local_minute / 60.0 - offset) % 24.0
+
+
+def session_reset_index(ts: pd.Series, anchor: SessionAnchor) -> np.ndarray:
+    """For each bar (UTC) return the id of its session: the index of the most
+    recent reset instant <= the bar timestamp (spec section 4.2 dynamic VWAP).
+    """
+    times = ts.dt.tz_convert("UTC").to_numpy(dtype="datetime64[ns]")
+    ns = times.astype("int64")  # epoch ns, UTC
+    months = ts.dt.month.to_numpy()
+    # One reset per day; the UTC hour of the reset depends on the DST month.
+    # We compute, for each bar, the reset instant of *its* day; sessions are
+    # contiguous in time so grouping by that instant is sufficient even when
+    # the UTC hour of the anchor shifts across DST dates (a bar is always
+    # compared against resets on-or-before itself).
+    DAY_NS = 86_400 * 1_000_000_000
+    day_ns = (ns // DAY_NS) * DAY_NS
+    hour = np.vectorize(lambda m: _reset_utc_hour(anchor, int(m)))(months)
+    reset_ns = day_ns + (hour * 3600.0).astype(np.int64) * 1_000_000_000
+    # A bar before its own day's reset belongs to the previous day's session.
+    prev_day_reset = reset_ns - DAY_NS
+    group = np.where(ns >= reset_ns, reset_ns, prev_day_reset)
+    # Compress the (strictly increasing) reset instants to small integer ids.
+    _, ids = np.unique(group, return_inverse=True)
+    return ids
+
+
+def vwap_within_session(
+    tp: np.ndarray, volume: np.ndarray, session: np.ndarray
+) -> np.ndarray:
+    """Session-anchored VWAP: cumsum(tp*vol)/cumsum(vol) within each session."""
+    pv = tp * volume
+    df = pd.DataFrame({"s": session, "pv": pv, "v": volume})
+    g = df.groupby("s", sort=False)
+    cum_pv = g["pv"].cumsum().to_numpy()
+    cum_v = g["v"].cumsum().to_numpy()
+    with np.errstate(divide="ignore", invalid="ignore"):
+        out = np.where(cum_v > 0, cum_pv / np.where(cum_v == 0, 1.0, cum_v), np.nan)
+    return out
+
+
+# ---------------------------------------------------------------------------
+# Gap / market-state flags (spec section 3.2)
+# ---------------------------------------------------------------------------
+
+
+def is_gap_bar_series(times: pd.Series, interval_seconds: int) -> np.ndarray:
+    """1 where the gap since the previous bar's *close* exceeds one period."""
+    t = times.dt.tz_convert("UTC").to_numpy(dtype="datetime64[ns]").astype("int64")
+    gap_ns = np.empty(len(t), dtype=np.int64)
+    if len(t) > 1:
+        gap_ns[1:] = t[1:] - (t[:-1] + interval_seconds * 1_000_000_000)
+    else:
+        gap_ns[:] = 0
+    return (gap_ns > 0).astype(np.int8)
+
+
+def is_partial_series(n_bars: np.ndarray, interval_seconds: int) -> np.ndarray:
+    expected = interval_seconds // 60  # 5m -> 5 one-minute bars, 1h -> 60
+    return (np.asarray(n_bars) < expected).astype(np.int8)
+
+
+def is_near_market_close_series(times: pd.Series, anchor: SessionAnchor) -> np.ndarray:
+    """1 during the 2 hours before the instrument's session anchor on Fridays."""
+    # Friday = weekday 4; window [anchor-2h, anchor) in local time.
+    dt = times.dt
+    weekday = dt.weekday.to_numpy()
+    # Local time of each bar using both offsets; a bar is "near close" if it
+    # falls inside the 2h window under either DST state.
+    def in_window(offset: float) -> np.ndarray:
+        local_h = (times.dt.hour.to_numpy() + times.dt.minute.to_numpy() / 60.0
+                   + times.dt.second.to_numpy() / 3600.0 + offset) % 24.0
+        start = (anchor.local_hour - 2.0) % 24.0
+        end = anchor.local_hour % 24.0
+        if start < end:
+            inside = (local_h >= start) & (local_h < end)
+        else:
+            inside = (local_h >= start) | (local_h < end)
+        return inside
+
+    w = (in_window(anchor.utc_offset_winter) | in_window(anchor.utc_offset_summer))
+    return (w & (weekday == 4)).astype(np.int8)
+
+
+# ---------------------------------------------------------------------------
+# Feature groups (spec section 6-7)
+# ---------------------------------------------------------------------------
+
+
+class BaseFeatureGroup(abc.ABC):
+    """Uniform interface every feature family must implement (spec 6.1)."""
+
+    @abc.abstractmethod
+    def compute(
+        self,
+        o: np.ndarray, h: np.ndarray, l: np.ndarray, c: np.ndarray,
+        v: np.ndarray, n_grid: tuple[int, ...], pairs: tuple[tuple[int, int], ...],
+        aux: dict | None = None,
+    ) -> dict[str, np.ndarray]:
+        """Return {column name: float64 1-D array} aligned to the input rows."""
+
+    @property
+    @abc.abstractmethod
+    def required_columns(self) -> list[str]:
+        ...
+
+
+class TrendGroup(BaseFeatureGroup):
+    required_columns = ["high", "low", "close"]
+
+    def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
+        out: dict[str, np.ndarray] = {}
+        for n in n_grid:
+            out[f"sma_{n}"] = talib.SMA(c, timeperiod=n)
+            out[f"ema_{n}"] = talib.EMA(c, timeperiod=n)
+            adx = talib.ADX(h, l, c, timeperiod=n)
+            out[f"adx_{n}"] = adx
+            out[f"plus_di_{n}"] = talib.PLUS_DI(h, l, c, timeperiod=n)
+            out[f"minus_di_{n}"] = talib.MINUS_DI(h, l, c, timeperiod=n)
+            up, down = talib.AROON(h, l, timeperiod=n)
+            out[f"aroon_up_{n}"] = up
+            out[f"aroon_down_{n}"] = down
+            hi_n = talib.MAX(h, timeperiod=n)
+            lo_n = talib.MIN(l, timeperiod=n)
+            out[f"dc_upper_{n}"] = hi_n
+            out[f"dc_lower_{n}"] = lo_n
+            out[f"dc_mid_{n}"] = (hi_n + lo_n) / 2.0
+        for f, s in pairs:
+            macd, signal, hist = talib.MACD(c, fastperiod=f, slowperiod=s, signalperiod=f)
+            out[f"macd_{f}_{s}"] = macd
+            out[f"macd_signal_{f}_{s}"] = signal
+            out[f"macd_hist_{f}_{s}"] = hist
+        return out
+
+
+class MomentumGroup(BaseFeatureGroup):
+    required_columns = ["high", "low", "close"]
+
+    def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
+        out: dict[str, np.ndarray] = {}
+        for n in n_grid:
+            out[f"rsi_{n}"] = talib.RSI(c, timeperiod=n)
+            out[f"roc_{n}"] = talib.ROC(c, timeperiod=n)
+            out[f"mom_{n}"] = talib.MOM(c, timeperiod=n)
+            # STOCHF returns (fastk, fastd); fastd = SMA(%K, 6, simple) per spec 7.2.
+            stoch_k, stoch_d = talib.STOCHF(
+                h, l, c, fastk_period=n, fastd_period=FASTD_PERIOD, fastd_matype=0
+            )
+            out[f"stoch_k_{n}"] = stoch_k
+            out[f"stoch_d_{n}"] = stoch_d
+            out[f"cci_{n}"] = talib.CCI(h, l, c, timeperiod=n)
+            out[f"willr_{n}"] = talib.WILLR(h, l, c, timeperiod=n)
+        return out
+
+
+class VolatilityGroup(BaseFeatureGroup):
+    required_columns = ["high", "low", "close"]
+
+    def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
+        out: dict[str, np.ndarray] = {}
+        out["tr"] = talib.TRANGE(h, l, c)
+        log_ret = np.empty_like(c)
+        log_ret[0] = np.nan
+        log_ret[1:] = np.log(c[1:] / c[:-1])
+        for n in n_grid:
+            atr = talib.ATR(h, l, c, timeperiod=n)
+            out[f"atr_{n}"] = atr
+            mid, upper, lower = talib.BBANDS(
+                c, timeperiod=n, nbdevup=BB_SIGMA, nbdevdn=BB_SIGMA, matype=0
+            )
+            out[f"bb_mid_{n}"] = mid
+            out[f"bb_upper_{n}"] = upper
+            out[f"bb_lower_{n}"] = lower
+            out[f"bb_width_{n}"] = (upper - lower) / mid
+            span = upper - lower
+            out[f"bb_pctb_{n}"] = (c - lower) / np.where(span == 0, np.nan, span)
+            kc_mid = talib.EMA(c, timeperiod=n)
+            out[f"kc_mid_{n}"] = kc_mid
+            out[f"kc_upper_{n}"] = kc_mid + KC_MULT * atr
+            out[f"kc_lower_{n}"] = kc_mid - KC_MULT * atr
+            out[f"sqz_on_{n}"] = (
+                (lower > out[f"kc_lower_{n}"]) & (upper < out[f"kc_upper_{n}"])
+            ).astype(np.float64)
+            out[f"hv_{n}"] = talib.STDDEV(log_ret, timeperiod=n)
+        return out
+
+
+class RegimeGroup(BaseFeatureGroup):
+    required_columns = ["high", "low", "close"]
+
+    def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
+        s = pd.Series
+        out: dict[str, np.ndarray] = {}
+        for n in n_grid:
+            out[f"er_{n}"] = np.asarray(ptac.er(s(c), length=n), dtype=np.float64)
+            out[f"chop_{n}"] = np.asarray(
+                ptac.chop(s(h), s(l), s(c), length=n), dtype=np.float64
+            )
+        return out
+
+
+class CandleStructureGroup(BaseFeatureGroup):
+    required_columns = ["open", "high", "low", "close"]
+
+    def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
+        rng = np.maximum(h - l, EPS)
+        return {
+            "bar_body_ratio": np.abs(c - o) / rng,
+            "bar_upper_wick_ratio": (h - np.maximum(o, c)) / rng,
+            "bar_lower_wick_ratio": (np.minimum(o, c) - l) / rng,
+            "bar_clv": ((c - l) - (h - c)) / rng,
+        }
+
+
+class VolumeProxyGroup(BaseFeatureGroup):
+    required_columns = ["high", "low", "close", "volume"]
+
+    def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
+        aux = aux or {}
+        out: dict[str, np.ndarray] = {}
+        for n in n_grid:
+            vol_sma = talib.SMA(v, timeperiod=n)
+            out[f"vol_sma_{n}"] = vol_sma
+            out[f"vol_rel_{n}"] = v / np.where(vol_sma == 0, np.nan, vol_sma)
+            out[f"mfi_{n}"] = talib.MFI(h, l, c, v, timeperiod=n)
+            cmf = ptac.cmf(pd.Series(h), pd.Series(l), pd.Series(c), pd.Series(v), length=n)
+            out[f"cmf_{n}"] = np.asarray(cmf, dtype=np.float64)
+        if "vwap" in aux:
+            out["vwap"] = aux["vwap"]
+        return out
+
+
+class DerivedFeatureGroup(BaseFeatureGroup):
+    required_columns = ["open", "high", "low", "close"]
+
+    def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
+        aux = aux or {}
+        out: dict[str, np.ndarray] = {}
+        atr_norm = aux.get("atr_norm")
+        for n in n_grid:
+            atr = aux.get(f"atr_{n}")
+            if atr is not None:
+                out[f"atr_pct_{n}"] = atr / c
+            ema = aux.get(f"ema_{n}")
+            if ema is not None and atr_norm is not None:
+                out[f"ema_dist_{n}"] = (c - ema) / np.where(atr_norm == 0, np.nan, atr_norm)
+        for f, s in pairs:
+            ema_f, ema_s = aux.get(f"ema_{f}"), aux.get(f"ema_{s}")
+            if ema_f is not None and ema_s is not None and atr_norm is not None:
+                out[f"ema_spread_{f}_{s}"] = (ema_f - ema_s) / np.where(
+                    atr_norm == 0, np.nan, atr_norm
+                )
+            macd_hist = aux.get(f"macd_hist_{f}_{s}")
+            if macd_hist is not None and atr_norm is not None:
+                out[f"macd_hist_atr_{f}_{s}"] = macd_hist / np.where(
+                    atr_norm == 0, np.nan, atr_norm
+                )
+            atr_f, atr_s = aux.get(f"atr_{f}"), aux.get(f"atr_{s}")
+            if atr_f is not None and atr_s is not None:
+                out[f"vol_ratio_{f}_{s}"] = atr_f / np.where(atr_s == 0, np.nan, atr_s)
+        # Donchian position and shifted high/low distance (lookahead-safe).
+        for n in n_grid:
+            dc_up, dc_lo = aux.get(f"dc_upper_{n}"), aux.get(f"dc_lower_{n}")
+            if dc_up is not None and dc_lo is not None:
+                span = dc_up - dc_lo
+                out[f"dc_pos_{n}"] = (c - dc_lo) / np.where(span <= 0, np.nan, span)
+            prev_hi = np.full_like(c, np.nan)
+            prev_lo = np.full_like(c, np.nan)
+            if len(c) > 1:
+                prev_hi[1:] = talib.MAX(h, timeperiod=n)[:-1]
+                prev_lo[1:] = talib.MIN(l, timeperiod=n)[:-1]
+            if atr_norm is not None:
+                out[f"dist_high_{n}"] = (prev_hi - c) / np.where(atr_norm == 0, np.nan, atr_norm)
+                out[f"dist_low_{n}"] = (c - prev_lo) / np.where(atr_norm == 0, np.nan, atr_norm)
+        if "hour_sin" in aux:
+            out["hour_sin"] = aux["hour_sin"]
+            out["hour_cos"] = aux["hour_cos"]
+            out["dow_sin"] = aux["dow_sin"]
+            out["dow_cos"] = aux["dow_cos"]
+        return out
+
+
+GROUPS = (
+    TrendGroup,
+    MomentumGroup,
+    VolatilityGroup,
+    RegimeGroup,
+    CandleStructureGroup,
+    VolumeProxyGroup,
+    DerivedFeatureGroup,
+)
+
+
+# ---------------------------------------------------------------------------
+# Orchestration
+# ---------------------------------------------------------------------------
+
+OHLCV_COLS = ("instrument", "time", "open", "high", "low", "close", "volume", "n_bars")
+
+
+def _instrument_arrays(df: pd.DataFrame) -> tuple[np.ndarray, ...]:
+    return (
+        df["open"].to_numpy(np.float64),
+        df["high"].to_numpy(np.float64),
+        df["low"].to_numpy(np.float64),
+        df["close"].to_numpy(np.float64),
+        df["volume"].to_numpy(np.float64),
+    )
+
+
+def compute_instrument_features(
+    df: pd.DataFrame,
+    interval_seconds: int,
+    n_grid: tuple[int, ...] = N_GRID,
+    pairs: tuple[tuple[int, int], ...] = PAIRS,
+) -> pd.DataFrame:
+    """Compute the full spec feature matrix for one instrument's bars (sorted).
+
+    ``df`` must contain OHLCV_COLS with a UTC ``time`` column.  Returns a
+    DataFrame of the same length (warm-up rows are NaN, dropped by the caller).
+    """
+    validate_grid(n_grid, pairs)
+    df = df.reset_index(drop=True)
+    o, h, l, c, v = _instrument_arrays(df)
+    instrument = df["instrument"].iloc[0]
+    anchor = session_anchor(instrument)
+    times = df["time"]
+
+    # Shared auxiliaries.
+    session = session_reset_index(times, anchor)
+    tp = (h + l + c) / 3.0
+    vwap = vwap_within_session(tp, v, session)
+    ema24 = talib.EMA(c, timeperiod=NORM_ATR_N)
+    atr24 = talib.ATR(h, l, c, timeperiod=NORM_ATR_N)
+
+    aux: dict = {"vwap": vwap, "atr_norm": atr24}
+    out: dict[str, np.ndarray] = {}
+    for group_cls in GROUPS[:5]:  # trend..candle: self-contained
+        out.update(group_cls().compute(o, h, l, c, v, n_grid, pairs, aux))
+    # Feed computed intermediates to volume/derived groups.
+    aux.update(out)
+    out.update(VolumeProxyGroup().compute(o, h, l, c, v, n_grid, pairs, aux))
+    hour = times.dt.hour.to_numpy() + times.dt.minute.to_numpy() / 60.0
+    aux.update(
+        hour_sin=np.sin(2 * math.pi * hour / 24.0),
+        hour_cos=np.cos(2 * math.pi * hour / 24.0),
+        dow_sin=np.sin(2 * math.pi * times.dt.dayofweek.to_numpy() / 7.0),
+        dow_cos=np.cos(2 * math.pi * times.dt.dayofweek.to_numpy() / 7.0),
+    )
+    out.update(DerivedFeatureGroup().compute(o, h, l, c, v, n_grid, pairs, aux))
+
+    # Gap / market-state flags.
+    out["is_gap_bar"] = is_gap_bar_series(times, interval_seconds)
+    out["is_partial"] = is_partial_series(df["n_bars"].to_numpy(np.int64), interval_seconds)
+    out["is_near_market_close"] = is_near_market_close_series(times, anchor)
+
+    return pd.DataFrame(out, index=df.index)
+
+
+# 1h background features projected onto the 5m signal layer (spec 3.3).
+H1_PROJECTION_TEMPLATES = (
+    "ema_dist_{n}", "adx_{n}", "rsi_{n}", "er_{n}", "atr_pct_{n}",
+)
+
+
+def _h1_feature_columns(n_grid: tuple[int, ...] = N_GRID) -> list[str]:
+    cols: list[str] = []
+    for n in n_grid:
+        cols += [tmpl.format(n=n) for tmpl in H1_PROJECTION_TEMPLATES]
+    return cols
+
+
+def asof_join_h1_features(
+    m: pd.DataFrame, h: pd.DataFrame, interval_5m_seconds: int, interval_1h_seconds: int
+) -> pd.DataFrame:
+    """As-of join: 1h row is visible only once its close_time <= the 5m bar's
+    close_time (spec 3.3).  Strict, no lookahead.
+    """
+    m = m.reset_index(drop=True)
+    h_close = h["time"].dt.tz_convert("UTC").to_numpy(dtype="datetime64[ns]").astype("int64")
+    h_close = h_close + interval_1h_seconds * 1_000_000_000
+    m_close = m["time"].dt.tz_convert("UTC").to_numpy(dtype="datetime64[ns]").astype("int64")
+    m_close = m_close + interval_5m_seconds * 1_000_000_000
+    # Searchsorted on h_close (sorted): position of first h_close > m_close,
+    # so idx = pos - 1 is the last 1h bar with close_time <= m_close.
+    pos = np.searchsorted(h_close, m_close, side="right")
+    valid = pos > 0
+    idx = np.full(len(m), -1, dtype=np.int64)
+    idx[valid] = pos[valid] - 1
+
+    base_cols = _h1_feature_columns()
+    for col in base_cols:
+        src = h[col].to_numpy()
+        out = np.full(len(m), np.nan, dtype=np.float64)
+        out[valid] = src[idx[valid]]
+        m[f"h1_{col}"] = out
+    return m
+
+
+def _read_instrument(
+    src: str, instrument: str
+) -> pd.DataFrame:
+    import duckdb
+
+    conn = duckdb.connect()
+    try:
+        df = conn.execute(
+            "SELECT * FROM read_parquet(?) WHERE instrument = ? ORDER BY time",
+            [src, instrument],
+        ).fetch_df()
+    finally:
+        conn.close()
+    return df
+
+
+def _atomic_parquet(df: pd.DataFrame, target: Path) -> None:
+    target.parent.mkdir(parents=True, exist_ok=True)
+    tmp = target.with_name(target.stem + ".tmp.parquet")
+    df.to_parquet(tmp, index=False)
+    tmp.replace(target)
+
+
+def build_features(
+    source_5m: str | Path = "data/ohlcv_5m/ohlcv_5m.parquet",
+    source_1h: str | Path = "data/ohlcv_1h/ohlcv_1h.parquet",
+    out_5m: str | Path = "data/ohlcv_5m_features/ohlcv_5m_features.parquet",
+    out_1h: str | Path = "data/ohlcv_1h_features/ohlcv_1h_features.parquet",
+    instruments: list[str] | None = None,
+) -> dict[str, int]:
+    """Regenerate both feature tables from the OHLCV sources.
+
+    Computation is float64; written Parquet is float32 (spec section 2).
+    Warm-up rows (first WARMUP_DROP bars per instrument) are dropped.
+    """
+    import duckdb
+
+    src5, src1 = str(source_5m), str(source_1h)
+    conn = duckdb.connect()
+    try:
+        insts = sorted(
+            r[0] for r in conn.execute(
+                "SELECT DISTINCT instrument FROM read_parquet(?) ORDER BY 1", [src5]
+            ).fetchall()
+        )
+    finally:
+        conn.close()
+    if instruments is not None:
+        insts = [i for i in insts if i in set(instruments)]
+
+    # ---- 1h features (independent) --------------------------------------
+    h1_frames = []
+    for inst in insts:
+        df = _read_instrument(src1, inst)
+        if len(df) < WARMUP_DROP + 1:
+            raise ValueError(f"{inst}: not enough 1h bars ({len(df)})")
+        feats = compute_instrument_features(df, 3600)
+        frame = pd.concat([df[list(OHLCV_COLS)], feats], axis=1)
+        h1_frames.append(frame.iloc[WARMUP_DROP:].reset_index(drop=True))
+        print(f"1h {inst}: {len(frame)} rows ({len(feats.columns)} features)")
+    h1_all = pd.concat(h1_frames, ignore_index=True)
+
+    # ---- 5m features + as-of 1h join -------------------------------------
+    m_frames = []
+    for inst in insts:
+        df = _read_instrument(src5, inst)
+        if len(df) < WARMUP_DROP + 1:
+            raise ValueError(f"{inst}: not enough 5m bars ({len(df)})")
+        feats = compute_instrument_features(df, 300)
+        frame = pd.concat([df[list(OHLCV_COLS)], feats], axis=1)
+        h1_inst = h1_all[h1_all["instrument"] == inst]
+        frame = asof_join_h1_features(frame, h1_inst, 300, 3600)
+        m_frames.append(frame.iloc[WARMUP_DROP:].reset_index(drop=True))
+        print(f"5m {inst}: {len(frame)} rows ({len(feats.columns)} features)")
+    m5_all = pd.concat(m_frames, ignore_index=True)
+
+    # ---- float32 write (spec section 2) ----------------------------------
+    float32 = pd.Float32Dtype()
+
+    def to_f32(frame: pd.DataFrame) -> pd.DataFrame:
+        out = frame.copy()
+        for col in out.columns:
+            if out[col].dtype == np.float64:
+                out[col] = out[col].astype(float32)
+        return out
+
+    _atomic_parquet(to_f32(m5_all), Path(out_5m))
+    _atomic_parquet(to_f32(h1_all), Path(out_1h))
+    print(f"Wrote {out_5m} ({len(m5_all)} rows, {m5_all.shape[1]} cols)")
+    print(f"Wrote {out_1h} ({len(h1_all)} rows, {h1_all.shape[1]} cols)")
+    return {"5m": len(m5_all), "1h": len(h1_all)}
+
+
+def main() -> None:
+    build_features()
+
+
+if __name__ == "__main__":
+    main()

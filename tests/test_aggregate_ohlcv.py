@@ -64,6 +64,7 @@ def test_aggregate_5m_and_1h_basic(tmp_path: Path) -> None:
     out5 = tmp_path / "out" / "ohlcv_5m.parquet"
     out1 = tmp_path / "out" / "ohlcv_1h.parquet"
     db = tmp_path / "meta.duckdb"
+    duckdb.connect(str(db)).close()
 
     counts = aggregate_ohlcv_data(
         db_path=db, input_parquet_path=inp,
@@ -71,6 +72,20 @@ def test_aggregate_5m_and_1h_basic(tmp_path: Path) -> None:
     )
 
     assert counts == {"main.ohlcv_5m": 3, "main.ohlcv_1h": 2}
+    catalog = duckdb.connect(str(db), read_only=True)
+    try:
+        registered = catalog.execute(
+            "SELECT table_name, row_count FROM data_tables ORDER BY table_name"
+        ).fetchall()
+        assert registered == [("ohlcv_1h", 2), ("ohlcv_5m", 3)]
+        assert catalog.execute(
+            "SELECT table_type FROM information_schema.tables "
+            "WHERE table_schema = 'main' AND table_name = 'ohlcv_5m'"
+        ).fetchone() == ("VIEW",)
+        assert catalog.execute("SELECT count(*) FROM main.ohlcv_5m").fetchone() == (3,)
+    finally:
+        catalog.close()
+
     t5 = pq.read_table(out5)
     assert set(t5.column_names) == {"instrument", "time", "open", "high", "low", "close", "volume", "n_bars"}
     assert str(t5.schema.field("time").type) == "timestamp[us, tz=UTC]"

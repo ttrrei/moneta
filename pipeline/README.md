@@ -16,7 +16,9 @@ This directory hosts the **data pipeline (Bronze ingestion)** for Nova.
 2. Drops rows where `is_complete` is false.
 3. Deduplicates on `(instrument, time)`.
 4. Exports the cleaned 1-minute bars to `data/<table_name>/<table_name>.parquet`.
-5. Records bookkeeping in `data/metadata.duckdb` (metadata only — no data tables).
+5. Records the Parquet path, row count, and schema in `data/metadata.duckdb`.
+   DuckDB exposes `main.all_data` as a view over the Parquet file; it does not
+   duplicate the table data in the database.
 
 Run with `python -m pipeline.load_data` (default table name `all_data`).
 
@@ -29,6 +31,8 @@ Run with `python -m pipeline.load_data` (default table name `all_data`).
 3. Buckets bars on UTC boundaries into 5-minute and 1-hour OHLCV bars.
 4. Computes `open`/`close` via `arg_min`/`arg_max` by source time (first/last bar), `high`/`low` via MAX/MIN, `volume` via SUM, and `n_bars` via COUNT for partial-bar detection.
 5. Writes results to `data/ohlcv_5m/ohlcv_5m.parquet` and `data/ohlcv_1h/ohlcv_1h.parquet` (one directory per table, consistent with `data/all_data/all_data.parquet`).
+6. Registers each Parquet path, row count, and schema in DuckDB's `data_tables`
+   catalog and exposes `main.ohlcv_5m` / `main.ohlcv_1h` as Parquet-backed views.
 
 Run with `python -m pipeline.aggregate_ohlcv` (default paths).
 
