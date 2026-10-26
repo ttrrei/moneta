@@ -90,7 +90,7 @@ tables.
 | `config/setting.example.yml` | Template: `oci.par_url`, `oanda.*`. |
 | `config/setting.yml` | **Git-ignored** real secrets; the only place tokens live. |
 | `config/history_map.yml` | Per-instrument backfill ranges (`from`, `to: auto`). |
-| `config/indicators.yml` | ⚠ **Stale** legacy indicator list (9/14/20). Superseded by `indicators.py`. |
+| `config/indicators.yml` | Readable indicator/feature spec (not loaded at runtime). Superseded by, and must match, `indicators.py`. |
 
 ## 4. Key design decisions (ADRs, summarized)
 

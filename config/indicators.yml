@@ -1,198 +1,188 @@
-# Indicator metadata for the Nova (moneta) strategy engine.
+# Indicator & feature spec — moneta / Nova (source of truth: pipeline/indicators.py)
 #
-# One source of truth for every indicator applied to the 5-minute and 1-hour
-# OHLCV bars.  Each entry describes *what* to compute, its parameters, the
-# lookback/warm-up behaviour and the output column name produced.  The
-# implementation lives in pipeline/indicators.py.
+# This file describes the EXACT feature engine that produces:
+#   * data/ohlcv_5m_features/ohlcv_5m_features.parquet  (259 columns)
+#   * data/ohlcv_1h_features/ohlcv_1h_features.parquet  (234 columns)
 #
-# Conventions:
-#   - All time references are UTC (bars are bucketed on UTC boundaries).
-#   - `lookback`  = minimum number of input bars needed before a value is valid
-#                   (trading bars; warm-up bars are emitted as NaN).
-#   - `warmup`    = bars additionally discarded after computation (default 0).
-#   - `output`    = column name written into the resulting feature table.
-#   - Parameters use the same units as the bar timeframe unless noted.
-#   - Inputs refer to OHLCV columns: open, high, low, close, volume, n_bars.
+# IMPORTANT:
+#   - The authoritative implementation is `pipeline/indicators.py`. If this file
+#     and that code ever disagree, the code wins — update this file in the same
+#     change (see docs/README.md "Maintenance rule").
+#   - The 5m table = the 1h table PLUS the `h1_*` context block (last 25 columns).
+#   - Do NOT invent new windows. The grid below is a hard whitelist enforced by
+#     `validate_grid()`; only the values listed here are allowed.
+#   - A prior legacy version of this file listed classic US-equity windows
+#     (ema_9/21/50, sma_200, rsi_14, cci_20, bb(20), kc(20,14), obv, vwap "per
+#     UTC day"). That has been superseded by the CFD grid below and removed.
+#     (Original preserved in the session artifacts folder as indicators.yml.legacy.bak.)
+#   - Placeholders: {n} = a window from parameter_grid.windows_n;
+#     {f}_{s} = one of parameter_grid.macd_pairs (fast_slow).
 
+# ---------------------------------------------------------------------------
+# Parameter grid (spec section 4.1) — HARD WHITELIST
+# ---------------------------------------------------------------------------
+parameter_grid:
+  windows_n: [6, 12, 24, 60, 120]              # every rolling-window indicator
+  macd_pairs: [[6, 24], [12, 60], [24, 120]]   # only these (fast, slow) pairs
+  macd_signal_period: "fast"                    # signal period = fast (spec section 5)
+  norm_atr: 24                                  # window for ATR-normalized features
+  bb_sigma: 2.0                                 # Bollinger population-std (ddof=0)
+  keltner_mult: 2.0                             # Keltner = ema_N +/- 2.0 * atr_N
+  stochastic_d_sma: 6                           # %D = SMA-6 of raw %K (STOCHF, not STOCH)
+  eps: 1.0e-12
+  warmup_drop: 360                              # 3 * max(N); leading warm-up rows dropped
+
+# ---------------------------------------------------------------------------
+# Precision & causality policy (spec sections 2 & 3)
+# ---------------------------------------------------------------------------
+policy:
+  compute_dtype: float64
+  store_dtype: float32
+  lookahead: forbidden                          # feature at bar T uses data <= T only
+  synthetic_fill: forbidden                     # gaps exposed as flags, never imputed
+  h1_to_5m_join: "as-of on close_time (m.close_time >= h.close_time)"
+  execution: "signal on closed bar T, fill at open of bar T+1"
+  cost_bps_one_way: 2                           # strategy backtests (not this engine)
+
+# ---------------------------------------------------------------------------
+# Session reset anchors (spec section 4.2) — local market time
+#   vwap resets here (not UTC midnight); is_near_market_close = Fri 2h before this.
+# ---------------------------------------------------------------------------
+session_anchors:
+  fx_and_metals:
+    instruments: [AUD_USD, EUR_USD, GBP_USD, NZD_USD, USD_CAD, USD_CHF, USD_JPY, XAU_USD, XAG_USD]
+    anchor: "17:00 New York"
+  us_indices:
+    instruments: [US30_USD, SPX500_USD, NAS100_USD]
+    anchor: "09:30 New York"
+  eu_indices:
+    instruments: [DE30_EUR, UK100_GBP]
+    anchor: "08:00 CET/BST"
+  asia_indices:
+    instruments: [JP225_USD, HK33_HKD, CN50_USD]
+    anchor: "local exchange open (09:00 JST / 09:30 HKT)"
+  energy_and_crypto:
+    instruments: [WTICO_USD, BCO_USD, BTC_USD, ETH_USD]
+    anchor: "00:00 UTC"
+
+# ---------------------------------------------------------------------------
+# Feature families (one table = base + every family below)
+#   {n} = a window from parameter_grid.windows_n
+#   {f}_{s} = one of parameter_grid.macd_pairs
+# ---------------------------------------------------------------------------
 timeframes:
-  5m:
-    source_table: ohlcv_5m
-    bar_minutes: 5
-    indicators:
-      # --- Trend (1h context is authoritative, but computed on 5m too) ---
-      - name: ema_fast
-        type: trend
-        inputs: [close]
-        params: { span: 9 }
-        output: ema_9
-        lookback: 9
-      - name: ema_slow
-        type: trend
-        inputs: [close]
-        params: { span: 21 }
-        output: ema_21
-        lookback: 21
-      - name: ema_trend
-        type: trend
-        inputs: [close]
-        params: { span: 50 }
-        output: ema_50
-        lookback: 50
-      - name: sma_200
-        type: trend
-        inputs: [close]
-        params: { window: 200 }
-        output: sma_200
-        lookback: 200
-      - name: macd
-        type: trend
-        inputs: [close]
-        params: { fast: 12, slow: 26, signal: 9 }
-        outputs: [macd, macd_signal, macd_hist]
-        lookback: 35
-      - name: adx
-        type: trend
-        inputs: [high, low, close]
-        params: { window: 14 }
-        outputs: [adx, plus_di, minus_di]
-        lookback: 28
+  base:                       # OHLCV_COLS, present on both tables
+    - {name: instrument, dtype: string}
+    - {name: time, dtype: "timestamp[us, UTC]", note: "bar OPEN time"}
+    - {name: open, dtype: float64}
+    - {name: high, dtype: float64}
+    - {name: low, dtype: float64}
+    - {name: close, dtype: float64}
+    - {name: volume, dtype: float64, note: "tick volume = activity proxy"}
+    - {name: n_bars, dtype: int64, note: "1-min bars fed this bar"}
 
-      # --- Momentum ---
-      - name: rsi
-        type: momentum
-        inputs: [close]
-        params: { window: 14 }
-        output: rsi_14
-        lookback: 15
-      - name: stoch
-        type: momentum
-        inputs: [high, low, close]
-        params: { k: 14, d: 3, smooth: 3 }
-        outputs: [stoch_k, stoch_d]
-        lookback: 16
-      - name: cci
-        type: momentum
-        inputs: [high, low, close]
-        params: { window: 20 }
-        output: cci_20
-        lookback: 20
-      - name: roc
-        type: momentum
-        inputs: [close]
-        params: { window: 10 }
-        output: roc_10
-        lookback: 11
+  trend:
+    per_window_n:
+      - sma_{n}
+      - ema_{n}
+      - adx_{n}
+      - plus_di_{n}
+      - minus_di_{n}
+      - aroon_up_{n}
+      - aroon_down_{n}
+      - dc_upper_{n}
+      - dc_lower_{n}
+      - dc_mid_{n}
+    macd_per_pair:
+      - macd_{f}_{s}
+      - macd_signal_{f}_{s}
+      - macd_hist_{f}_{s}
+    notes: "TA-Lib; dc = Donchian channel; aroon = AROON up/down; MACD signal period = fast."
 
-      # --- Volatility ---
-      - name: atr
-        type: volatility
-        inputs: [high, low, close]
-        params: { window: 14 }
-        output: atr_14
-        lookback: 15
-      - name: bollinger
-        type: volatility
-        inputs: [close]
-        params: { window: 20, std: 2.0 }
-        outputs: [bb_mid, bb_upper, bb_lower, bb_width, bb_pctb]
-        lookback: 20
-      - name: keltner
-        type: volatility
-        inputs: [high, low, close]
-        params: { ema: 20, atr: 14, mult: 2.0 }
-        outputs: [kc_mid, kc_upper, kc_lower]
-        lookback: 34
+  momentum:
+    per_window_n:
+      - rsi_{n}
+      - roc_{n}
+      - mom_{n}
+      - stoch_k_{n}
+      - stoch_d_{n}
+      - cci_{n}
+      - willr_{n}
+    notes: "stoch_d_{n} = SMA-6 of raw %K built with talib.STOCHF (not smoothed STOCH)."
 
-      # --- Volume / microstructure ---
-      - name: obv
-        type: volume
-        inputs: [close, volume]
-        output: obv
-        lookback: 1
-      - name: vwap
-        type: volume
-        inputs: [high, low, close, volume]
-        output: vwap
-        lookback: 1
-        reset: session   # cumulative per UTC day
-      - name: volume_sma
-        type: volume
-        inputs: [volume]
-        params: { window: 20 }
-        output: vol_sma_20
-        lookback: 20
+  volatility:
+    no_window: [tr]                        # True Range
+    per_window_n:
+      - atr_{n}
+      - bb_mid_{n}
+      - bb_upper_{n}
+      - bb_lower_{n}
+      - bb_width_{n}
+      - bb_pctb_{n}
+      - kc_mid_{n}
+      - kc_upper_{n}
+      - kc_lower_{n}
+      - sqz_on_{n}
+      - hv_{n}
+    notes: "bb uses population std (ddof=0); kc = ema_N +/- 2.0*atr_N; sqz_on = 1 when Bollinger inside Keltner (volatility compression); hv = rolling std of log returns."
 
-  1h:
-    source_table: ohlcv_1h
-    bar_minutes: 60
-    indicators:
-      - name: ema_fast
-        type: trend
-        inputs: [close]
-        params: { span: 9 }
-        output: ema_9
-        lookback: 9
-      - name: ema_slow
-        type: trend
-        inputs: [close]
-        params: { span: 21 }
-        output: ema_21
-        lookback: 21
-      - name: ema_trend
-        type: trend
-        inputs: [close]
-        params: { span: 50 }
-        output: ema_50
-        lookback: 50
-      - name: sma_200
-        type: trend
-        inputs: [close]
-        params: { window: 200 }
-        output: sma_200
-        lookback: 200
-      - name: macd
-        type: trend
-        inputs: [close]
-        params: { fast: 12, slow: 26, signal: 9 }
-        outputs: [macd, macd_signal, macd_hist]
-        lookback: 35
-      - name: adx
-        type: trend
-        inputs: [high, low, close]
-        params: { window: 14 }
-        outputs: [adx, plus_di, minus_di]
-        lookback: 28
-      - name: rsi
-        type: momentum
-        inputs: [close]
-        params: { window: 14 }
-        output: rsi_14
-        lookback: 15
-      - name: atr
-        type: volatility
-        inputs: [high, low, close]
-        params: { window: 14 }
-        output: atr_14
-        lookback: 15
-      - name: bollinger
-        type: volatility
-        inputs: [close]
-        params: { window: 20, std: 2.0 }
-        outputs: [bb_mid, bb_upper, bb_lower, bb_width, bb_pctb]
-        lookback: 20
-      - name: vwap
-        type: volume
-        inputs: [high, low, close, volume]
-        output: vwap
-        lookback: 1
-        reset: session
+  regime:
+    per_window_n:
+      - er_{n}
+      - chop_{n}
+    notes: "er = efficiency ratio 0-1 (1=trend, 0=chop); chop = choppiness 0-100. Both from pandas_ta_classic."
 
-# Composite features derived from both timeframes (computed later in Gold layer),
-# documented here for discoverability.
-composite:
-  - name: trend_alignment
-    description: 1 when 5m ema_9 > ema_21 and 1h ema_9 > ema_21 else 0 (long-bias gate).
-  - name: atr_ratio_5m_1h
-    description: 5m atr_14 / 1h atr_14 (relative volatility scale).
-  - name: breakout_score
-    description: (close - bb_mid) / (bb_upper - bb_mid) on 5m, gated by 1h adx > 25.
+  candle_structure:           # no window
+    - bar_body_ratio
+    - bar_upper_wick_ratio
+    - bar_lower_wick_ratio
+    - bar_clv                 # -1..+1, (close-low)-(high-close) / range
+
+  volume:
+    no_window: [vwap]          # session-anchored (see session_anchors), cumulative within session
+    per_window_n:
+      - vol_sma_{n}
+      - vol_rel_{n}
+      - mfi_{n}
+      - cmf_{n}
+    notes: "vol_rel = volume / its SMA; tick volume is an activity proxy; cmf from pandas_ta_classic."
+
+  derived:                    # scale-free / ATR-normalized
+    per_window_n:
+      - atr_pct_{n}
+      - ema_dist_{n}
+      - dc_pos_{n}
+      - dist_high_{n}
+      - dist_low_{n}
+    macd_per_pair:
+      - ema_spread_{f}_{s}
+      - macd_hist_atr_{f}_{s}
+      - vol_ratio_{f}_{s}
+    notes: "atr_pct = atr/close; ema_dist = (close-ema)/atr_24; dc_pos = 0-1 position in Donchian channel; dist_high/low = ATR-normalized distance to the PREVIOUS n-bar extreme (already shift(1) -> lookahead-safe); vol_ratio = atr_f/atr_s."
+
+  time_cyclic:                # no window
+    - hour_sin
+    - hour_cos
+    - dow_sin
+    - dow_cos
+
+  flags:                      # int8 0/1, input signals (never impute)
+    - is_gap_bar              # gap since previous bar's close exceeds one period
+    - is_partial              # bar built from fewer 1-min bars than the standard count
+    - is_near_market_close    # Friday, within 2h before the session anchor
+
+  # 5m table ONLY — last closed 1h bar projected via as-of join on close_time (no lookahead).
+  5m_context:
+    per_window_n:
+      - h1_ema_dist_{n}
+      - h1_adx_{n}
+      - h1_rsi_{n}
+      - h1_er_{n}
+      - h1_atr_pct_{n}
+
+# ---------------------------------------------------------------------------
+# Column counts (verified against the built tables)
+# ---------------------------------------------------------------------------
+column_counts:
+  ohlcv_1h_features: 234
+  ohlcv_5m_features: 259     # = 234 + 25 (h1_* block, 5 windows x 5 columns)

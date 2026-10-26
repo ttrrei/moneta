@@ -83,7 +83,7 @@ moneta/
 ├── config/
 │   ├── setting.example.yml      ← template (oci.par_url, oanda.*); setting.yml is git-ignored
 │   ├── history_map.yml          ← per-instrument backfill ranges
-│   └── indicators.yml           ← ⚠ legacy indicator list (see "Known inconsistencies" below)
+│   └── indicators.yml           ← indicator/feature spec (matches pipeline/indicators.py)
 ├── tests/                       ← pytest unit tests for pipeline (no network)
 └── data/                        ← Parquet tables + metadata.duckdb (git-ignored contents)
 ```
@@ -101,14 +101,13 @@ moneta/
 Machine limits: **2 CPUs, ~8 GB RAM** — keep backtests a per-instrument loop; never
 load all 21 instruments' 5m frames at once (>10 GB). No network is needed to backtest.
 
-## Known inconsistencies (fix before relying on the listed file)
+## Known gotchas
 
-- **`config/indicators.yml` is stale.** It lists classic US-equity windows
-  (`ema_9/21/50`, `sma_200`, `rsi_14`, `cci_20`, `bb(20)`, `kc(20,14)`, `obv`,
-  `vwap` "per UTC day"). The **implemented** grid is the CFD whitelist above
-  (`N ∈ {6,12,24,60,120}`, `vwap` session-anchored per asset class, `obv` unused).
-  Treat `pipeline/indicators.py` + `indicators.md` as correct; update or delete the
-  YAML to match.
+- **`config/indicators.yml`** is a readable spec, **not** code — it is not loaded at
+  runtime. If it and `pipeline/indicators.py` ever disagree, the code wins; fix the YAML
+  in the same change. (A legacy version of this file listed stale US-equity windows; it was
+  rewritten to match the implemented CFD grid. Original preserved in the session artifacts
+  folder as `indicators.yml.legacy.bak`.)
 - **`metadata.duckdb` is single-user.** Close any VS Code DuckDB panel (file lock)
   before writing to it.
 
