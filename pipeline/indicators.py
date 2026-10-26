@@ -27,6 +27,8 @@ from typing import Iterable
 
 import numpy as np
 import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 import talib
 
 import pandas_ta_classic as ptac
@@ -455,7 +457,6 @@ def compute_instrument_features(
     session = session_reset_index(times, anchor)
     tp = (h + l + c) / 3.0
     vwap = vwap_within_session(tp, v, session)
-    ema24 = talib.EMA(c, timeperiod=NORM_ATR_N)
     atr24 = talib.ATR(h, l, c, timeperiod=NORM_ATR_N)
 
     aux: dict = {"vwap": vwap, "atr_norm": atr24}
@@ -538,11 +539,92 @@ def _read_instrument(
     return df
 
 
-def _atomic_parquet(df: pd.DataFrame, target: Path) -> None:
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_name(target.stem + ".tmp.parquet")
-    df.to_parquet(tmp, index=False)
-    tmp.replace(target)
+def _parquet_schema(df: pd.DataFrame) -> pa.Schema:
+    """Arrow schema for a feature frame.
+
+    The 8 OHLCV columns keep their source types; explicit flags become int8;
+    everything else (all computed features, incl. ``h1_*``) is float32
+    (spec section 2: float32 at write time).
+    """
+    fields = []
+    for name in df.columns:
+        if name == "instrument":
+            fields.append(pa.field(name, pa.string()))
+        elif name == "time":
+            fields.append(pa.field(name, pa.timestamp("us", tz="UTC")))
+        elif name in ("n_bars",):
+            fields.append(pa.field(name, pa.int64()))
+        elif name in OHLCV_COLS:
+            fields.append(pa.field(name, pa.float64()))
+        elif name in _FLAG_COLS:
+            fields.append(pa.field(name, pa.int8()))
+        else:
+            fields.append(pa.field(name, pa.float32()))
+    return pa.schema(fields)
+
+
+_FLAG_COLS = ("is_gap_bar", "is_partial", "is_near_market_close")
+
+
+class _ParquetSink:
+    """Append-only Parquet writer that finalises atomically (tmp + rename)."""
+
+    def __init__(self, target: Path, schema: pa.Schema) -> None:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        self._tmp = target.with_name(target.stem + ".tmp.parquet")
+        self._sink = pa.OSFile(str(self._tmp), "wb")
+        self._writer = pq.ParquetWriter(self._sink, schema)
+        self._schema = schema
+        self.rows = 0
+
+    def write(self, frame: pd.DataFrame) -> None:
+        table = pa.table({name: frame[name] for name in self._schema.names},
+                         schema=self._schema)
+        self._writer.write_table(table, row_group_size=131_072)
+        self.rows += table.num_rows
+
+    def finish(self, target: Path) -> int:
+        self._writer.close()
+        self._sink.close()
+        self._tmp.replace(target)
+        return self.rows
+
+    def abort(self) -> None:
+        try:
+            self._writer.close()
+        finally:
+            self._sink.close()
+            if self._tmp.exists():
+                self._tmp.unlink()
+
+
+def _build_one_instrument(
+    src5: str,
+    src1: str,
+    inst: str,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Compute the 1h and 5m feature frames for one instrument (warm-up dropped).
+
+    Returns ``(frame_5m, frame_1h)``; both carry the 8 OHLCV columns plus
+    computed features (float64).  The 5m frame includes the as-of ``h1_*``
+    background columns.
+    """
+    # ---- 1h features -----------------------------------------------------
+    h = _read_instrument(src1, inst)
+    if len(h) < WARMUP_DROP + 1:
+        raise ValueError(f"{inst}: not enough 1h bars ({len(h)})")
+    h_feats = compute_instrument_features(h, 3600)
+    h_frame = pd.concat([h[list(OHLCV_COLS)], h_feats], axis=1).iloc[WARMUP_DROP:].reset_index(drop=True)
+
+    # ---- 5m features + as-of 1h join -------------------------------------
+    m = _read_instrument(src5, inst)
+    if len(m) < WARMUP_DROP + 1:
+        raise ValueError(f"{inst}: not enough 5m bars ({len(m)})")
+    m_feats = compute_instrument_features(m, 300)
+    m_frame = pd.concat([m[list(OHLCV_COLS)], m_feats], axis=1)
+    m_frame = asof_join_h1_features(m_frame, h_frame, 300, 3600)
+    m_frame = m_frame.iloc[WARMUP_DROP:].reset_index(drop=True)
+    return m_frame, h_frame
 
 
 def build_features(
@@ -552,10 +634,11 @@ def build_features(
     out_1h: str | Path = "data/ohlcv_1h_features/ohlcv_1h_features.parquet",
     instruments: list[str] | None = None,
 ) -> dict[str, int]:
-    """Regenerate both feature tables from the OHLCV sources.
+    """Regenerate both feature tables, streaming per instrument to disk.
 
     Computation is float64; written Parquet is float32 (spec section 2).
-    Warm-up rows (first WARMUP_DROP bars per instrument) are dropped.
+    Warm-up rows (first WARMUP_DROP bars per instrument) are dropped.  Only one
+    instrument's worth of data is held in memory at a time.
     """
     import duckdb
 
@@ -571,48 +654,32 @@ def build_features(
         conn.close()
     if instruments is not None:
         insts = [i for i in insts if i in set(instruments)]
+    if not insts:
+        raise ValueError("No instruments selected")
 
-    # ---- 1h features (independent) --------------------------------------
-    h1_frames = []
-    for inst in insts:
-        df = _read_instrument(src1, inst)
-        if len(df) < WARMUP_DROP + 1:
-            raise ValueError(f"{inst}: not enough 1h bars ({len(df)})")
-        feats = compute_instrument_features(df, 3600)
-        frame = pd.concat([df[list(OHLCV_COLS)], feats], axis=1)
-        h1_frames.append(frame.iloc[WARMUP_DROP:].reset_index(drop=True))
-        print(f"1h {inst}: {len(frame)} rows ({len(feats.columns)} features)")
-    h1_all = pd.concat(h1_frames, ignore_index=True)
-
-    # ---- 5m features + as-of 1h join -------------------------------------
-    m_frames = []
-    for inst in insts:
-        df = _read_instrument(src5, inst)
-        if len(df) < WARMUP_DROP + 1:
-            raise ValueError(f"{inst}: not enough 5m bars ({len(df)})")
-        feats = compute_instrument_features(df, 300)
-        frame = pd.concat([df[list(OHLCV_COLS)], feats], axis=1)
-        h1_inst = h1_all[h1_all["instrument"] == inst]
-        frame = asof_join_h1_features(frame, h1_inst, 300, 3600)
-        m_frames.append(frame.iloc[WARMUP_DROP:].reset_index(drop=True))
-        print(f"5m {inst}: {len(frame)} rows ({len(feats.columns)} features)")
-    m5_all = pd.concat(m_frames, ignore_index=True)
-
-    # ---- float32 write (spec section 2) ----------------------------------
-    float32 = pd.Float32Dtype()
-
-    def to_f32(frame: pd.DataFrame) -> pd.DataFrame:
-        out = frame.copy()
-        for col in out.columns:
-            if out[col].dtype == np.float64:
-                out[col] = out[col].astype(float32)
-        return out
-
-    _atomic_parquet(to_f32(m5_all), Path(out_5m))
-    _atomic_parquet(to_f32(h1_all), Path(out_1h))
-    print(f"Wrote {out_5m} ({len(m5_all)} rows, {m5_all.shape[1]} cols)")
-    print(f"Wrote {out_1h} ({len(h1_all)} rows, {h1_all.shape[1]} cols)")
-    return {"5m": len(m5_all), "1h": len(h1_all)}
+    # Probe the first instrument once to lock both Parquet schemas.
+    probe_5m, probe_1h = _build_one_instrument(src5, src1, insts[0])
+    sink_5m = _ParquetSink(Path(out_5m), _parquet_schema(probe_5m))
+    sink_1h = _ParquetSink(Path(out_1h), _parquet_schema(probe_1h))
+    print(f"{insts[0]}: 5m {len(probe_5m)} rows ({probe_5m.shape[1]} cols) | "
+          f"1h {len(probe_1h)} rows ({probe_1h.shape[1]} cols)")
+    try:
+        sink_5m.write(probe_5m)
+        sink_1h.write(probe_1h)
+        for inst in insts[1:]:
+            m_frame, h_frame = _build_one_instrument(src5, src1, inst)
+            sink_5m.write(m_frame)
+            sink_1h.write(h_frame)
+            print(f"{inst}: 5m {len(m_frame)} rows | 1h {len(h_frame)} rows")
+    except BaseException:
+        sink_5m.abort()
+        sink_1h.abort()
+        raise
+    rows_5m = sink_5m.finish(Path(out_5m))
+    rows_1h = sink_1h.finish(Path(out_1h))
+    print(f"Wrote {out_5m} ({rows_5m} rows, {len(sink_5m._schema.names)} cols)")
+    print(f"Wrote {out_1h} ({rows_1h} rows, {len(sink_1h._schema.names)} cols)")
+    return {"5m": rows_5m, "1h": rows_1h}
 
 
 def main() -> None:
