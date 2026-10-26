@@ -6,6 +6,11 @@
 > **Read order:** this file → [STRATEGY_REGISTRY.md](STRATEGY_REGISTRY.md) →
 > start building. If any fact below stops matching reality, fix this file in
 > the same change.
+>
+> **AI task "generate a strategy"?** Use the dedicated pair instead:
+> [generated_strategy.md](generated_strategy.md) (the *what*) →
+> [WORKFLOW.md](WORKFLOW.md) (the *how*, steps 0–7 with gates). This file
+> remains the authoritative data contract those docs build on.
 
 ---
 
@@ -120,6 +125,8 @@ in `pipeline/indicators.py` deliberately if you truly need one.
 
 ```
 strategy/
+├── generated_strategy.md    ← generation brief (AI entry point: the "what")
+├── WORKFLOW.md              ← execution playbook (the "how": steps 0–7 + gates)
 ├── STRATEGY_BACKGROUND.md   ← this file (read me first)
 ├── STRATEGY_REGISTRY.md     ← check before creating, update after running
 ├── code/                    ← one self-contained CLI .py per strategy
@@ -178,14 +185,19 @@ feature slice and loop in Python/NumPy, enforcing signal-at-T / fill-at-T+1-open
 
 ## 8. New-strategy checklist
 
+> For the AI-assisted loop (commands, gates, failure paths), follow
+> [WORKFLOW.md](WORKFLOW.md) with [generated_strategy.md](generated_strategy.md).
+> The manual checklist below is the same discipline in short form.
+
 1. Read this file + the registry. Already listed as S-01…S-NN? → stop.
 2. Add a `candidate` row (next `S-NN`) to [STRATEGY_REGISTRY.md](STRATEGY_REGISTRY.md).
 3. Create `strategy/code/strategy_<name>.py`, self-contained CLI with
-   `--instrument`, `--since`, `--parquet`, `--json`; load via DuckDB filtered on
-   `instrument` (fast); enforce the §4 rules; print a JSON metrics block
+   `--instrument`, `--since`, `--parquet`, `--cost-bps` (default 2), `--json`;
+   load via DuckDB filtered on `instrument` (fast); enforce the §4 rules;
+   print a JSON metrics block
    (`n_trades, win_rate, total_return, buyhold_return, max_dd, avg_trade, sharpe, exposure`).
 4. Run on **EUR_USD + a trending instrument (BTC_USD) + a metal (XAU_USD)**,
-   full history **and** a recent 12-month slice.
+   full history **and** a recent 12-month slice, at **0 / 2 / 5 bps**.
 5. Write `strategy/docs/strategy_<name>_report.md`: results vs buy-hold,
    why it wins/loses, cost sensitivity (0/2/5 bps).
 6. Update the registry: status, last run, result. If it fails → **rejected** + reason.

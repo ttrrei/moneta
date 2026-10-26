@@ -24,7 +24,8 @@ registry that prevents duplicate work.
 |---|---|---|
 | Understand the business case, goals, scope, success criteria | [BRD.md](BRD.md) | [SAD.md](SAD.md) |
 | Understand system architecture, data flow, components, invariants | [SAD.md](SAD.md) | [indicators.md](indicators.md) |
-| Design / code / test a **new strategy** | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
+| **Generate a new strategy** (AI task: "follow the action list and do the downstream jobs") | `strategy/generated_strategy.md` (the *what*) → `strategy/WORKFLOW.md` (the *how*: steps 0–7 with gates) | `strategy/STRATEGY_REGISTRY.md`, [data_profile.md](data_profile.md) |
+| Design / code / test a **new strategy** by hand | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
 | Understand the **feature/indicator engine** (259/234 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` (source of truth) |
 | Understand the **data** (rows, grain, dtypes, gotchas) | [data_profile.md](data_profile.md) | `pipeline/sanity_check.py`, `pipeline/profile_check.py` |
 | Ingest / backfill data | `pipeline/README.md` | `pipeline/extract_oanda.py`, `load_data.py`, `aggregate_ohlcv.py` |
@@ -67,6 +68,8 @@ moneta/
 │   ├── indicators.md            ← feature-engine spec (authoritative)
 │   └── data_profile.md          ← data profile (rows/grain/dtypes)
 ├── strategy/
+│   ├── generated_strategy.md    ← generation brief: the "what" (read first for AI strategy tasks)
+│   ├── WORKFLOW.md              ← execution playbook: the "how" (steps 0–7, gates, failure paths)
 │   ├── STRATEGY_BACKGROUND.md   ← read before coding a strategy (authoritative)
 │   ├── STRATEGY_REGISTRY.md     ← register/check strategies (authoritative)
 │   ├── code/strategy_rsi.py     ← reference backtest (S-01, self-contained CLI)

@@ -13,6 +13,7 @@ Run from the repo root::
 
     python strategy/code/strategy_rsi.py                     # EUR_USD, all history
     python strategy/code/strategy_rsi.py --instrument BTC_USD --since 2023-01-01
+    python strategy/code/strategy_rsi.py --cost-bps 0        # cost sensitivity (0/2/5)
 """
 
 from __future__ import annotations
@@ -168,13 +169,15 @@ def main() -> None:
     ap.add_argument("--instrument", default="EUR_USD")
     ap.add_argument("--since", default=None, help="ISO date, e.g. 2023-01-01")
     ap.add_argument("--parquet", default=FEATURES_PARQUET)
+    ap.add_argument("--cost-bps", type=float, default=COST_BPS,
+                    help="one-way transaction cost in basis points (default 2)")
     ap.add_argument("--json", default=None, help="also write results JSON to path")
     args = ap.parse_args()
 
     df = load_bars(args.parquet, args.instrument, args.since)
     if len(df) < 1_000:
         raise SystemExit(f"Only {len(df)} bars loaded; not enough to backtest.")
-    result = run_backtest(df, args.instrument)
+    result = run_backtest(df, args.instrument, cost_bps=args.cost_bps)
     print(json.dumps(asdict(result), indent=2))
     if args.json:
         Path(args.json).write_text(json.dumps(asdict(result), indent=2))
