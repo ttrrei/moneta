@@ -35,8 +35,8 @@ frames into memory at once (>10 GB).
 
 | Layer | File | Rows | Cols | Grain |
 |---|---|---:|---:|---|
-| **5m features** | `data/ohlcv_5m_features/ohlcv_5m_features.parquet` | 9,926,663 | **259** | one 5-min bar / instrument |
-| **1h features** | `data/ohlcv_1h_features/ohlcv_1h_features.parquet` | 826,353 | **234** | one 1-hour bar / instrument |
+| **5m features** | `data/ohlcv_5m_features/ohlcv_5m_features.parquet` | 9,926,663 | **305** | one 5-min bar / instrument |
+| **1h features** | `data/ohlcv_1h_features/ohlcv_1h_features.parquet` | 826,353 | **270** | one 1-hour bar / instrument |
 | 5m raw OHLCV | `data/ohlcv_5m/ohlcv_5m.parquet` | 9,934,223 | 8 | pre-features |
 | 1h raw OHLCV | `data/ohlcv_1h/ohlcv_1h.parquet` | 833,913 | 8 | pre-features |
 | 1m raw | `data/all_data/all_data.parquet` | 48,588,451 | — | Bronze source |
@@ -61,26 +61,31 @@ frames into memory at once (>10 GB).
 
 ---
 
-## 3. Feature columns (all 259 / 234, grouped)
+## 3. Feature columns (all 305 / 270, grouped)
 
-The 5m table = the 1h table **plus** the `h1_*` context block (last 25 columns).
+The 5m table = the 1h table **plus** the `h1_*` context block (last 35 columns).
 Window grid is a **hard whitelist**: `N ∈ {6, 12, 24, 60, 120}`; MACD pairs only
 `(6,24)`, `(12,60)`, `(24,120)`. **Do not invent new windows** — extend the grid
-in `pipeline/indicators.py` deliberately if you truly need one.
+in `pipeline/indicators.py` deliberately if you truly need one. **Non-window
+parameters are free but named**: PSAR accel/max and the Supertrend multiplier are
+not whitelisted (B10/B11) — they are explicit constants
+(`pipeline/indicators.py` → `PSAR_PARAMS`, `ST_MULTS`; library
+`indicators/psar.py`, `indicators/supertrend.py`), and their values are baked
+into the column names (e.g. `st_24_2p5`, `psar_0p02_0p2`).
 
 | Family | Columns (repeat per N = 6,12,24,60,120) |
 |---|---|
 | Base | `instrument, time, open, high, low, close, volume, n_bars` |
-| **Trend** | `sma_N`, `ema_N`, `adx_N`, `plus_di_N`, `minus_di_N`, `aroon_up_N`, `aroon_down_N`, `dc_upper_N`, `dc_lower_N`, `dc_mid_N` · plus MACD triples `macd_f_s`, `macd_signal_f_s`, `macd_hist_f_s` (signal period = fast) |
+| **Trend** | `sma_N`, `ema_N`, `adx_N`, `plus_di_N`, `minus_di_N`, `aroon_up_N`, `aroon_down_N`, `dc_upper_N`, `dc_lower_N`, `dc_mid_N` · plus MACD triples `macd_f_s`, `macd_signal_f_s`, `macd_hist_f_s` (signal period = fast) · `st_N_K`, `st_dir_N_K` (Supertrend: length N from the grid, ATR multiplier K free, default 2 and 3; dir ±1) · `psar_A_M`, `psar_dir_A_M` (Wilder SAR, free accel/max, default 0.02/0.2 and 0.01/0.1; no window) |
 | **Momentum** | `rsi_N`, `roc_N`, `mom_N`, `stoch_k_N`, `stoch_d_N`, `cci_N`, `willr_N` |
 | **Volatility** | `tr` (no window), `atr_N`, `bb_mid_N`, `bb_upper_N`, `bb_lower_N`, `bb_width_N`, `bb_pctb_N`, `kc_mid_N`, `kc_upper_N`, `kc_lower_N`, `sqz_on_N` (0/1: BB inside Keltner), `hv_N` (log-return std) |
 | **Regime** | `er_N` (efficiency ratio 0–1; 1=trend, 0=chop), `chop_N` (choppiness 0–100; >61.8 range, <38.2 trend) |
 | **Candle** (no window) | `bar_body_ratio`, `bar_upper_wick_ratio`, `bar_lower_wick_ratio`, `bar_clv` (−1…+1) |
 | **Volume** (tick volume = activity proxy) | `vol_sma_N`, `vol_rel_N` (=vol/its SMA), `mfi_N`, `cmf_N` · `vwap` (no window, session-anchored) |
-| **Derived / scale-free** | `atr_pct_N` (=atr/close), `ema_dist_N` ((close−ema)/atr24), `ema_spread_f_s`, `macd_hist_atr_f_s`, `vol_ratio_f_s`, `dc_pos_N` (0–1 in channel), `dist_high_N`, `dist_low_N` (ATR distance to prior N-bar extreme, pre-shifted → lookahead-safe) |
+| **Derived / scale-free** | `atr_pct_N` (=atr/close), `ema_dist_N` ((close−ema)/atr24), `ema_spread_f_s`, `macd_hist_atr_f_s`, `vol_ratio_f_s`, `dc_pos_N` (0–1 in channel), `dist_high_N`, `dist_low_N` (ATR distance to prior N-bar extreme, pre-shifted → lookahead-safe), `st_dist_N_K`, `psar_dist_A_M` (signed ATR distance to trailing-stop line) |
 | **Time cyclic** | `hour_sin`, `hour_cos`, `dow_sin`, `dow_cos` |
 | **Flags** (int8 0/1) | `is_gap_bar` (gap since prev close), `is_partial` (bar built from < full 1m count), `is_near_market_close` (Fri, 2h before session anchor) |
-| **1h context (5m table only)** | `h1_ema_dist_N`, `h1_adx_N`, `h1_rsi_N`, `h1_er_N`, `h1_atr_pct_N` — as-of joined, **already lookahead-safe** |
+| **1h context (5m table only)** | `h1_ema_dist_N`, `h1_adx_N`, `h1_rsi_N`, `h1_er_N`, `h1_atr_pct_N`, `h1_st_dir_N_K` — as-of joined, **already lookahead-safe** |
 
 **Semantics you must respect:**
 - `stoch_d_N` = SMA-6 of raw `%K` (built with `STOCHF`, not the smoothed `STOCH`).
@@ -147,9 +152,17 @@ strategy/
 ├── WORKFLOW.md              ← execution playbook (the "how": steps 0–7 + gates)
 ├── STRATEGY_BACKGROUND.md   ← this file (read me first)
 ├── STRATEGY_REGISTRY.md     ← check before creating, update after running
+├── engine.py                ← shared backtest engine (accounting + metrics)
+├── strategy_rsi_lib.py      ← S-01 rule (shared by CLI + matrix runner)
+├── run_matrix.py            ← 3 inst × 2 windows × 3 cost tiers → strategy/results/
 ├── code/                    ← one self-contained CLI .py per strategy
 │   └── strategy_rsi.py
 └── docs/                    ← one report .md per strategy
+
+indicators/                  ← our own indicator library (TA-Lib gaps)
+├── supertrend.py            ← causal Supertrend (line + direction), tested in isolation
+├── psar.py                  ← PSAR (talib.SAR) + our direction convention
+└── utils.py                 ← param_tag, validate_free_params
     └── strategy_rsi_report.md
 
 pipeline/

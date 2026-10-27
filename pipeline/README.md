@@ -84,23 +84,32 @@ files survive an OCI re-sync.
 
 `indicators.py` implements the **feature engine** (the "Gold" wide tables) —
 the single source of truth for the 5m/1h feature matrix. It reads the 5m/1h
-OHLCV tables and, per instrument, computes **259 (5m) / 234 (1h) feature
+OHLCV tables and, per instrument, computes **305 (5m) / 270 (1h) feature
 columns** across trend, momentum, volatility, regime, candle-structure,
 volume-proxy, and derived families, then drops the 360-bar warm-up head and
 streams the result to Parquet (registering metadata + views in DuckDB).
 
 ```bash
 .venv/bin/python -m pipeline.indicators    # rebuild both feature tables (~5 min)
+# free (non-window) parameters, e.g. different PSAR sets / Supertrend multipliers:
+.venv/bin/python -m pipeline.indicators --psar 0.02:0.2 --st-mult 3
 ```
 
 The spec is `docs/indicators.md`; the readable (non-code) mirror is
 `config/indicators.yml`. If the two ever disagree, **`pipeline/indicators.py`
 wins** — update the spec in the same change.
 
+**Custom indicators live in the `indicators/` package** (our own code, not
+TA-Lib): `supertrend.py` (causal Supertrend line + direction — TA-Lib has no
+Supertrend), `psar.py` (PSAR line via `talib.SAR` + our direction convention),
+`utils.py` (shared helpers). They are pure NumPy, causal, and **tested in
+isolation** in `tests/test_indicators.py`; the pipeline imports them rather
+than re-implementing.
+
 The feature engine is covered by the six quality gates in
 `tests/test_indicators.py` (causality/prefix-invariance, bounds & invariants,
-degenerate-input safety, and the 1h→5m as-of alignment), runnable with no real
-data and no network.
+degenerate-input safety, the 1h→5m as-of alignment, and the custom-indicator
+tests above), runnable with no real data and no network.
 
 ## Not yet implemented
 

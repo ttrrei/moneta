@@ -8,7 +8,7 @@ any environment and are the intended basis for a future CI.
 Run with:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q        # 61 tests
+.venv/bin/python -m pytest tests/ -q        # 80 tests
 ```
 
 ## What is covered
@@ -21,13 +21,20 @@ Run with:
 - `test_aggregate_ohlcv.py` — 1m → 5m/1h aggregation (buckets, OHLC, partial
   bars, dedup).
 - `test_indicators.py` — the **six quality gates** for the feature engine
-  (`pipeline/indicators.py`) on synthetic data:
+  (`pipeline/indicators.py`) **plus the custom `indicators/` library** (PSAR,
+  Supertrend) on synthetic data:
   - Gate 1 — causality / prefix invariance + no-future-leakage;
   - Gate 3 — bounds & invariants (RSI/Stoch ∈ [0,100], ATR ≥ 0,
     bb_lower ≤ bb_upper, binary flags);
   - Gate 4 — degenerate (zero-amplitude) input produces no Inf and no crash;
   - Gate 6 — the 1h→5m as-of join never exposes an unclosed 1h bar;
-  - Gate 5 (smoke) — RSI/SMA parity against a direct TA-Lib call.
+  - Gate 5 (smoke) — RSI/SMA parity against a direct TA-Lib call, and
+    Supertrend direction parity against `pandas_ta_classic.supertrend`
+    (agreement > 99.8%);
+  - **PSAR / Supertrend** — column presence, free-param handling (not
+    whitelisted, but windows still are), direction = side of price, Supertrend
+    line on the trend side, wider multiplier flips less, flip-on-close, and
+    prefix-invariance under custom parameters.
 - `test_metrics.py` — **golden-value tests for the shared engine**
   (`strategy/engine.py`): exact accounting on known price paths, long/short
   symmetry, force-close, next-open fill, the **corrected annualised Sharpe**

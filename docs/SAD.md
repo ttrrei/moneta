@@ -30,8 +30,8 @@ tables.
                                                    │ indicators (feature engine)
                                                    v
                               ┌──────────────────────────────────────────────┐
-                              │ ohlcv_5m_features (259 cols)                │
-                              │ ohlcv_1h_features (234 cols)  ← 1h as-of → 5m
+                              │ ohlcv_5m_features (305 cols)               │
+                              │ ohlcv_1h_features (270 cols)  ← 1h as-of → 5m
                               └──────────────────────┬───────────────────────┘
                                                      │ read via DuckDB (filter on instrument)
                                                      v
@@ -69,7 +69,8 @@ tables.
 | `extract_oanda.py` | OANDA gap-fill / history backfill → raw CSV | Paginate at 5k limit; per-month CSVs + `.empty` markers; layered retries; 401/403 aborts. |
 | `load_data.py` | Raw CSV → `all_data.parquet` + DuckDB catalog | De-dup on `(instrument,time)`; drop incomplete; register view. |
 | `aggregate_ohlcv.py` | 1m → 5m/1h OHLCV | UTC bucketing; OHLCV semantics; `n_bars` for partial detection. |
-| `indicators.py` | Feature engine (259/234 cols) | TA-Lib source of truth; causality; CFD grid; no synthetic fill; float64→float32. |
+| `indicators.py` | Feature engine (305/270 cols) | TA-Lib source of truth; causality; CFD grid; no synthetic fill; float64→float32. |
+| `indicators/` (pkg) | Custom indicators (Supertrend, PSAR dir) | Causal, pure-NumPy modules; tested in isolation (`tests/test_indicators.py`); imported by `pipeline/indicators.py`. |
 | `sanity_check.py` | "Is anything broken?" | 0 dup keys / 0 bad OHLC / 0 over-full bars, else exit 1. |
 | `profile_check.py` | Judgement profiling + `safe_mtf_view` | Shows naive-vs-safe 1h→5m join leak; gaps/sessions/partial/spread/quality. |
 | `table_catalog.py` | Register Parquet tables + views in DuckDB | Identifier/literal quoting; upsert catalog; drop+recreate view. |

@@ -1,16 +1,21 @@
 # Indicator & feature spec — moneta / Nova (source of truth: pipeline/indicators.py)
 #
 # This file describes the EXACT feature engine that produces:
-#   * data/ohlcv_5m_features/ohlcv_5m_features.parquet  (259 columns)
-#   * data/ohlcv_1h_features/ohlcv_1h_features.parquet  (234 columns)
+#   * data/ohlcv_5m_features/ohlcv_5m_features.parquet  (305 columns)
+#   * data/ohlcv_1h_features/ohlcv_1h_features.parquet  (270 columns)
 #
 # IMPORTANT:
-#   - The authoritative implementation is `pipeline/indicators.py`. If this file
-#     and that code ever disagree, the code wins — update this file in the same
-#     change (see docs/README.md "Maintenance rule").
-#   - The 5m table = the 1h table PLUS the `h1_*` context block (last 25 columns).
+#   - The authoritative implementation is `pipeline/indicators.py` (orchestration
+#     + TA-Lib calls); the custom indicators (Supertrend, PSAR direction) live in
+#     the `indicators/` package and are imported there. If any of these and this
+#     file disagree, the code wins — update this file in the same change
+#     (see docs/README.md "Maintenance rule").
+#   - The 5m table = the 1h table PLUS the `h1_*` context block (last 35 columns).
 #   - Do NOT invent new windows. The grid below is a hard whitelist enforced by
 #     `validate_grid()`; only the values listed here are allowed.
+#   - Free (non-window) parameters (PSAR accel/max, Supertrend multiplier) are
+#     NOT whitelisted — they are named constants (B10/B11), overridden per run
+#     via `--psar` / `--st-mult`. Their values appear in the column names.
 #   - A prior legacy version of this file listed classic US-equity windows
 #     (ema_9/21/50, sma_200, rsi_14, cci_20, bb(20), kc(20,14), obv, vwap "per
 #     UTC day"). That has been superseded by the CFD grid below and removed.
@@ -28,6 +33,10 @@ parameter_grid:
   norm_atr: 24                                  # window for ATR-normalized features
   bb_sigma: 2.0                                 # Bollinger population-std (ddof=0)
   keltner_mult: 2.0                             # Keltner = ema_N +/- 2.0 * atr_N
+  # Free (non-window) parameters: NOT restricted to the N grid / whitelist.
+  # Override per run: python -m pipeline.indicators --psar 0.02:0.2,0.01:0.1 --st-mult 2,3
+  psar_params: [[0.02, 0.20], [0.01, 0.10]]     # Wilder SAR (acceleration, maximum)
+  supertrend_mults: [2.0, 3.0]                  # Supertrend ATR multiplier (length = windows_n)
   stochastic_d_sma: 6                           # %D = SMA-6 of raw %K (STOCHF, not STOCH)
   eps: 1.0e-12
   warmup_drop: 360                              # 3 * max(N); leading warm-up rows dropped
@@ -97,7 +106,13 @@ timeframes:
       - macd_{f}_{s}
       - macd_signal_{f}_{s}
       - macd_hist_{f}_{s}
-    notes: "TA-Lib; dc = Donchian channel; aroon = AROON up/down; MACD signal period = fast."
+    per_psar_param:            # a,m = accel,max tags (0.02 -> 0p02); dir = +1/-1
+      - psar_{a}_{m}
+      - psar_dir_{a}_{m}
+    per_window_n_x_mult:       # k = multiplier tag (2.5 -> 2p5); dir = +1 up / -1 down
+      - st_{n}_{k}
+      - st_dir_{n}_{k}
+    notes: "TA-Lib; dc = Donchian channel; aroon = AROON up/down; MACD signal period = fast. PSAR via talib.SAR (direction ours); Supertrend is our own causal implementation (indicators/supertrend.py)."
 
   momentum:
     per_window_n:
@@ -154,11 +169,15 @@ timeframes:
       - dc_pos_{n}
       - dist_high_{n}
       - dist_low_{n}
+    per_window_n_x_mult:
+      - st_dist_{n}_{k}       # k in supertrend_mults (per n x k)
+    per_psar_param:
+      - psar_dist_{a}_{m}     # (close - psar) / atr_24
     macd_per_pair:
       - ema_spread_{f}_{s}
       - macd_hist_atr_{f}_{s}
       - vol_ratio_{f}_{s}
-    notes: "atr_pct = atr/close; ema_dist = (close-ema)/atr_24; dc_pos = 0-1 position in Donchian channel; dist_high/low = ATR-normalized distance to the PREVIOUS n-bar extreme (already shift(1) -> lookahead-safe); vol_ratio = atr_f/atr_s."
+    notes: "atr_pct = atr/close; ema_dist = (close-ema)/atr_24; dc_pos = 0-1 position in Donchian channel; dist_high/low = ATR-normalized distance to the PREVIOUS n-bar extreme (already shift(1) -> lookahead-safe); vol_ratio = atr_f/atr_s; st_dist/psar_dist = signed ATR distance to the trailing-stop line (sign = side)."
 
   time_cyclic:                # no window
     - hour_sin
@@ -179,10 +198,12 @@ timeframes:
       - h1_rsi_{n}
       - h1_er_{n}
       - h1_atr_pct_{n}
+    per_window_n_x_mult:
+      - h1_st_dir_{n}_{k}     # 1h Supertrend direction (per n x k)
 
 # ---------------------------------------------------------------------------
 # Column counts (verified against the built tables)
 # ---------------------------------------------------------------------------
 column_counts:
-  ohlcv_1h_features: 234
-  ohlcv_5m_features: 259     # = 234 + 25 (h1_* block, 5 windows x 5 columns)
+  ohlcv_1h_features: 270
+  ohlcv_5m_features: 305     # = 270 + 35 (h1_* block: 5 windows x 5 + 5 windows x 2 Supertrend mults)

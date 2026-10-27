@@ -309,3 +309,168 @@ def test_sma_parity_vs_talib_reference():
         got = f[f"sma_{n}"].to_numpy()
         mask = np.isfinite(ref) & np.isfinite(got)
         assert np.max(np.abs(ref[mask] - got[mask])) < 1e-9, f"SMA_{n} parity failed"
+
+
+# ===========================================================================
+# PSAR + Supertrend — the `indicators/` library (T2.1)
+# ===========================================================================
+
+from indicators import supertrend as _supertrend_fn  # noqa: E402
+from pipeline.indicators import (  # noqa: E402
+    PSAR_PARAMS,
+    ST_MULTS,
+    param_tag,
+)
+
+
+def _tag(x: float) -> str:
+    return param_tag(x)
+
+
+def _h1_cols() -> list[str]:
+    from pipeline.indicators import _h1_feature_columns
+
+    return _h1_feature_columns()
+
+
+def test_psar_and_supertrend_columns_present():
+    f = _features(make_ohlcv(n=1500, seed=21))
+    expected = set()
+    for a, m in PSAR_PARAMS:
+        t = f"{_tag(a)}_{_tag(m)}"
+        expected |= {f"psar_{t}", f"psar_dir_{t}", f"psar_dist_{t}"}
+    for n in N_GRID:
+        for mult in ST_MULTS:
+            t = _tag(mult)
+            expected |= {f"st_{n}_{t}", f"st_dir_{n}_{t}", f"st_dist_{n}_{t}"}
+    assert expected <= set(f.columns)
+    # 1h projection carries the Supertrend direction too.
+    h1 = set(_h1_cols())
+    assert {f"st_dir_{n}_{_tag(m)}" for n in N_GRID for m in ST_MULTS} <= h1
+
+
+def test_free_params_not_whitelisted_but_windows_still_are():
+    df = make_ohlcv(n=1500, seed=22)
+    f = compute_instrument_features(
+        df, 300, psar_params=((0.03, 0.30), (0.015, 0.15)), st_mults=(1.5, 2.5, 4.0)
+    )
+    for col in ("psar_0p03_0p3", "psar_dist_0p015_0p15", "st_24_1p5",
+                "st_dir_6_2p5", "st_dist_120_4"):
+        assert col in f.columns, col
+    assert "psar_0p02_0p2" not in f.columns  # only the requested params are built
+    # ... but time windows stay restricted to the N grid
+    with pytest.raises(ValueError):
+        compute_instrument_features(df, 300, n_grid=(7,))
+    # free params are sanity-checked, not whitelisted
+    with pytest.raises(ValueError):
+        compute_instrument_features(df, 300, psar_params=((0.2, 0.02),))
+    with pytest.raises(ValueError):
+        compute_instrument_features(df, 300, st_mults=(0.0,))
+
+
+def test_custom_params_are_prefix_invariant():
+    df = make_ohlcv(n=2500, seed=23)
+    kw = dict(psar_params=((0.03, 0.30),), st_mults=(1.5, 5.0))
+    full = compute_instrument_features(df, 300, **kw)
+    pre = compute_instrument_features(df.iloc[:1700].reset_index(drop=True), 300, **kw)
+    cols = [c for c in full.columns if c.startswith(("psar", "st_"))]
+    assert cols
+    for col in cols:
+        assert np.allclose(full[col].to_numpy(np.float64)[:1700],
+                           pre[col].to_numpy(np.float64), equal_nan=True), col
+
+
+def test_psar_direction_matches_side_of_price():
+    f = _features(make_ohlcv(n=2000, seed=24)).iloc[WARMUP:]
+    c = make_ohlcv(n=2000, seed=24)["close"].to_numpy()[WARMUP:]
+    for a, m in PSAR_PARAMS:
+        t = f"{_tag(a)}_{_tag(m)}"
+        side = np.sign(c - f[f"psar_{t}"].to_numpy())
+        valid = np.isfinite(side)
+        assert (f[f"psar_dir_{t}"].to_numpy()[valid] == side[valid]).all()
+        assert (np.sign(f[f"psar_dist_{t}"].to_numpy())[valid] == side[valid]).all()
+
+
+@pytest.mark.parametrize("n", N_GRID)
+@pytest.mark.parametrize("mult", ST_MULTS)
+def test_supertrend_line_is_on_the_trend_side(n, mult):
+    f = _features(make_ohlcv(n=2000, seed=25)).iloc[WARMUP:]
+    c = make_ohlcv(n=2000, seed=25)["close"].to_numpy()[WARMUP:]
+    t = _tag(mult)
+    line = f[f"st_{n}_{t}"].to_numpy()
+    d = f[f"st_dir_{n}_{t}"].to_numpy()
+    assert not np.isnan(line).any() and not np.isnan(d).any()
+    # uptrend -> line (lower band) at/below close; downtrend -> at/above close
+    ok = ((d > 0) & (line <= c + 1e-9)) | ((d < 0) & (line >= c - 1e-9))
+    assert ok.all()
+    assert (np.sign(f[f"st_dist_{n}_{t}"].to_numpy()) == d).all()
+
+
+def test_wider_supertrend_multiplier_flips_less():
+    f = compute_instrument_features(make_ohlcv(n=4000, seed=26), 300, st_mults=(1.0, 4.0)).iloc[WARMUP:]
+    flips = lambda col: int((f[col].diff().abs() > 0).sum())
+    assert flips("st_dir_24_4") < flips("st_dir_24_1")
+
+
+def test_supertrend_flips_on_close_through_band():
+    """Hand-made series: steady rise, then a sharp drop must flip to downtrend."""
+    n = 200
+    c = np.r_[np.linspace(100, 120, 150), np.linspace(120, 90, 50)]
+    h, l = c + 0.2, c - 0.2
+    atr = np.full(n, 0.5)
+    _, d = _supertrend_fn(h, l, c, atr, mult=3.0)
+    assert d[100] == 1.0 and d[-1] == -1.0
+
+
+def test_supertrend_no_inf_on_flat_series():
+    """Zero-amplitude input: bands stay finite (atr=0 → bands = hl2), no Inf."""
+    n = 100
+    c = np.full(n, 100.0)
+    h, l = c + 1e-7, c - 1e-7  # near-flat (exactly flat makes ATR 0, still finite)
+    atr = talib.ATR(h, l, c, timeperiod=6)
+    line, d = _supertrend_fn(h, l, c, atr, mult=3.0)
+    # ATR is NaN for the first `timeperiod` bars → line/direction NaN there;
+    # after warm-up everything must be finite (no Inf on zero-amplitude input).
+    assert not np.isinf(line).any() and not np.isinf(d).any()
+    valid = np.isfinite(line)
+    assert valid.sum() > 0
+    assert np.all(np.isfinite(line[valid]))
+    assert np.all(np.isfinite(d[valid]))
+
+
+def test_supertrend_parity_direction_vs_pandas_ta():
+    """Gate 5 (smoke): direction agreement with pandas_ta_classic.supertrend.
+
+    Both use a ratcheted-band recursion with the same close-crossing flip
+    rule, but they may differ in the first bar after ATR warm-up and in
+    NaN-handling, so we compare *direction* on the valid overlap with a
+    relaxed agreement threshold (the reviews cite >99.8%).
+    """
+    import pandas_ta_classic as ptac
+
+    df = make_ohlcv(n=3000, seed=27)
+    h = df["high"].to_numpy()
+    l = df["low"].to_numpy()
+    c = df["close"].to_numpy()
+
+    n, mult = 24, 3.0
+    atr = talib.ATR(h, l, c, timeperiod=n)
+    _, ours = _supertrend_fn(h, l, c, atr, mult=mult)
+
+    ref = ptac.supertrend(pd.Series(h), pd.Series(l), pd.Series(c),
+                          length=n, multiplier=mult)
+    # pandas-ta-classic columns: SUPERT_<n>_<mult> (line), SUPERTd_... (direction)
+    dcol = [x for x in ref.columns if x.startswith("SUPERTd")]
+    assert dcol, f"no direction column in {list(ref.columns)}"
+    theirs_dir = ref[dcol[0]].to_numpy()
+
+    mask = np.isfinite(ours) & np.isfinite(theirs_dir)
+    agree = (ours[mask] == theirs_dir[mask]).mean()
+    assert mask.sum() > 100
+    assert agree > 0.95, f"supertrend direction agreement vs pandas_ta: {agree:.2%}"
+
+
+def test_supertrend_invalid_multiplier_rejected():
+    with pytest.raises(ValueError):
+        _supertrend_fn(np.array([1.0]), np.array([1.0]), np.array([1.0]),
+                       np.array([0.1]), mult=0.0)

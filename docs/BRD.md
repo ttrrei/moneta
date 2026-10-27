@@ -68,7 +68,7 @@ fact.
 - Bronze ingest from OCI (PAR) and OANDA (gap-fill + history backfill) to raw CSV.
 - Load + clean to a de-duplicated 1-minute Parquet table.
 - Aggregate to 5m and 1h OHLCV on UTC boundaries.
-- Feature engineering to the two feature tables (259 / 234 columns).
+- Feature engineering to the two feature tables (305 / 270 columns).
 - Integrity checks and profiling (sanity + profile checks).
 
 ### 5.2 Strategy research — IN SCOPE (implemented workflow)

@@ -33,6 +33,14 @@ import talib
 
 import pandas_ta_classic as ptac
 
+from indicators import (  # noqa: E402  (project's own indicator library)
+    param_tag,
+    psar_direction,
+    psar_line,
+    supertrend,
+    validate_free_params,
+)
+
 # ---------------------------------------------------------------------------
 # Parameter grid (spec section 4.1)
 # ---------------------------------------------------------------------------
@@ -43,6 +51,12 @@ NORM_ATR_N = 24
 BB_SIGMA = 2.0
 KC_MULT = 2.0
 FASTD_PERIOD = 6
+# Free (non-window) parameters.  Only *time-window* parameters are restricted
+# to the N grid above; these are NOT whitelisted.  Defaults below are named
+# constants (never library defaults) and can be overridden per run
+# (compute_instrument_features / build_features / CLI flags).
+PSAR_PARAMS = ((0.02, 0.20), (0.01, 0.10))  # Wilder SAR (acceleration, maximum)
+ST_MULTS = (2.0, 3.0)                       # Supertrend ATR multiplier(s)
 EPS = 1e-12
 WARMUP_DROP = 3 * max(N_GRID)  # 360 bars (spec section 5)
 
@@ -257,6 +271,21 @@ class TrendGroup(BaseFeatureGroup):
             out[f"macd_{f}_{s}"] = macd
             out[f"macd_signal_{f}_{s}"] = signal
             out[f"macd_hist_{f}_{s}"] = hist
+        # Parabolic SAR (free params, no window) and Supertrend (length = N from
+        # the grid, multiplier free).  Column names carry the free parameters.
+        # Implemented in the `indicators/` library; tested in isolation there.
+        cfg = aux or {}
+        for accel, mx in cfg.get("psar_params", PSAR_PARAMS):
+            tag = f"{param_tag(accel)}_{param_tag(mx)}"
+            sar = psar_line(h, l, accel=accel, maximum=mx)
+            out[f"psar_{tag}"] = sar
+            out[f"psar_dir_{tag}"] = psar_direction(c, sar)
+        for n in n_grid:
+            atr_n = talib.ATR(h, l, c, timeperiod=n)
+            for mult in cfg.get("st_mults", ST_MULTS):
+                st, st_dir = supertrend(h, l, c, atr_n, mult)
+                out[f"st_{n}_{param_tag(mult)}"] = st
+                out[f"st_dir_{n}_{param_tag(mult)}"] = st_dir
         return out
 
 
@@ -399,6 +428,18 @@ class DerivedFeatureGroup(BaseFeatureGroup):
             if atr_norm is not None:
                 out[f"dist_high_{n}"] = (prev_hi - c) / np.where(atr_norm == 0, np.nan, atr_norm)
                 out[f"dist_low_{n}"] = (c - prev_lo) / np.where(atr_norm == 0, np.nan, atr_norm)
+        # Signed ATR-normalised distance to the trailing-stop lines (sign = side).
+        if atr_norm is not None:
+            safe = np.where(atr_norm == 0, np.nan, atr_norm)
+            for accel, mx in aux.get("psar_params", PSAR_PARAMS):
+                tag = f"{param_tag(accel)}_{param_tag(mx)}"
+                if aux.get(f"psar_{tag}") is not None:
+                    out[f"psar_dist_{tag}"] = (c - aux[f"psar_{tag}"]) / safe
+            for n in n_grid:
+                for mult in aux.get("st_mults", ST_MULTS):
+                    key = f"st_{n}_{param_tag(mult)}"
+                    if aux.get(key) is not None:
+                        out[f"st_dist_{n}_{param_tag(mult)}"] = (c - aux[key]) / safe
         if "hour_sin" in aux:
             out["hour_sin"] = aux["hour_sin"]
             out["hour_cos"] = aux["hour_cos"]
@@ -440,13 +481,20 @@ def compute_instrument_features(
     interval_seconds: int,
     n_grid: tuple[int, ...] = N_GRID,
     pairs: tuple[tuple[int, int], ...] = PAIRS,
+    psar_params: tuple[tuple[float, float], ...] = PSAR_PARAMS,
+    st_mults: tuple[float, ...] = ST_MULTS,
 ) -> pd.DataFrame:
     """Compute the full spec feature matrix for one instrument's bars (sorted).
+
+    ``n_grid`` / ``pairs`` are whitelisted (time-window parameters).
+    ``psar_params`` / ``st_mults`` are free parameters and are only
+    sanity-checked (not whitelisted) — see the `indicators/` library.
 
     ``df`` must contain OHLCV_COLS with a UTC ``time`` column.  Returns a
     DataFrame of the same length (warm-up rows are NaN, dropped by the caller).
     """
     validate_grid(n_grid, pairs)
+    validate_free_params(psar_params, st_mults)
     df = df.reset_index(drop=True)
     o, h, l, c, v = _instrument_arrays(df)
     instrument = df["instrument"].iloc[0]
@@ -459,7 +507,8 @@ def compute_instrument_features(
     vwap = vwap_within_session(tp, v, session)
     atr24 = talib.ATR(h, l, c, timeperiod=NORM_ATR_N)
 
-    aux: dict = {"vwap": vwap, "atr_norm": atr24}
+    aux: dict = {"vwap": vwap, "atr_norm": atr24,
+                 "psar_params": tuple(psar_params), "st_mults": tuple(st_mults)}
     out: dict[str, np.ndarray] = {}
     for group_cls in GROUPS[:5]:  # trend..candle: self-contained
         out.update(group_cls().compute(o, h, l, c, v, n_grid, pairs, aux))
@@ -489,15 +538,19 @@ H1_PROJECTION_TEMPLATES = (
 )
 
 
-def _h1_feature_columns(n_grid: tuple[int, ...] = N_GRID) -> list[str]:
+def _h1_feature_columns(
+    n_grid: tuple[int, ...] = N_GRID, st_mults: tuple[float, ...] = ST_MULTS
+) -> list[str]:
     cols: list[str] = []
     for n in n_grid:
         cols += [tmpl.format(n=n) for tmpl in H1_PROJECTION_TEMPLATES]
+        cols += [f"st_dir_{n}_{param_tag(m)}" for m in st_mults]  # 1h Supertrend direction
     return cols
 
 
 def asof_join_h1_features(
-    m: pd.DataFrame, h: pd.DataFrame, interval_5m_seconds: int, interval_1h_seconds: int
+    m: pd.DataFrame, h: pd.DataFrame, interval_5m_seconds: int, interval_1h_seconds: int,
+    st_mults: tuple[float, ...] = ST_MULTS,
 ) -> pd.DataFrame:
     """As-of join: 1h row is visible only once its close_time <= the 5m bar's
     close_time (spec 3.3).  Strict, no lookahead.
@@ -514,7 +567,7 @@ def asof_join_h1_features(
     idx = np.full(len(m), -1, dtype=np.int64)
     idx[valid] = pos[valid] - 1
 
-    base_cols = _h1_feature_columns()
+    base_cols = _h1_feature_columns(st_mults=st_mults)
     for col in base_cols:
         src = h[col].to_numpy()
         out = np.full(len(m), np.nan, dtype=np.float64)
@@ -602,6 +655,8 @@ def _build_one_instrument(
     src5: str,
     src1: str,
     inst: str,
+    psar_params: tuple[tuple[float, float], ...] = PSAR_PARAMS,
+    st_mults: tuple[float, ...] = ST_MULTS,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Compute the 1h and 5m feature frames for one instrument (warm-up dropped).
 
@@ -613,16 +668,16 @@ def _build_one_instrument(
     h = _read_instrument(src1, inst)
     if len(h) < WARMUP_DROP + 1:
         raise ValueError(f"{inst}: not enough 1h bars ({len(h)})")
-    h_feats = compute_instrument_features(h, 3600)
+    h_feats = compute_instrument_features(h, 3600, psar_params=psar_params, st_mults=st_mults)
     h_frame = pd.concat([h[list(OHLCV_COLS)], h_feats], axis=1).iloc[WARMUP_DROP:].reset_index(drop=True)
 
     # ---- 5m features + as-of 1h join -------------------------------------
     m = _read_instrument(src5, inst)
     if len(m) < WARMUP_DROP + 1:
         raise ValueError(f"{inst}: not enough 5m bars ({len(m)})")
-    m_feats = compute_instrument_features(m, 300)
+    m_feats = compute_instrument_features(m, 300, psar_params=psar_params, st_mults=st_mults)
     m_frame = pd.concat([m[list(OHLCV_COLS)], m_feats], axis=1)
-    m_frame = asof_join_h1_features(m_frame, h_frame, 300, 3600)
+    m_frame = asof_join_h1_features(m_frame, h_frame, 300, 3600, st_mults=st_mults)
     m_frame = m_frame.iloc[WARMUP_DROP:].reset_index(drop=True)
     return m_frame, h_frame
 
@@ -633,6 +688,8 @@ def build_features(
     out_5m: str | Path = "data/ohlcv_5m_features/ohlcv_5m_features.parquet",
     out_1h: str | Path = "data/ohlcv_1h_features/ohlcv_1h_features.parquet",
     instruments: list[str] | None = None,
+    psar_params: tuple[tuple[float, float], ...] = PSAR_PARAMS,
+    st_mults: tuple[float, ...] = ST_MULTS,
 ) -> dict[str, int]:
     """Regenerate both feature tables, streaming per instrument to disk.
 
@@ -658,7 +715,7 @@ def build_features(
         raise ValueError("No instruments selected")
 
     # Probe the first instrument once to lock both Parquet schemas.
-    probe_5m, probe_1h = _build_one_instrument(src5, src1, insts[0])
+    probe_5m, probe_1h = _build_one_instrument(src5, src1, insts[0], psar_params, st_mults)
     sink_5m = _ParquetSink(Path(out_5m), _parquet_schema(probe_5m))
     sink_1h = _ParquetSink(Path(out_1h), _parquet_schema(probe_1h))
     print(f"{insts[0]}: 5m {len(probe_5m)} rows ({probe_5m.shape[1]} cols) | "
@@ -667,7 +724,7 @@ def build_features(
         sink_5m.write(probe_5m)
         sink_1h.write(probe_1h)
         for inst in insts[1:]:
-            m_frame, h_frame = _build_one_instrument(src5, src1, inst)
+            m_frame, h_frame = _build_one_instrument(src5, src1, inst, psar_params, st_mults)
             sink_5m.write(m_frame)
             sink_1h.write(h_frame)
             print(f"{inst}: 5m {len(m_frame)} rows | 1h {len(h_frame)} rows")
@@ -682,8 +739,37 @@ def build_features(
     return {"5m": rows_5m, "1h": rows_1h}
 
 
-def main() -> None:
-    build_features()
+def _parse_psar(spec: str) -> tuple[tuple[float, float], ...]:
+    """Parse 'accel:max,accel:max' → ((a1, m1), (a2, m2), ...)."""
+    params = []
+    for part in spec.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        a_s, m_s = part.split(":")
+        params.append((float(a_s), float(m_s)))
+    if not params:
+        raise ValueError(f"--psar {spec!r} parsed to no parameter sets")
+    return tuple(params)
+
+
+def main(argv: list[str] | None = None) -> None:
+    import argparse
+
+    ap = argparse.ArgumentParser(description="Rebuild the 5m/1h feature tables.")
+    ap.add_argument("--psar", default=None,
+                    help="free PSAR params 'accel:max,accel:max' (default %s)" % (
+                        ",".join(f"{a}:{m}" for a, m in PSAR_PARAMS)))
+    ap.add_argument("--st-mult", default=None,
+                    help="free Supertrend ATR multipliers 'm1,m2' (default %s)" % (
+                        ",".join(str(m) for m in ST_MULTS)))
+    args = ap.parse_args(argv)
+    kwargs: dict = {}
+    if args.psar:
+        kwargs["psar_params"] = _parse_psar(args.psar)
+    if args.st_mult:
+        kwargs["st_mults"] = tuple(float(x) for x in args.st_mult.split(",") if x)
+    build_features(**kwargs)
 
 
 if __name__ == "__main__":

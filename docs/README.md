@@ -26,7 +26,7 @@ registry that prevents duplicate work.
 | Understand system architecture, data flow, components, invariants | [SAD.md](SAD.md) | [indicators.md](indicators.md) |
 | **Generate a new strategy** (AI task: "follow the action list and do the downstream jobs") | `strategy/generated_strategy.md` (the *what*) → `strategy/WORKFLOW.md` (the *how*: steps 0–7 with gates) | `strategy/STRATEGY_REGISTRY.md`, [data_profile.md](data_profile.md) |
 | Design / code / test a **new strategy** by hand | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
-| Understand the **feature/indicator engine** (259/234 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` (source of truth) |
+| Understand the **feature/indicator engine** (305/270 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` + `indicators/` (custom: Supertrend, PSAR) |
 | Understand the **data** (rows, grain, dtypes, gotchas) | [data_profile.md](data_profile.md) | `pipeline/sanity_check.py`, `pipeline/profile_check.py` |
 | Review the **roadmap** of known gaps (consolidated legacy reviews, T0→T3 ranked) | [legacy_full.md](legacy_full.md) | raw reviews in `legacy/` (git-ignored) |
 | Ingest / backfill data | `pipeline/README.md` | `pipeline/extract_oanda.py`, `load_data.py`, `aggregate_ohlcv.py` |
@@ -96,7 +96,7 @@ moneta/
 │   ├── history_map.yml          ← per-instrument backfill ranges
 │   ├── indicators.yml           ← indicator/feature spec (matches pipeline/indicators.py)
 │   └── strategies.yml           ← evaluation windows + OOS holdout + trial-log rules
-├── tests/                       ← pytest suite (61): pipeline + engine + metrics (no network)
+├── tests/                       ← pytest suite (80): pipeline + engine + metrics + custom indicators (no network)
 └── data/                        ← Parquet tables + metadata.duckdb (git-ignored contents)
 ```
 
@@ -106,7 +106,7 @@ moneta/
 .venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01
 .venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --timeframe 1h
 .venv/bin/python -m pipeline.indicators                    # rebuild features (~5 min)
-.venv/bin/python -m pytest tests/ -q                       # 61 tests (pipeline + engine + metrics)
+.venv/bin/python -m pytest tests/ -q                       # 80 tests (pipeline + engine + metrics)
 # ad-hoc query via the registered Parquet-backed views:
 .venv/bin/python -c "import duckdb;print(duckdb.connect('data/metadata.duckdb', read_only=True).execute('SELECT * FROM main.ohlcv_5m_features LIMIT 3').fetchdf())"
 ```
