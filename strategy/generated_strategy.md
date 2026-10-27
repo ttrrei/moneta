@@ -54,27 +54,47 @@ in spread while edge/trade ≈ 0.03%. Your strategy must structurally beat that:
 1. **Register first:** append a `candidate` row to [STRATEGY_REGISTRY.md](STRATEGY_REGISTRY.md)
    (next `S-NN`, never reuse a rejected ID); update the indicator usage map.
 2. **Code:** `code/strategy_<name>.py` — self-contained CLI with
-   `--instrument --since --parquet --cost-bps --json`, DuckDB-filtered load,
-   same JSON metrics block as `strategy_rsi.py` (n_trades, win_rate_pct,
-   total_return_pct, buyhold_return_pct, max_drawdown_pct,
-   avg_trade_return_pct, sharpe, exposure_pct).
+   `--instrument --timeframe --since --parquet --cost-bps --json`, DuckDB-filtered
+   load, and the **shared engine** (`strategy/engine.py`) for accounting &
+   metrics. `--timeframe 5m|1h` selects the correct feature table and the loader
+   must **fail loudly** on a timeframe/data mismatch (a 1h rule run on 5m data
+   is the silent failure mode to make impossible). Same JSON metrics block as
+   `strategy_rsi.py` (n_trades, win_rate_pct, total_return_pct,
+   buyhold_return_pct, max_drawdown_pct, avg_trade_return_pct, sharpe,
+   exposure_pct).
 3. **Run protocol (mandatory, all of it):**
    - Instruments: **EUR_USD + BTC_USD + XAU_USD**
-   - Windows: **full history** and **last 12 months**
+   - Windows: **full history** and **last 12 months** (fixed anchor
+     `2025-10-27`, from `config/strategies.yml` — not "12 months ago")
    - Costs: **0 / 2 / 5 bps** sensitivity table
-4. **Report:** `docs/strategy_<name>_report.md` with:
+   - **OOS:** if a stop condition is *not* met and the strategy is a finalist,
+     run it **once** on the reserved holdout (`oos.holdout_start` → latest) and
+     require it to beat buy-hold there. Never iterate against the holdout.
+4. **Report:** `strategy/docs/strategy_<name>_report.md` (the full path — do
+   **not** write to the repo-root `docs/` folder; see B3) with:
    hypothesis → results vs buy-and-hold → why it wins/loses → cost sensitivity →
-   regime breakdown → honest caveats (in-sample, no slippage, per-instrument).
+   regime breakdown → honest caveats (in-sample, no slippage, per-instrument)
+   → and, near the end, one line: **"N strategies tried before this one: <k>"**
+   (from `strategy/trial_log.md`). That number is the honest "best-of-N"
+   context and must not be omitted.
 5. **Update registry:** status (`tested`/`rejected`/`parked`), last run,
    result (ret vs BH). A failure is a valid, valuable output — record it.
 
 ## 5. Stop & report (don't force a result)
 
 Stop and report as `rejected` with diagnosis if ANY of:
-- total_return < buyhold AND avg_trade < round-trip cost at 0/2/5 bps;
+- total_return < buyhold AND avg_trade < round-trip cost at **all of** 0/2/5 bps
+  (i.e. it loses after costs at *every* cost tier — if it is net-positive at 0
+  bps but loses only at higher costs, that is a cost-sensitivity story, not an
+  automatic reject);
 - trade count > 300 (structurally uneconomic, see §3);
 - edge appears on < 1 of 3 instruments OR only in < 1 of 2 windows
   (likely overfit, not alpha).
+
+**And, before any promotion to `tested`:** the finalist must pass the one-shot
+out-of-sample check on the reserved holdout (`config/strategies.yml` → `oos`),
+beating buy-hold there. The in-sample windows above are *not* out-of-sample —
+they are what the rule was tuned against. (Overfitting is the BRD's #1 risk.)
 
 ## 6. Anti-patterns (instant reject)
 

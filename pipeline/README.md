@@ -80,8 +80,31 @@ It runs `extract_oanda --map`, `load_data`, `aggregate_ohlcv`, `sanity_check` an
 `extract_oci` leaves sub-directories of `data/raw_csv/` alone, so backfilled
 files survive an OCI re-sync.
 
-## Planned (not yet implemented)
+## Implemented now (feature engine)
 
-- **Feature engineering** — technical indicators and engineered features (Silver/Gold).
+`indicators.py` implements the **feature engine** (the "Gold" wide tables) —
+the single source of truth for the 5m/1h feature matrix. It reads the 5m/1h
+OHLCV tables and, per instrument, computes **259 (5m) / 234 (1h) feature
+columns** across trend, momentum, volatility, regime, candle-structure,
+volume-proxy, and derived families, then drops the 360-bar warm-up head and
+streams the result to Parquet (registering metadata + views in DuckDB).
 
-Treat the unimplemented steps above as placeholders.
+```bash
+.venv/bin/python -m pipeline.indicators    # rebuild both feature tables (~5 min)
+```
+
+The spec is `docs/indicators.md`; the readable (non-code) mirror is
+`config/indicators.yml`. If the two ever disagree, **`pipeline/indicators.py`
+wins** — update the spec in the same change.
+
+The feature engine is covered by the six quality gates in
+`tests/test_indicators.py` (causality/prefix-invariance, bounds & invariants,
+degenerate-input safety, and the 1h→5m as-of alignment), runnable with no real
+data and no network.
+
+## Not yet implemented
+
+- A standalone `scripts/verify_indicator_parity.py` dual-library parity harness
+  (Gate 5 is currently covered at the smoke level by `tests/test_indicators.py`;
+  the full TA-Lib vs pandas-ta parity fixture on a fixed 20k-row sample is still
+  future work).

@@ -75,6 +75,11 @@ ASOF LEFT JOIN ohlcv_1h h
 - **双窗口对（快, 慢）**：仅允许 `(6, 24)`, `(12, 60)`, `(24, 120)`；
 - **固定常量**：Bollinger $\sigma=2.0$，Keltner $mult=2.0$，CCI 常数 $=0.015$，无量纲基准 ATR 窗口 $\text{NORM\_ATR}=24$。
 
+> **白名单作用域（B10/B11）**：白名单**仅约束窗口类参数**（单窗口 $N$ 与快/慢窗口对），由
+> `pipeline/indicators.py::validate_grid` 强制校验。非窗口类参数（如 PSAR 的 `accel`/`max`、
+> SuperTrend 的 `multiplier`、RSI 之外的自由阈值）**不受该白名单限制**，但必须写成
+> **具名常量**（named constants）而非内联魔数，以便在 `config/indicators.yml` 与代码中一一对应、可追溯。
+
 ### 4.2 动态品种结算时区（Dynamic Session Reset）
 
 彻底废除全局一刀切的 UTC 00:00 截断，根据不同资产类别的真实交易惯例配置日内锚定重置点（Session Reset）：
@@ -234,6 +239,12 @@ class BaseFeatureGroup(abc.ABC):
 ---
 
 ## 8. 六重自动化质量验证体系（Quality Gates）
+
+> **实现状态（as of T0）**：Gate 1（因果性/无未来泄漏）、Gate 3（数值边界）、
+> Gate 4（奇异值容错）与 Gate 6（跨周期 As-Of 对齐）已在 `tests/test_indicators.py` 中以
+> **合成数据**（不触网、不依赖真实数据）落地为可重复门禁断言；Gate 5（双库 Parity）
+> 的 RSI/SMA 与 `talib` 对齐子集亦已纳入同一测试文件。Gate 2（起点无关/预热）仍为
+> **规划中**，待完整 Parity 脚本就绪后补齐。运行：`.venv/bin/python -m pytest tests/test_indicators.py -q`。
 
 任何新指标或库版本升级，必须通过六重自动化门禁断言：
 

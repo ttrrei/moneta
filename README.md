@@ -4,95 +4,144 @@
 
 ## Current Status
 
-This repository started from the single-line `# moneta` initial commit and now contains an **early, partial Bronze data-ingestion implementation** on top of scaffolding. Only the items explicitly listed below as implemented actually exist; the rest of the "Nova" stack is still planned.
+**moneta / Nova** is a working research rig, not scaffolding: a deterministic
+Bronze→feature pipeline plus a **shared, tested backtest engine** and a
+registry-driven strategy loop. The full path
+(raw CSV → 1m → 5m/1h → **259/234-column feature tables** → bar-by-bar
+backtest → report) is implemented and has been run end-to-end at least once
+(strategy **S-01**, see `strategy/docs/strategy_rsi_report.md`).
 
-Implemented so far:
+Implemented and tracked in Git:
 
-- `pipeline/extract_oci.py` — OCI PAR listing + download, safe path handling, zip extraction to a flat CSV directory, YAML config loading (`config/setting.yml`), and a `main()` entry point.
-- `tests/test_extract_oci.py` — 7 unit tests covering the above (run with `pytest -q`).
-- `legacy/extract_zips.py` and `legacy/sync_oci.py` — older reference implementations kept for migration context (not active; their constants/APIs differ from `pipeline/`).
+- **Pipeline** (`pipeline/`): `extract_oci.py` (OCI PAR download + unzip → CSV),
+  `extract_oanda.py` (OANDA gap-fill / history backfill → CSV), `load_data.py`
+  (CSV → `all_data.parquet` + DuckDB catalog), `aggregate_ohlcv.py`
+  (1m → 5m/1h), `indicators.py` (**feature engine**, source of truth),
+  `sanity_check.py`, `profile_check.py`, `table_catalog.py`.
+- **Strategy layer** (`strategy/`): `engine.py` (**shared backtest engine** —
+  accounting + metric definitions, long & short, tested), `strategy_rsi_lib.py`
+  (S-01 rule + data loading, shared by CLI and matrix runner),
+  `code/strategy_rsi.py` (S-01 CLI), `run_matrix.py` (automated 3×2×3 matrix
+  runner → `strategy/results/`), `WORKFLOW.md` (steps 0–7 + gates),
+  `STRATEGY_REGISTRY.md`, `STRATEGY_BACKGROUND.md`, `generated_strategy.md`,
+  `trial_log.md` (OOS / best-of-N discipline), `docs/strategy_rsi_report.md`.
+- **Config** (`config/`): `indicators.yml` (feature spec), `strategies.yml`
+  (evaluation windows + OOS holdout + trial-log rules), `history_map.yml`,
+  `setting.example.yml`.
+- **Tests** (`tests/`): **61 passing** unit tests covering the pipeline
+  (`extract_oci`, `extract_oanda`, `aggregate_ohlcv`), the feature engine
+  (`test_indicators.py` — the six quality gates on synthetic data), and the
+  shared engine's metric definitions (`test_metrics.py`). Run with `pytest -q`.
+- **Docs** (`docs/`): BRD, SAD, `indicators.md` (spec), `data_profile.md`,
+  and `README.md` (the AI-first index — **read that one first**).
 
-Still **not** implemented (see Roadmap):
+Still **not** implemented (see Roadmap / BRD §5.3): automated strategy
+*generation*, a vectorized/DuckDB-only engine, a formal dedup engine, a full
+walk-forward harness, and CI (there is local `pytest`, no CI). A lightweight
+out-of-sample discipline (holdout + trial log, `config/strategies.yml`) **has**
+been added; a full walk-forward harness is still future work.
 
-- Silver/Gold transformations, DuckDB loading, feature engineering
-- YAML strategy schema, vectorized backtest, deduplication, evaluation metrics
-- AI strategy generation pipeline, strategy zoo, CI
+Note on `legacy/` and `data/`: their *contents* are git-ignored
+(`legacy/` holds earlier review notes and reference code; `data/` holds the
+Parquet tables and `metadata.duckdb`). Everything above is tracked.
+`config/setting.yml` (secrets) is git-ignored.
 
-What currently exists in the working tree:
+## What Nova is
 
-- `README.md` — this document
-- `LICENSE` — MIT License
-- `.gitignore` — Python ignore rules plus local ignores for `legacy/` contents, `data/` contents, and `config/setting.yml`
-- `requirement.txt` — Python dependency manifest (currently untracked)
-- `config/setting.example.yml` — template for `config/setting.yml` (currently untracked)
-- `config/setting.yml` — local OCI PAR URL (git-ignored, untracked)
-- `pipeline/` — Bronze ingestion implementation (currently untracked)
-- `tests/` — pipeline unit tests (currently untracked)
-- `legacy/` — reference-only code (contents git-ignored except `README.md`)
-- `data/` — runtime artifacts (contents git-ignored except `README.md`)
+A quantitative strategy discovery engine built around a multi-timeframe,
+**state-transition** trading paradigm, with causality enforced end to end:
 
-The Git history currently consists of a single initial commit on `main`; all implementation files above are still untracked in the working tree.
+- **Trend / regime determination** on the 1-hour timeframe.
+- **Entry execution** on the 5-minute timeframe.
+- **Look-ahead elimination**: 1h features are locked to the last *fully closed*
+  1h bar via an as-of join (`m.close_time >= h.close_time`), and a strategy
+  signal on a closed bar `T` fills only at the **open of bar T+1**.
 
-## Project Vision (planned, not yet implemented)
+The strategy loop (read the docs → check the registry → register → code against
+the shared engine → run the 3×3×2 matrix → report → record the outcome) is the
+core, repeatable workflow. It is a **manual/AI-assisted** loop today, not yet a
+fully autonomous generator.
 
-Nova is intended to be an automated quantitative strategy discovery system built around a multi-timeframe state-transition trading paradigm:
+Future goals (not yet implemented): AI-driven strategy generation, self-
+describing YAML strategy schemas, a formal dedup engine, vectorized
+DuckDB-only backtesting for large sweeps, and a walk-forward harness. The
+Medallion layout is already effectively in place (Bronze CSV → `all_data` →
+5m/1h → Gold feature tables) over Apache Parquet.
 
-- **Trend determination** on the 1-hour timeframe
-- **Entry execution** on the 5-minute timeframe
-- **Look-ahead bias elimination** by locking 1-hour features to the last fully closed candle during 5-minute signal calculation
-
-Planned capabilities, listed as goals rather than implemented features:
-
-- AI-driven strategy generation (Gemini + Gemma multi-model pipeline)
-- Self-describing YAML strategy specifications
-- Four-level progressive deduplication (syntax normalization, SHA-256 fingerprinting, AI self-reflection retries, signal-correlation deduplication)
-- Vectorized backtesting on DuckDB with R-Multiple normalization and pessimistic collision handling
-- Anti-overfitting constraints (time uniformity, win-rate stability, equity thickness)
-- Medallion data architecture (Bronze → Silver → Gold) over Apache Parquet
-
-## Planned (future) project structure
-
-The layout below describes the intended structure. Note that it uses `nova/` and `data_pipeline/` as target names while the code implemented so far lives under `pipeline/` and `tests/` instead; the tree itself (including `nova/` and `main.py`) is not present yet.
+## Current project structure
 
 ```text
-nova/
-├── data_pipeline/
-│   ├── sync_oci.py
-│   ├── build_silver.py
-│   └── build_gold_features.py
-├── ai_engine/
-├── backtest_engine/
-├── ideas_backlog/
-├── strategies_zoo/
-├── DESIGN.md
-└── main.py
+moneta/
+├── docs/                        ← documentation (read docs/README.md first)
+│   ├── BRD.md  SAD.md  indicators.md  data_profile.md
+├── pipeline/                    ← data pipeline (Bronze → features)
+│   ├── extract_oci.py  extract_oanda.py  load_data.py
+│   ├── aggregate_ohlcv.py  indicators.py   ← feature engine (source of truth)
+│   ├── sanity_check.py  profile_check.py  table_catalog.py
+├── strategy/                    ← the research loop
+│   ├── engine.py                ← shared backtest engine (accounting + metrics)
+│   ├── strategy_rsi_lib.py      ← S-01 rule (shared by CLI + matrix runner)
+│   ├── code/strategy_rsi.py     ← S-01 reference strategy CLI
+│   ├── run_matrix.py            ← 3 inst × 2 windows × 3 cost tiers → strategy/results/
+│   ├── WORKFLOW.md  STRATEGY_REGISTRY.md  STRATEGY_BACKGROUND.md
+│   ├── generated_strategy.md  trial_log.md
+│   ├── results/S01/             ← per-cell JSON + matrix.md + summary.csv
+│   └── docs/strategy_rsi_report.md
+├── config/                      ← indicators.yml, strategies.yml, history_map.yml
+├── tests/                       ← 61 pytest tests (pipeline + engine + metrics)
+├── scripts/  data/  legacy/     ← helpers / runtime artifacts / notes (git-ignored contents)
+└── requirement.txt
 ```
 
-## Tech stack (target, from `requirement.txt`)
+## Tech stack (from `requirement.txt`)
 
 | Category | Technology |
 |----------|------------|
 | Language | Python 3.12+ |
 | Data engine | DuckDB, Apache Parquet (pyarrow) |
 | Object storage | OCI Object Storage |
+| Indicators | **TA-Lib** (needs the C library), pandas-ta-classic |
 | AI / LLM SDKs | `google-genai` |
 | Utilities | NumPy, pandas, PyYAML, python-dotenv |
+| Testing | pytest |
 
 ## Getting started
 
-Create and activate a virtual environment, then install the declared dependencies:
+The whole project runs on **Python 3.12 in `.venv`**, invoked as
+`.venv/bin/python` (POSIX). Install the dependencies first:
 
 ```bash
 python -m venv .venv
-# PowerShell
-. .venv/Scripts/Activate.ps1
-# or cmd.exe
-.venv\Scripts\activate.bat
-
 pip install -r requirement.txt
+# TA-Lib needs its C library — see docs/indicators.md §9. On most systems:
+#   apt-get install libta-lib-dev   (or build from source into ~/.local/ta-lib)
 ```
 
-There is now a runnable Bronze entry point: `python -m pipeline.extract_oci` (or `python pipeline/extract_oci.py`) downloads and extracts raw data; the commands above still only prepare the environment for everything else. Silver/Gold and beyond remain unimplemented.
+Then run things from the repo root:
+
+```bash
+# Tests (61, no network needed):
+.venv/bin/python -m pytest tests/ -q
+
+# Rebuild the feature tables (only after data or spec changes; ~5 min, streams per instrument):
+.venv/bin/python -m pipeline.indicators
+
+# Backtest the reference strategy (5m by default; --timeframe 1h for 1h bars):
+.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01
+.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --timeframe 1h
+
+# Run the standard matrix (3 instruments x 2 windows x 3 cost tiers) in one go:
+.venv/bin/python strategy/run_matrix.py --strategy s01
+# → strategy/results/S01/: per-cell JSON + matrix.md + summary.csv
+
+# Ingest / backfill new data:
+.venv/bin/python -m pipeline.extract_oanda --map config/history_map.yml   # download
+.venv/bin/python -m pipeline.load_data                                    # → all_data.parquet
+.venv/bin/python -m pipeline.aggregate_ohlcv                              # → 5m/1h
+.venv/bin/python -m pipeline.sanity_check                                 # integrity checks
+```
+
+(On Windows use `.venv\Scripts\python.exe` instead of `.venv/bin/python`.)
 
 ## Configuration
 
@@ -119,14 +168,14 @@ Extract either a gap or a historical interval by specifying inclusive UTC
 timestamps:
 
 ```bash
-python -m pipeline.extract_oanda --instrument GBP_USD \
+.venv/bin/python -m pipeline.extract_oanda --instrument GBP_USD \
   --from 2026-07-08T02:25:00Z --to 2026-07-08T20:47:00Z
 ```
 
 The extractor paginates requests at OANDA's 5,000-candle limit and writes the
 raw CSV schema under `data/raw_csv/<instrument>/`, ready for
-`python -m pipeline.load_data`. Re-running the same interval replaces that
-interval's output file; loading deduplicates overlapping intervals by
+`.venv/bin/python -m pipeline.load_data`. Re-running the same interval replaces
+that interval's output file; loading deduplicates overlapping intervals by
 `(instrument, time)`. Use `--output` to select a specific CSV destination or
 `--json-out` to preserve the raw API response. `OANDA_API_TOKEN` and `--token`
 can override the configured token.
@@ -136,9 +185,9 @@ can override the configured token.
 List the instruments (and how far back) in `config/history_map.yml`, then:
 
 ```bash
-python -m pipeline.extract_oanda --map config/history_map.yml --dry-run
-python -m pipeline.extract_oanda --map config/history_map.yml
-python -m pipeline.load_data
+.venv/bin/python -m pipeline.extract_oanda --map config/history_map.yml --dry-run
+.venv/bin/python -m pipeline.extract_oanda --map config/history_map.yml
+.venv/bin/python -m pipeline.load_data
 ```
 
 `from` sets how far back to go; `to: auto` (the default) stops just before the
@@ -147,7 +196,7 @@ If nothing is ingested yet (empty DuckDB / no parquet), `to: auto` fills from
 `from` up to now, so a fresh start works with any past start time.
 Output is one CSV per instrument per UTC month; finished months are skipped, so
 re-running resumes an interrupted backfill. After loading, re-run
-`python pipeline/profile_check.py --raw` to confirm the merged data has no gaps
+`.venv/bin/python pipeline/profile_check.py --raw` to confirm the merged data has no gaps
 at the seam and no conflicting duplicates.
 
 Tokens should not be committed. Any token pasted into a chat, command history,
@@ -155,17 +204,24 @@ or other shared location should be revoked and replaced before use.
 
 ## Roadmap
 
-- [x] Bronze data ingestion from OCI Object Storage (extract step only: `pipeline/extract_oci.py`)
-- [ ] DuckDB loading of raw CSVs
-- [ ] Silver transformation (resampling to 5m / 1h)
-- [ ] Gold feature wide tables
-- [ ] YAML strategy schema
-- [ ] Vectorized backtest engine
-- [ ] Deduplication engine
-- [ ] Evaluation metrics
-- [ ] AI strategy generation pipeline
-- [ ] Strategy Zoo management
-- [ ] Automated tests and CI (partial: 7 pipeline unit tests, no CI)
+Done (tracked in Git):
+
+- [x] Bronze data ingestion (OCI + OANDA backfill) and dedup on `(instrument, time)`
+- [x] DuckDB loading of raw CSVs (`load_data.py`) — Parquet is the data, DuckDB is metadata + views
+- [x] Silver transformation — 1m resampled to 5m / 1h (`aggregate_ohlcv.py`)
+- [x] Gold feature wide tables — **259 / 234 columns** (`indicators.py`, spec in `docs/indicators.md`)
+- [x] **Shared, tested backtest engine** with standard metrics, cost handling, and buy-and-hold (`strategy/engine.py`)
+- [x] Strategy registry + background/checklist + trial log + OOS holdout discipline
+- [x] Automated tests — **61 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard)
+
+Not yet done (future, see BRD §5.3 / §11):
+
+- [ ] Out-of-sample / walk-forward validation harness (a lightweight holdout + trial log now exists in `config/strategies.yml`)
+- [ ] Automated strategy *generation* (LLM-driven) — the loop is currently AI-assisted/manual
+- [ ] Vectorized / DuckDB-only backtest engine for large-scale sweeps
+- [ ] Formal deduplication engine (fingerprinting, signal correlation)
+- [ ] Self-describing YAML strategy schema
+- [ ] CI (lint + `pytest` + doc-vs-code drift check) — local `pytest` only today
 
 ## License
 

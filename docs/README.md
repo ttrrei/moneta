@@ -28,6 +28,7 @@ registry that prevents duplicate work.
 | Design / code / test a **new strategy** by hand | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
 | Understand the **feature/indicator engine** (259/234 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` (source of truth) |
 | Understand the **data** (rows, grain, dtypes, gotchas) | [data_profile.md](data_profile.md) | `pipeline/sanity_check.py`, `pipeline/profile_check.py` |
+| Review the **roadmap** of known gaps (consolidated legacy reviews, T0→T3 ranked) | [legacy_full.md](legacy_full.md) | raw reviews in `legacy/` (git-ignored) |
 | Ingest / backfill data | `pipeline/README.md` | `pipeline/extract_oanda.py`, `load_data.py`, `aggregate_ohlcv.py` |
 
 ## Authoritative sources (do NOT trust this index over them)
@@ -41,6 +42,11 @@ maintained single sources of truth for their domains:
   `strategy/STRATEGY_BACKGROUND.md`.
 - **Every strategy already tried (don't duplicate these):**
   `strategy/STRATEGY_REGISTRY.md`.
+- **Backtest accounting & metric definitions (Sharpe, drawdown, …):**
+  `strategy/engine.py` (the shared engine) — the single source of truth; a
+  strategy file must not re-implement them.
+- **Evaluation windows, OOS holdout, and the trial log:**
+  `config/strategies.yml` + `strategy/trial_log.md`.
 
 ## Non-negotiable rules (must hold in any change you make)
 
@@ -64,7 +70,7 @@ moneta/
 ├── docs/                        ← you are here
 │   ├── README.md                ← this index (read first)
 │   ├── BRD.md                   ← business requirements
-│   ├── SAD.md                   ← software architecture
+│   ├── SAD.md                   ← software architecture (incl. §7 metric contract)
 │   ├── indicators.md            ← feature-engine spec (authoritative)
 │   └── data_profile.md          ← data profile (rows/grain/dtypes)
 ├── strategy/
@@ -72,7 +78,9 @@ moneta/
 │   ├── WORKFLOW.md              ← execution playbook: the "how" (steps 0–7, gates, failure paths)
 │   ├── STRATEGY_BACKGROUND.md   ← read before coding a strategy (authoritative)
 │   ├── STRATEGY_REGISTRY.md     ← register/check strategies (authoritative)
-│   ├── code/strategy_rsi.py     ← reference backtest (S-01, self-contained CLI)
+│   ├── engine.py                ← SHARED BACKTEST ENGINE (accounting + metrics; tested)
+│   ├── trial_log.md             ← every attempt + "best-of-N" count (OOS discipline)
+│   ├── code/strategy_rsi.py     ← reference strategy (S-01), built on engine.py
 │   └── docs/strategy_rsi_report.md
 ├── pipeline/                    ← data pipeline (Bronze → features)
 │   ├── extract_oci.py           ← OCI PAR download + unzip → raw CSV
@@ -86,8 +94,9 @@ moneta/
 ├── config/
 │   ├── setting.example.yml      ← template (oci.par_url, oanda.*); setting.yml is git-ignored
 │   ├── history_map.yml          ← per-instrument backfill ranges
-│   └── indicators.yml           ← indicator/feature spec (matches pipeline/indicators.py)
-├── tests/                       ← pytest unit tests for pipeline (no network)
+│   ├── indicators.yml           ← indicator/feature spec (matches pipeline/indicators.py)
+│   └── strategies.yml           ← evaluation windows + OOS holdout + trial-log rules
+├── tests/                       ← pytest suite (61): pipeline + engine + metrics (no network)
 └── data/                        ← Parquet tables + metadata.duckdb (git-ignored contents)
 ```
 
@@ -95,8 +104,9 @@ moneta/
 
 ```bash
 .venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01
+.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --timeframe 1h
 .venv/bin/python -m pipeline.indicators                    # rebuild features (~5 min)
-.venv/bin/python -m pytest tests/ -q                       # pipeline unit tests
+.venv/bin/python -m pytest tests/ -q                       # 61 tests (pipeline + engine + metrics)
 # ad-hoc query via the registered Parquet-backed views:
 .venv/bin/python -c "import duckdb;print(duckdb.connect('data/metadata.duckdb', read_only=True).execute('SELECT * FROM main.ohlcv_5m_features LIMIT 3').fetchdf())"
 ```

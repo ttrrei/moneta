@@ -7,6 +7,16 @@
 > **Data:** `data/ohlcv_5m_features/ohlcv_5m_features.parquet` (built 2026-10-26) ·
 > **Registry ID:** S-01 — see [STRATEGY_REGISTRY.md](../STRATEGY_REGISTRY.md)
 
+> **Update (2026-10-27):** the strategy now runs through the shared
+> [engine](../engine.py) and is exposed as a lib
+> ([strategy_rsi_lib.py](../strategy_rsi_lib.py)) plus a thin CLI. The standard
+> 3×2×3 evaluation is automated by [run_matrix.py](../run_matrix.py); the
+> current matrix (all 18 cells, this exact baseline) is at
+> [results/S01/matrix.md](../results/S01/matrix.md). A B6 entry-guard option
+> (`--entry-guard`) blocks new entries on gap / near-market-close bars — this
+> report's numbers are the **guard-off** baseline (944/1011/920 trades); the
+> guard-on variant drops a few gap-bar entries (e.g. EUR 944→941, −21.58%→−21.25%).
+
 ---
 
 ## 1. The strategy (the simplest possible)

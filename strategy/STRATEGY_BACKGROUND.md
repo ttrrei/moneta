@@ -113,11 +113,29 @@ in `pipeline/indicators.py` deliberately if you truly need one.
 4. **Costs:** assume **2 bps one-way** (OANDA CFD spread) on every fill unless a
    report states otherwise. When a result is near zero, always show a
    0 / 2 / 5 bps sensitivity so the required edge is explicit.
-5. **Benchmark:** report **buy-and-hold** for the identical window in every result table.
+5. **Benchmark:** report **buy-and-hold** for the identical window in every
+   result table. *Caveat (state it in every report):* the buy-hold baseline is
+   **not** cost-bearing while the strategy **is** — so the comparison is
+   conservative in the strategy's *disfavour* on the cost side; a near-zero
+   strategy result is not automatically a loss once you note the baseline
+   ignores the one entry spread a real buy-hold would also pay.
 6. **Register first.** Add a `candidate` row to [STRATEGY_REGISTRY.md](STRATEGY_REGISTRY.md)
    before coding; update status + result after the first run.
 7. **No duplicates.** If the idea already matches an existing
    key-indicators + timeframe + entry-logic row, stop — don't re-test a tweak.
+8. **No new entries on broken bars (recommended default).** Do not open a new
+   position on a bar where `is_gap_bar == 1` or `is_near_market_close == 1`
+   (gap/open-auction pricing and the illiquid close). Use `is_partial` / `n_bars`
+   to decide bar completeness; a strategy that *does* trade those bars must say
+   so in the report and justify it (e.g. it is explicitly a gap-continuation rule).
+
+   The engine supports this as `BarFrame.no_entry_mask` (blocks *entries from
+   flat* only; exits and force-close are never blocked — see
+   `strategy/engine.py` and `tests/test_metrics.py`). Each strategy's CLI
+   exposes it as `--entry-guard`. **S-01 is documented with the guard OFF** to
+   match its original 2026-10-26 baseline (944/1011/920 trades); run with
+   `--entry-guard` to see the gap-filtered variant. New strategies may adopt
+   the guard as their default — record which it is in the registry row.
 
 ---
 

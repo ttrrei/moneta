@@ -150,18 +150,42 @@ aggregate_ohlcv → sanity_check → profile_check --raw).
 ```
 python strategy/code/strategy_<name>.py
   --instrument <SYM>      # default EUR_USD
+  --timeframe <5m|1h>     # default 5m; selects the matching feature table
   --since <ISO date>      # optional lower bound on time
-  --parquet <path>        # default data/ohlcv_5m_features/ohlcv_5m_features.parquet
+  --parquet <path>        # optional override; default depends on --timeframe
+  --cost-bps <f>          # one-way cost, default 2
   --json <path>           # optional: also write the metrics block to file
 ```
-Outputs a JSON block containing at least:
+The loader **must** verify the loaded table's bar length matches `--timeframe`
+and fail loudly on a mismatch (a 1h rule run on 5m data must be impossible, not
+silent). Outputs a JSON block containing at least:
 `n_trades, win_rate_pct, total_return_pct, buyhold_return_pct, max_drawdown_pct,
 avg_trade_return_pct, sharpe, exposure_pct`.
 
+Accounting and these metrics are owned by the **shared engine**
+(`strategy/engine.py`); a strategy file declares only its signal rule and must
+not re-implement the event loop or the metric formulas.
+
 ### 7.2 Metrics definitions (consistent across strategies)
-- `buyhold_return_pct` = `close[-1] / open[0] - 1`.
-- Transaction cost applied **at entry and exit** (default 2 bps one-way).
-- Execution: signal on closed bar `T` → fill at `open[T+1]`.
+
+All accounting: signal on closed bar `T` → fill at `open[T+1]`; one-way
+transaction cost at **both** entry and exit (default 2 bps); one position at a
+time; an open position is force-closed at the last bar's close.
+
+- `buyhold_return_pct` = `close[-1] / open[0] - 1` (cost-free reference for the
+  identical window).
+- `total_return_pct` = compounded account equity over the window, in %.
+- `max_drawdown_pct` = `max((peak_equity - equity) / peak_equity)`, in %.
+- `win_rate_pct` = fraction of closed trades with net return > 0, in %.
+- `avg_trade_return_pct` = mean per-trade net return, in %.
+- `exposure_pct` = fraction of bars with a non-zero position, in %.
+- `sharpe` = **annualised, trade-rate-based Sharpe**:
+  `mean(tr) / std(tr, ddof=1) * sqrt(n_trades / span_years)`, where `tr` is the
+  per-trade net return and `span_years` is the observed window length in
+  fractional years. It depends on the *rate* of trading, not the total count —
+  so the same edge over a longer sample gives the same Sharpe (it is
+  comparable across strategies and windows). This supersedes the earlier
+  `* sqrt(n_trades * 12)` form, which inflated with sample length.
 
 ### 7.3 DuckDB view contract
 - `main.all_data`, `main.ohlcv_5m`, `main.ohlcv_1h`, `main.ohlcv_5m_features`,

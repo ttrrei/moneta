@@ -1,0 +1,69 @@
+# Strategy evaluation config — moneta / Nova
+#
+# This file pins the **evaluation windows** and the **out-of-sample (OOS)
+# discipline** so that repeated loop runs remain comparable and do not silently
+# overfit (legacy reviews: finding B4 "no fixed window anchor" and the OOS
+# gap, BRD §10 #1 risk = overfitting).
+#
+# Read by:
+#   * strategy/WORKFLOW.md (Step 4 window selection, Step 6 OOS gate)
+#   * strategy/generated_strategy.md §5 (stop conditions / OOS requirement)
+#   * any automated runner (strategy/run_matrix.py, T1) to read a single source
+#     of truth instead of re-deriving dates at run time.
+#
+# This is *config, not code*: nothing loads it at runtime yet. When code
+# (run_matrix.py / check_registry.py) is added, it should read these values
+# verbatim so the windows cannot drift between runs.
+
+# ---------------------------------------------------------------------------
+# Evaluation windows (Step 4). Fixed anchors so every strategy — this run and
+# every future run — evaluates the *identical* data spans. This is what makes
+# cross-strategy and cross-run comparisons valid (B4).
+# ---------------------------------------------------------------------------
+windows:
+  # "full": no lower bound (whole available history, warm-up already dropped).
+  full:
+    since: null
+  # "last_12m": a *fixed* 12-month window anchored to a specific date, NOT
+  # "12 months before now". Every strategy references the same anchor.
+  last_12m:
+    since: "2025-10-27"        # anchor (review2 B4): pinned, not computed at run time
+    # end is always "now"/latest bar; pinning only the start keeps it stable.
+
+# ---------------------------------------------------------------------------
+# Out-of-sample holdout (0.5 OOS discipline). This span is **never** used for
+# hypothesis selection or tuning. It is run ONCE, only for a finalist
+# ("tested") strategy, and its result is the only number allowed to decide
+# promotion. Iterating against it is data snooping.
+# ---------------------------------------------------------------------------
+oos:
+  # Reserve the most recent ~14 months (2025-08 → latest) as the holdout.
+  # Strategies are *discovered and tuned* only on data strictly before
+  # `holdout_start`.
+  holdout_start: "2025-08-01"
+  # Rule for the workflow (Step 6 / generated_strategy §5): a strategy may only
+  # be promoted to `tested` if it ALSO beats buy-hold inside the holdout,
+  # evaluated exactly once. Re-running it to improve the holdout number is
+  # prohibited (that is re-tuning and must open a new S-NN).
+  usage: "finalist_only_once"
+  note: >
+    The in-sample window for discovery/tuning is data < holdout_start.
+    The holdout is the single, final, out-of-sample check. Recording which
+    strategies were tried against it (trial_log) is mandatory.
+
+# ---------------------------------------------------------------------------
+# Trial log (0.5). Every attempt — including rejected and parked ones — is
+# recorded so the cumulative multiple-testing burden is visible. Without this,
+# the "best of N" strategy is indistinguishable from luck.
+# ---------------------------------------------------------------------------
+trial_log:
+  file: "strategy/trial_log.md"
+  # Every row must include: date, strategy_id, hypothesis (one line), the
+  # window used, and the outcome (tested/parked/rejected).
+  required_fields:
+    - date
+    - strategy_id
+    - hypothesis
+    - window            # "full" | "last_12m" | "oos"
+    - outcome
+    - n_strategies_tried_before   # running count, for honest "best-of-N" context

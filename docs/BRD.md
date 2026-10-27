@@ -80,8 +80,14 @@ fact.
 - Automated strategy *generation* (LLM-driven idea generation).
 - Vectorized/DuckDB-only backtest engine replacing per-instrument event loops.
 - Formal deduplication engine (syntax fingerprint, signal-correlation).
-- Out-of-sample / walk-forward validation harness.
+- Full out-of-sample / walk-forward *validation harness* (rolling re-fit, expanding window,
+  automated re-selection).
 - CI beyond local `pytest`.
+
+> **已交付的相关纪律（T0）**：轻量的 **OOS holdout 纪律 + 试验台账** 已作为 MVP 的一部分落地——
+> `config/strategies.yml` 锁定 OOS holdout 起点（`2025-08-01`）与 `finalist_only_once` 使用策略，
+> `strategy/trial_log.md` 记录每次 best-of-N 尝试，`WORKFLOW.md` Step 6 将其设为准入门。
+> 上述完整验证 **harness** 仍属未来工作，见 §11。
 
 ## 6. Stakeholders
 
@@ -149,7 +155,7 @@ fact.
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Overfitting to in-sample (all 2020→26 is in-sample) | Fake alpha | Hold out last 12 months before any tuning; register and record status. |
+| Overfitting to in-sample (all 2020→26 is in-sample) | Fake alpha | OOS holdout locked in `config/strategies.yml` (start `2025-08-01`, `finalist_only_once`); every best-of-N attempt logged in `strategy/trial_log.md`; gate enforced by `WORKFLOW.md` Step 6. |
 | Cost assumption off per instrument | Misleading P&L | Report cost sensitivity; pull per-instrument spread via `profile_check`. |
 | Stale docs vs code | Wrong AI decisions | "Code wins" rule + maintenance rule in [README.md](README.md). |
 | Single-user DuckDB lock | Write failures | Close DuckDB panels before writes (documented). |
@@ -157,7 +163,7 @@ fact.
 ## 11. Roadmap (post-MVP, not committed)
 
 1. Slow the signal (1h) / add regime / squeeze filters — see `strategy_rsi_report.md` §5.
-2. Out-of-sample / walk-forward validation harness.
+2. Full out-of-sample / walk-forward validation harness (rolling re-fit, expanding window, automated re-selection). The lightweight OOS holdout + trial log is already in place (see §5.3 note); this item builds the *harness* around it.
 3. Optional LLM-assisted strategy idea generation (still gated by the registry).
 4. Optional DuckDB-vectorized backtest engine for large-scale sweeps.
 5. CI (lint + `pytest`) and automated doc-vs-code drift check.

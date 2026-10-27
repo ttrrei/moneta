@@ -33,13 +33,16 @@
 **Action:** verify the environment and data are ready.
 
 ```bash
-ls data/ohlcv_5m_features/ohlcv_5m_features.parquet   # must exist
+ls data/ohlcv_5m_features/ohlcv_5m_features.parquet   # must exist (5m layer)
+ls data/ohlcv_1h_features/ohlcv_1h_features.parquet   # must exist (1h layer — 1h strategies need it)
 .venv/bin/python -c "import talib, duckdb, pandas"      # must not raise
 .venv/bin/python -m pipeline.sanity_check && echo OK    # must print OK / exit 0
 ```
 
-- **Gate G0:** all three succeed. If the feature Parquet is missing or sanity
-  fails → **STOP.** Tell the user which pipeline stage to run
+- **Gate G0:** all four succeed. A strategy on **either** timeframe must have
+  *its* feature table present (B5: G0 previously only checked the 5m table, so a
+  1h strategy would only fail at Step 4). If a feature Parquet is missing or
+  sanity fails → **STOP.** Tell the user which pipeline stage to run
   (`load_data` → `aggregate_ohlcv` → `indicators`). Do not run multi-minute
   pipeline stages yourself without asking.
 - **Note:** close any VS Code DuckDB panel before anything writes
@@ -78,11 +81,19 @@ ls data/ohlcv_5m_features/ohlcv_5m_features.parquet   # must exist
 ## Step 3 — Implement
 
 **Action:** create `code/strategy_<name>.py`:
-- Self-contained CLI: `--instrument --since --parquet --cost-bps --json`
-  (defaults: EUR_USD, none, 5m features path, 2 bps).
+- Self-contained CLI: `--instrument --timeframe --since --parquet --cost-bps
+  --json` (defaults: EUR_USD, **5m**, none, 2 bps). Use the shared engine
+  (`strategy/engine.py`) for accounting & metrics — do **not** re-implement the
+  event loop or the metric formulas.
+- **Pin the table to the timeframe (B1).** `--timeframe 5m|1h` selects the
+  matching feature parquet; the loader **must** verify the observed bar length
+  (median `time` diff) matches the timeframe and **fail loudly** on a mismatch.
+  A 1h strategy run on the 5m table produces plausible-but-wrong numbers that
+  pass every gate — the loader must make that impossible. (Pattern:
+  `strategy_rsi.py` → `detect_bar_seconds`.)
 - Load via DuckDB filtered on `instrument` (pattern: `strategy_rsi.py`).
-- Execution model: signal on closed bar T → fill at `open[T+1]`; cost
-  applied at entry and exit.
+- Execution model: signal on closed bar T → fill at `open[T+1]`; cost applied
+  at entry and exit.
 - Print the standard JSON metrics block (generated_strategy.md §4.2).
 
 - **Gate G3 (self-review, required):** re-read your own code and check:
@@ -96,11 +107,32 @@ ls data/ohlcv_5m_features/ohlcv_5m_features.parquet   # must exist
 
 ## Step 4 — Run (mandatory protocol)
 
-**Action:** for each of EUR_USD, BTC_USD, XAU_USD:
+**Action (preferred — automated):** run the standard matrix in one command.
+It reads the windows verbatim from `config/strategies.yml` (fixed anchor, B4 —
+never "12 months before today"), runs all 18 cells, and persists per-cell JSON
+plus paste-ready tables:
+
+```
+.venv/bin/python strategy/run_matrix.py --strategy s01            # S-01: 3 inst × 2 windows × 3 costs
+.venv/bin/python strategy/run_matrix.py --strategy s01 --trial-row --hypothesis "<one line>"
+```
+
+Output → `strategy/results/<ID>/`: one JSON per cell, `matrix.md` (report tables),
+`summary.csv` (flat). Add a new strategy by registering it in `run_matrix.py`
+(`_STRATEGIES`), pointing at its `strategy_<name>_lib.py::run_<name>`.
+
+**Manual equivalent** (for one cell / debugging): for each of EUR_USD, BTC_USD,
+XAU_USD, pass the strategy's `--timeframe` (5m or 1h) so the loader picks the
+correct table:
 1. Full history:
-   `.venv/bin/python strategy/code/strategy_<name>.py --instrument <SYM> --cost-bps 0`
+   `.venv/bin/python strategy/code/strategy_<name>.py --instrument <SYM> --timeframe <TF> --cost-bps 0`
    … same with `--cost-bps 2` and `--cost-bps 5`
-2. Last 12 months: same three commands with `--since <date 12 months ago>`.
+2. Last 12 months: same three commands with the **fixed anchor**
+   `--since 2025-10-27` (from `config/strategies.yml` → `windows.last_12m.since`),
+   **not** "12 months before today". A fixed anchor is what keeps every strategy
+   — this run and the next — evaluating the *identical* span (B4).
+3. If the strategy supports the B6 entry guard (`--entry-guard`), run the matrix
+   both ways and record which is the reported baseline (S-01 baseline: **off**).
 
 - **Gate G4:** 18 JSON blocks produced (3 × 3 × 2) without exceptions, each
   with `n_bars > 1000` for the full-history runs.
@@ -110,13 +142,15 @@ ls data/ohlcv_5m_features/ohlcv_5m_features.parquet   # must exist
 
 ## Step 5 — Report
 
-**Action:** write `docs/strategy_<name>_report.md` (structure =
-generated_strategy.md §4.4) containing, at minimum:
+**Action:** write `strategy/docs/strategy_<name>_report.md` (structure =
+generated_strategy.md §4.4; note the full path — the repo-root `docs/` is for
+spec documents, not strategy reports) containing, at minimum:
 - Hypothesis (verbatim from Step 1) + expected trade count vs actual.
 - 3×3×2 results tables (instrument × cost × window) with buy-hold on each.
 - Why it wins/loses (mechanism, not just numbers).
 - Regime breakdown (which sub-periods it lives or dies on).
 - Causality checklist from Gate G3.
+- **"N strategies tried before this one: <k>"** (from `strategy/trial_log.md`).
 - Caveats (in-sample, no slippage, per-instrument loop).
 
 - **Gate G5:** every number in the report can be traced to a Step-4 JSON
@@ -133,23 +167,36 @@ Step-4 results and assign exactly one status:
 | `parked` | No stop condition met, but total_return < buyhold at 2 bps (interesting, insufficient). |
 | `tested` (candidate retained) | total_return > buyhold at 2 bps on ≥2 of 3 instruments, AND on both windows. |
 
-- **Gate G6:** status assigned and justified in the report. A `rejected`
-  outcome with a good diagnosis is a **complete, successful run** — do not
-  re-tune to escape it.
+- **OOS check (mandatory for `tested`, from `config/strategies.yml`):** the
+  `full` and `last_12m` windows above are all **in-sample** (they are what the
+  hypothesis was tuned against). Before a strategy may be promoted to `tested`,
+  it must *also* be evaluated once on the reserved holdout
+  (`oos.holdout_start` → latest), **exactly once**, and beat buy-hold there.
+  Iterating against the holdout is data snooping and is prohibited — that is a
+  new hypothesis, not a re-run. This is the single most important guard against
+  the overfitting risk the BRD names as #1.
+
+- **Gate G6:** status assigned and justified in the report; if `tested`, the
+  one-shot holdout result is present. A `rejected` outcome with a good
+  diagnosis is a **complete, successful run** — do not re-tune to escape it.
 
 ## Step 7 — Close out
 
 **Action:**
 1. `STRATEGY_REGISTRY.md`: set status, last run date, result (ret vs BH,
    primary instrument); keep the row for all outcomes.
-2. If `rejected`: add a row to *Rejected combinations — do not re-test
+2. **`strategy/trial_log.md`: append one row for THIS attempt** (every outcome,
+   including rejected/parked) with `n_tried_before` = the running count. This is
+   mandatory — it is the only place the "best of N" burden is visible.
+3. If `rejected`: add a row to *Rejected combinations — do not re-test
    without a new hypothesis* with the one-line reason.
-3. If `tested`: append the baseline evidence to `STRATEGY_BACKGROUND.md` §7
+4. If `tested`: append the baseline evidence to `STRATEGY_BACKGROUND.md` §7
    (one bullet: what works, on what, at what cost).
-4. List all changed/created files in your final message to the user.
+5. List all changed/created files in your final message to the user.
 
 - **Gate G7 (definition of done):** all of these are true —
   - [ ] Registry row exists with final status; usage map consistent.
+  - [ ] **Trial log row added with the correct `n_tried_before` count.**
   - [ ] Code runs in < 5 s per instrument.
   - [ ] Report has all 18 result cells + diagnosis + caveats.
   - [ ] No lookahead (Gate G3 checklist present in report).

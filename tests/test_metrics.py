@@ -1,0 +1,310 @@
+"""Golden-value tests for the shared backtest engine (:mod:`strategy.engine`).
+
+These lock the *metric definitions* (SAD §7.2 / engine ``METRIC_FORMULAS``) so
+they can no longer drift between strategies. They are pure (no data, no network,
+no talib) and run in any environment / CI.
+
+Key regression covered here: the old reference ``sharpe`` was
+``mean(tr)/std(tr) * sqrt(n_trades * 12)`` — a number that *grows with the
+number of trades*. These tests pin the corrected, annualised-by-trading-rate
+Sharpe and prove it is independent of sample length (same edge, longer sample →
+same Sharpe), which is what makes it comparable across strategies and windows.
+"""
+
+from __future__ import annotations
+
+import numpy as np
+import pytest
+
+from strategy.engine import (
+    BarFrame,
+    FlatRule,
+    annualised_sharpe,
+    run_backtest,
+)
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+def _bars(open_, close, bar_seconds: int = 300) -> BarFrame:
+    o = np.asarray(open_, dtype=np.float64)
+    c = np.asarray(close, dtype=np.float64)
+    return BarFrame(open=o, close=c, time=None, bar_seconds=bar_seconds)
+
+
+def _always_long() -> object:
+    """A rule that is long from the very first bar's open to the last bar."""
+    class _Long:
+        def desired_position(self, i: int) -> int:
+            return 1
+    return _Long()
+
+
+def _always_short() -> object:
+    class _Short:
+        def desired_position(self, i: int) -> int:
+            return -1
+    return _Short()
+
+
+def _tug_of_war() -> object:
+    """Flip between long and short every bar: a fully-known, deterministic
+    round-trip sequence with no overlap. Used for exact-value checks."""
+    class _Flip:
+        def desired_position(self, i: int) -> int:
+            return 1 if (i % 2 == 0) else -1
+    return _Flip()
+
+
+# ---------------------------------------------------------------------------
+# annualised_sharpe — the B2 regression, stated directly
+# ---------------------------------------------------------------------------
+
+def test_sharpe_is_invariant_to_sample_length():
+    """The *same* per-trade edge at the *same* trading rate (trades/year), over
+    a longer sample, gives (approximately) the *same* annualised Sharpe — it
+    depends on the rate, not the total count. This is the B2 fix made concrete.
+
+    Tolerance is loose (the *sample* std with ddof=1 has finite-sample noise as
+    n grows) but tight enough that the OLD formula — which scales by
+    ``sqrt(n_trades)`` and therefore differs by ``sqrt(n_b/n_a)`` — fails it.
+    """
+    edge = np.array([0.001, -0.0008, 0.0012, -0.0005, 0.0009, -0.0003])
+    a = list(edge) * 20                 # 120 trades / 5 yr  = 24 trades/yr
+    b = list(edge) * 40                 # 240 trades / 10 yr = 24 trades/yr
+    span_a, span_b = 5.0, 10.0
+    assert len(a) / span_a == pytest.approx(len(b) / span_b, rel=1e-12)
+
+    new_a = annualised_sharpe(a, span_a)
+    new_b = annualised_sharpe(b, span_b)
+    # Approximately invariant to sample length (same rate, same edge).
+    assert new_a == pytest.approx(new_b, rel=0.05)
+
+    # The OLD (B2) formula is NOT approximately invariant: it scales by sqrt(n),
+    # so the longer sample's value is sqrt(n_b/n_a) = sqrt(2) times larger.
+    old = lambda xs: float(np.mean(xs) / np.std(xs, ddof=1) * np.sqrt(len(xs) * 12))
+    assert old(a) == pytest.approx(old(b) / np.sqrt(2), rel=0.05)
+
+
+def test_sharpe_depends_on_trades_per_year():
+    """Same number of trades, but a longer span (fewer trades/year) → lower
+    annualised Sharpe. Confirms the scaling is by the *rate*, not the count."""
+    edge = [0.001, -0.0008, 0.0012, -0.0005, 0.0009, -0.0003]
+    s_dense = annualised_sharpe(edge, span_years=1.0)   # 6 trades/yr
+    s_sparse = annualised_sharpe(edge, span_years=4.0)  # 1.5 trades/yr
+    assert s_dense == pytest.approx(s_sparse * 2.0, rel=1e-9)  # sqrt(4/1) = 2
+
+
+def test_sharpe_zero_when_under_two_trades_or_zero_std():
+    assert annualised_sharpe([0.001], 1.0) == 0.0
+    assert annualised_sharpe([], 1.0) == 0.0
+    assert annualised_sharpe([0.0, 0.0], 1.0) == 0.0  # std == 0
+
+
+# ---------------------------------------------------------------------------
+# Deterministic accounting — exact values on a known price path
+# ---------------------------------------------------------------------------
+
+def test_flat_rule_produces_no_trades_and_zero_return():
+    bars = _bars(open_=[100.0, 101.0, 102.0], close=[101.0, 102.0, 103.0])
+    res = run_backtest(bars, FlatRule(), cost_bps=0.0)
+    assert res.n_trades == 0
+    assert res.raw_total_return_pct == 0.0
+    assert res.raw_sharpe == 0.0
+    assert res.raw_max_drawdown_pct == 0.0
+
+
+def test_single_long_round_trip_exact_value():
+    """Enter long at bar 0 open (100), exit long at bar 2 open (102) → one
+    round-trip with return (102*(1-c))/(100*(1+c)) - 1 exactly.
+
+    At cost 0 that is 2.0%; at cost 2 bps it is (102/100)/(1+0.0002)^2 - 1.
+    """
+    open_ = [100.0, 101.0, 102.0]
+    close = [101.0, 102.0, 103.0]
+
+    class _EnterExit:
+        # long at bar0 and bar1 open; flat at bar2 open (exit).
+        def desired_position(self, i: int) -> int:
+            return 1 if i < 2 else 0
+
+    # cost = 0
+    res0 = run_backtest(_bars(open_, close), _EnterExit(), cost_bps=0.0)
+    assert res0.n_trades == 1
+    assert res0.raw_total_return_pct == pytest.approx(2.0, rel=1e-12)
+    assert res0.raw_avg_trade_return_pct == pytest.approx(2.0, rel=1e-12)
+    assert res0.raw_buyhold_return_pct == pytest.approx((103.0 / 100.0 - 1.0) * 100, rel=1e-12)
+
+    # cost = 2 bps (one-way)
+    c = 2.0 / 10_000.0
+    expected = 102.0 * (1 - c) / (100.0 * (1 + c)) - 1.0
+    res2 = run_backtest(_bars(open_, close), _EnterExit(), cost_bps=2.0)
+    assert res2.n_trades == 1
+    assert res2.raw_total_return_pct == pytest.approx(expected * 100, rel=1e-12)
+
+
+def test_short_side_symmetry():
+    """A short entered at 100 (bar0 open) and exited at 98 (bar2 open) earns
+    ``entry/exit - 1`` = 100/98 - 1 at cost 0 — the mirror image of the long
+    case, in the opposite direction."""
+    open_ = [100.0, 99.0, 98.0]
+    close = [99.0, 98.0, 97.0]
+
+    class _Short:
+        def desired_position(self, i: int) -> int:
+            return -1 if i < 2 else 0
+
+    res = run_backtest(_bars(open_, close), _Short(), cost_bps=0.0)
+    assert res.n_trades == 1
+    assert res.trades[0].direction == -1
+    assert res.raw_total_return_pct == pytest.approx((100.0 / 98.0 - 1.0) * 100, rel=1e-12)
+
+
+def test_long_only_clamps_shorts():
+    bars = _bars([100.0, 99.0, 98.0], [99.0, 98.0, 97.0])
+    # _always_short wants to be short every bar; long_only must clamp to flat.
+    res = run_backtest(bars, _always_short(), cost_bps=0.0, long_only=True)
+    assert res.n_trades == 0
+    assert res.raw_total_return_pct == 0.0
+
+
+def test_force_close_at_last_bar_books_the_open_trade():
+    """If we are still long at the end, the open position must be force-closed
+    and counted as a trade (no unbooked return)."""
+    open_ = [100.0, 101.0, 102.0]
+    close = [101.0, 102.0, 105.0]  # rally to the end
+    res = run_backtest(_bars(open_, close), _always_long(), cost_bps=0.0)
+    assert res.n_trades == 1  # the single open position, force-closed at bar 2 close
+    # entry at 100 (bar0 open), exit at 105 (bar2 close): +5%
+    assert res.raw_total_return_pct == pytest.approx(5.0, rel=1e-12)
+    assert res.raw_exposure_pct == pytest.approx(100.0, rel=1e-12)
+
+
+def test_signal_on_closed_bar_fills_at_next_open():
+    """A rule that decides from bar ``i-1``'s close is filled at bar ``i``'s
+    open. The rule is long at the open of bar 1 (entry at open[1]=101) and
+    stays long; the single open position is force-closed at the last close
+    (close[2]=103). It must NOT enter at bar 0 (no prior close to signal from).
+
+    So the one trade is: entry 101, exit 103 → 103*(1-c)/(101*(1+c)) - 1.
+    """
+    open_ = [100.0, 101.0, 102.0]
+    close = [101.0, 102.0, 103.0]
+
+    class _EnterBar1:
+        def desired_position(self, i: int) -> int:
+            return 1 if i >= 1 else 0  # flat at bar0, long from bar1 onward
+
+    c = 2.0 / 10_000.0
+    expected = 103.0 * (1 - c) / (101.0 * (1 + c)) - 1.0  # enter@101 (bar1 open), exit@103 (last close)
+    res = run_backtest(_bars(open_, close), _EnterBar1(), cost_bps=2.0)
+    assert res.n_trades == 1
+    assert res.trades[0].entry_price == pytest.approx(101.0)  # filled at bar1 open, NOT bar0
+    assert res.trades[0].exit_price == pytest.approx(103.0)   # force-closed at last close
+    assert res.raw_total_return_pct == pytest.approx(expected * 100, rel=1e-12)
+
+
+def test_metrics_dict_is_json_serialisable():
+    import json
+    res = run_backtest(_bars([100.0, 101.0], [101.0, 102.0]),
+                       _always_long(), cost_bps=2.0)
+    d = res.to_dict()
+    s = json.dumps(d)  # must not raise
+    for key in ("n_trades", "total_return_pct", "buyhold_return_pct", "max_drawdown_pct",
+                "win_rate_pct", "avg_trade_return_pct", "sharpe", "exposure_pct"):
+        assert key in d
+    assert "trades" not in d  # ledger is intentionally excluded from the JSON block
+
+
+def test_needs_at_least_two_bars():
+    with pytest.raises(ValueError):
+        run_backtest(_bars([100.0], [101.0]), _always_long())
+
+
+# ---------------------------------------------------------------------------
+# run_matrix — pure helpers (no data / network)
+# ---------------------------------------------------------------------------
+
+def test_run_matrix_cell_names_are_stable():
+    from strategy.run_matrix import _cell_name
+
+    # Naming scheme used for per-cell JSON files; must not collide across the
+    # standard matrix (3 instruments x 2 windows x 3 cost tiers = 18 cells).
+    names = {
+        _cell_name(inst, win, cost)
+        for inst in ("EUR_USD", "BTC_USD", "XAU_USD")
+        for win in ("full", "last_12m")
+        for cost in (0.0, 2.0, 5.0)
+    }
+    assert len(names) == 18
+    assert _cell_name("EUR_USD", "full", 2.0) == "EUR_USD__full__c2"
+    assert _cell_name("EUR_USD", "last_12m", 0.0) == "EUR_USD__last_12m__c0"
+
+
+# ---------------------------------------------------------------------------
+# B6 entry guard — no *new* entries on flagged bars (gap / near market close)
+# ---------------------------------------------------------------------------
+
+def _bars_with_mask(open_, close, no_entry) -> BarFrame:
+    o = np.asarray(open_, dtype=np.float64)
+    c = np.asarray(close, dtype=np.float64)
+    return BarFrame(open=o, close=c, time=None, bar_seconds=300,
+                    no_entry_mask=np.asarray(no_entry, dtype=bool))
+
+
+def test_entry_guard_blocks_new_entry_from_flat():
+    """Bar 1 is flagged no-entry. A rule going long at bar 1 (decided from
+    bar 0's close) must NOT enter at bar 1's open; the engine stays flat and
+    re-attempts at bar 2.
+
+    Rule: long from bar 1 onward. Without the guard: entry at open[1]=101,
+    force-closed at close[2]=103. With the guard on bar 1: entry at
+    open[2]=102, force-closed at close[2]=103 → +1% at cost 0.
+    """
+    open_ = [100.0, 101.0, 102.0]
+    close = [101.0, 102.0, 103.0]
+
+    class _EnterBar1:
+        def desired_position(self, i: int) -> int:
+            return 1 if i >= 1 else 0
+
+    res_no_guard = run_backtest(_bars(open_, close), _EnterBar1(), cost_bps=0.0)
+    assert res_no_guard.n_trades == 1
+    assert res_no_guard.trades[0].entry_price == pytest.approx(101.0)
+
+    res_guarded = run_backtest(
+        _bars_with_mask(open_, close, no_entry=[False, True, False]),
+        _EnterBar1(), cost_bps=0.0)
+    assert res_guarded.n_trades == 1
+    assert res_guarded.trades[0].entry_price == pytest.approx(102.0)  # deferred to bar 2
+    # entry 102 (bar2 open), exit 103 (bar2 close, force-closed): +103/102 - 1
+    assert res_guarded.raw_total_return_pct == pytest.approx((103.0 / 102.0 - 1.0) * 100, rel=1e-12)
+
+
+def test_entry_guard_does_not_block_exits_or_flips():
+    """The no-entry mask must only block fresh entries *from flat*. Closing an
+    open position at a flagged bar's open is still allowed: long from bar 0,
+    exit at bar 2 open (flagged). The trade must still close at 102."""
+    open_ = [100.0, 101.0, 102.0]
+    close = [101.0, 102.0, 103.0]
+
+    class _EnterExit:
+        def desired_position(self, i: int) -> int:
+            return 1 if i < 2 else 0
+
+    res = run_backtest(
+        _bars_with_mask(open_, close, no_entry=[False, False, True]),
+        _EnterExit(), cost_bps=0.0)
+    assert res.n_trades == 1
+    assert res.trades[0].entry_price == pytest.approx(100.0)
+    assert res.trades[0].exit_price == pytest.approx(102.0)  # exit on flagged bar OK
+    assert res.raw_total_return_pct == pytest.approx(2.0, rel=1e-12)
+
+
+def test_entry_guard_mask_length_must_match():
+    with pytest.raises(ValueError):
+        run_backtest(
+            _bars_with_mask([100.0, 101.0], [101.0, 102.0], no_entry=[True, False, True]),
+            _always_long())
