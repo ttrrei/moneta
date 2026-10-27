@@ -70,7 +70,7 @@ tables.
 | `load_data.py` | Raw CSV → `all_data.parquet` + DuckDB catalog | De-dup on `(instrument,time)`; drop incomplete; register view. |
 | `aggregate_ohlcv.py` | 1m → 5m/1h OHLCV | UTC bucketing; OHLCV semantics; `n_bars` for partial detection. |
 | `indicators.py` | Feature engine (305/270 cols) | TA-Lib source of truth; causality; CFD grid; no synthetic fill; float64→float32. |
-| `indicators/` (pkg) | Custom indicators (Supertrend, PSAR dir) | Causal, pure-NumPy modules; tested in isolation (`tests/test_indicators.py`); imported by `pipeline/indicators.py`. |
+| `library/` (pkg) | Custom indicators (Supertrend, PSAR dir) | Causal, pure-NumPy modules; tested in isolation (`tests/test_indicators.py`); imported by `pipeline/indicators.py`. |
 | `sanity_check.py` | "Is anything broken?" | 0 dup keys / 0 bad OHLC / 0 over-full bars, else exit 1. |
 | `profile_check.py` | Judgement profiling + `safe_mtf_view` | Shows naive-vs-safe 1h→5m join leak; gaps/sessions/partial/spread/quality. |
 | `table_catalog.py` | Register Parquet tables + views in DuckDB | Identifier/literal quoting; upsert catalog; drop+recreate view. |

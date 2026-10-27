@@ -78,7 +78,7 @@ moneta/
 │   ├── extract_oci.py  extract_oanda.py  load_data.py
 │   ├── aggregate_ohlcv.py  indicators.py   ← feature engine (orchestrates + TA-Lib)
 │   ├── sanity_check.py  profile_check.py  table_catalog.py
-├── indicators/                  ← our own indicator library (TA-Lib gaps)
+├── library/                  ← our own indicator library (TA-Lib gaps)
 │   ├── supertrend.py  psar.py  utils.py    ← causal, pure-NumPy, tested in isolation
 ├── strategy/                    ← the research loop
 │   ├── engine.py                ← shared backtest engine (accounting + metrics)
@@ -211,7 +211,7 @@ Done (tracked in Git):
 - [x] Bronze data ingestion (OCI + OANDA backfill) and dedup on `(instrument, time)`
 - [x] DuckDB loading of raw CSVs (`load_data.py`) — Parquet is the data, DuckDB is metadata + views
 - [x] Silver transformation — 1m resampled to 5m / 1h (`aggregate_ohlcv.py`)
-- [x] Gold feature wide tables — **305 / 270 columns** (`pipeline/indicators.py` + `indicators/`, spec in `docs/indicators.md`)
+- [x] Gold feature wide tables — **305 / 270 columns** (`pipeline/indicators.py` + `library/`, spec in `docs/indicators.md`)
 - [x] **Shared, tested backtest engine** with standard metrics, cost handling, and buy-and-hold (`strategy/engine.py`)
 - [x] Strategy registry + background/checklist + trial log + OOS holdout discipline
 - [x] Automated tests — **61 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard)

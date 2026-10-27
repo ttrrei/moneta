@@ -28,9 +28,9 @@ Current contents:
 
 from __future__ import annotations
 
-from indicators.psar import psar_direction, psar_line
-from indicators.supertrend import supertrend
-from indicators.utils import param_tag, validate_free_params
+from library.psar import psar_direction, psar_line
+from library.supertrend import supertrend
+from library.utils import param_tag, validate_free_params
 
 __all__ = [
     "psar_direction",

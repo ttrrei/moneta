@@ -169,8 +169,8 @@ class BaseFeatureGroup(abc.ABC):
 | **ADX / DI** | `adx_{n}`<br>`plus_di_{n}`<br>`minus_di_{n}` | `talib.ADX(h, l, c, n)`<br>`talib.PLUS_DI(h, l, c, n)`<br>`talib.MINUS_DI(h, l, c, n)` | pandas-ta `adx` | $3n$ | Wilder 平滑方向性指标，取值严格在 $[0, 100]$ |
 | **Aroon** | `aroon_up_{n}`<br>`aroon_down_{n}` | `talib.AROON(h, l, timeperiod=n)` | pandas-ta `aroon` | $n+1$ | 度量创近期新高/新低的 Bar 距离，$[0, 100]$ |
 | **Donchian**| `dc_upper_{n}`<br>`dc_lower_{n}`<br>`dc_mid_{n}` | 向量封装：`talib.MAX(h, n)`，`talib.MIN(l, n)`，mid 为均值 | pandas rolling max/min | $n$ | 唐奇安通道；突破策略使用前一根通道值 `shift(1)` 对比 |
-| **Parabolic SAR** | `psar_{a}_{m}`<br>`psar_dir_{a}_{m}` | `talib.SAR(h, l, acceleration=a, maximum=m)`（`indicators/psar.py` 封装）；`psar_dir = +1 if close > psar else -1` | pandas-ta `psar` | 无窗口（路径依赖，由全局 360 行预热消除起点差异） | Wilder 抛物线转向指标。**`a`/`m` 是自由参数，不受 N 网格白名单限制**（默认 (0.02,0.20) 和 (0.01,0.10)，可用 `--psar` 覆盖）；列名带参数标签（0.02→`0p02`）；bar T 只用 ≤T 的数据 |
-| **Supertrend** | `st_{n}_{k}`<br>`st_dir_{n}_{k}` | `supertrend(h, l, c, talib.ATR(n), mult=k)`（`indicators/supertrend.py` 内的因果递推实现，TA-Lib 无此指标） | pandas-ta `supertrend`（方向一致率 >99.8%） | $n$ + 路径依赖 | **只有 ATR 长度 `n` 属于时间窗口，走 N 网格；乘数 `k` 是自由参数，不受白名单限制**（默认 2.0 和 3.0，可用 `--st-mult` 覆盖，列名如 `st_24_2p5`）；`st_dir` = +1 上升趋势（线=下轨）/ −1 下降趋势（线=上轨）；上下轨对上一根 close 做棘轮，方向在当根 close 穿越有效轨时翻转 |
+| **Parabolic SAR** | `psar_{a}_{m}`<br>`psar_dir_{a}_{m}` | `talib.SAR(h, l, acceleration=a, maximum=m)`（`library/psar.py` 封装）；`psar_dir = +1 if close > psar else -1` | pandas-ta `psar` | 无窗口（路径依赖，由全局 360 行预热消除起点差异） | Wilder 抛物线转向指标。**`a`/`m` 是自由参数，不受 N 网格白名单限制**（默认 (0.02,0.20) 和 (0.01,0.10)，可用 `--psar` 覆盖）；列名带参数标签（0.02→`0p02`）；bar T 只用 ≤T 的数据 |
+| **Supertrend** | `st_{n}_{k}`<br>`st_dir_{n}_{k}` | `supertrend(h, l, c, talib.ATR(n), mult=k)`（`library/supertrend.py` 内的因果递推实现，TA-Lib 无此指标） | pandas-ta `supertrend`（方向一致率 >99.8%） | $n$ + 路径依赖 | **只有 ATR 长度 `n` 属于时间窗口，走 N 网格；乘数 `k` 是自由参数，不受白名单限制**（默认 2.0 和 3.0，可用 `--st-mult` 覆盖，列名如 `st_24_2p5`）；`st_dir` = +1 上升趋势（线=下轨）/ −1 下降趋势（线=上轨）；上下轨对上一根 close 做棘轮，方向在当根 close 穿越有效轨时翻转 |
 
 ### 7.2 动量与衰竭组 (`MomentumGroup`)
 

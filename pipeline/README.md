@@ -99,7 +99,7 @@ The spec is `docs/indicators.md`; the readable (non-code) mirror is
 `config/indicators.yml`. If the two ever disagree, **`pipeline/indicators.py`
 wins** — update the spec in the same change.
 
-**Custom indicators live in the `indicators/` package** (our own code, not
+**Custom indicators live in the `library/` package** (our own code, not
 TA-Lib): `supertrend.py` (causal Supertrend line + direction — TA-Lib has no
 Supertrend), `psar.py` (PSAR line via `talib.SAR` + our direction convention),
 `utils.py` (shared helpers). They are pure NumPy, causal, and **tested in

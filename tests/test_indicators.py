@@ -315,7 +315,7 @@ def test_sma_parity_vs_talib_reference():
 # PSAR + Supertrend — the `indicators/` library (T2.1)
 # ===========================================================================
 
-from indicators import supertrend as _supertrend_fn  # noqa: E402
+from library import supertrend as _supertrend_fn  # noqa: E402
 from pipeline.indicators import (  # noqa: E402
     PSAR_PARAMS,
     ST_MULTS,

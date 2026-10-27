@@ -70,7 +70,7 @@ in `pipeline/indicators.py` deliberately if you truly need one. **Non-window
 parameters are free but named**: PSAR accel/max and the Supertrend multiplier are
 not whitelisted (B10/B11) — they are explicit constants
 (`pipeline/indicators.py` → `PSAR_PARAMS`, `ST_MULTS`; library
-`indicators/psar.py`, `indicators/supertrend.py`), and their values are baked
+`library/psar.py`, `library/supertrend.py`), and their values are baked
 into the column names (e.g. `st_24_2p5`, `psar_0p02_0p2`).
 
 | Family | Columns (repeat per N = 6,12,24,60,120) |
@@ -159,7 +159,7 @@ strategy/
 │   └── strategy_rsi.py
 └── docs/                    ← one report .md per strategy
 
-indicators/                  ← our own indicator library (TA-Lib gaps)
+library/                  ← our own indicator library (TA-Lib gaps)
 ├── supertrend.py            ← causal Supertrend (line + direction), tested in isolation
 ├── psar.py                  ← PSAR (talib.SAR) + our direction convention
 └── utils.py                 ← param_tag, validate_free_params

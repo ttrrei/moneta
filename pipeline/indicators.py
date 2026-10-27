@@ -33,7 +33,7 @@ import talib
 
 import pandas_ta_classic as ptac
 
-from indicators import (  # noqa: E402  (project's own indicator library)
+from library import (  # noqa: E402  (project's own indicator library)
     param_tag,
     psar_direction,
     psar_line,

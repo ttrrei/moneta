@@ -1,4 +1,4 @@
-# `indicators/` — custom indicator library
+# `library/` — custom indicator library
 
 The project's **own** indicator implementations, kept separate from
 `pipeline/indicators.py` (the feature engine) so they can be referenced by
@@ -35,11 +35,11 @@ the pipeline *and* checked in isolation.
 
 ## Adding a new indicator (checklist)
 
-1. New module `indicators/<name>.py` implementing the above conventions.
+1. New module `library/<name>.py` implementing the above conventions.
 2. Pure-NumPy unit tests in `tests/test_indicators.py` (or a dedicated
    `tests/test_<name>.py`): prefix-invariance, bounds, degenerate input,
    and (if a reference exists, e.g. pandas-ta-classic) a parity smoke test.
-3. Export from `indicators/__init__.py`.
+3. Export from `library/__init__.py`.
 4. Feature-engine integration in `pipeline/indicators.py` (column names +
    `param_tag`), then the **four-file sync**:
    `config/indicators.yml` → `docs/indicators.md` →
