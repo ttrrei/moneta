@@ -71,6 +71,12 @@ oos:
 strategies:
   S-01:
     timeframe: "5m"
+  S-02:
+    timeframe: "1h"
+  S-03:
+    timeframe: "5m"
+  S-04:
+    timeframe: "5m"
   S-05:
     timeframe: "5m"
   S-06:

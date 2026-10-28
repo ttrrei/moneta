@@ -73,9 +73,30 @@ def _register_s06() -> None:
     _STRATEGIES["s06"] = {"label": "S-06 EMA-spread-24/120 follower", "run": run}
 
 
+def _register_s02() -> None:
+    from strategy.strategy_rsi_1h_lib import run
+
+    _STRATEGIES["s02"] = {"label": "S-02 RSI-24 mean-reversion (1h)", "run": run}
+
+
+def _register_s03() -> None:
+    from strategy.strategy_rsi_trend_lib import run
+
+    _STRATEGIES["s03"] = {"label": "S-03 RSI + trend filter", "run": run}
+
+
+def _register_s04() -> None:
+    from strategy.strategy_squeeze_lib import run
+
+    _STRATEGIES["s04"] = {"label": "S-04 Squeeze-onset follower", "run": run}
+
+
 _register_s01()
 _register_s05()
 _register_s06()
+_register_s02()
+_register_s03()
+_register_s04()
 
 
 def _load_config() -> dict:
@@ -133,31 +154,6 @@ def _registered_id(cfg: dict, strategy: str) -> str | None:
     return None
 
 
-def _check_oos_once(strategy: str) -> None:
-    """One-time OOS lock (repo_review_20261027 §1.1 step 3): if the trial log
-    already records an `oos` window row for this strategy, re-running the
-    holdout would be re-tuning on the OOS span — refuse.
-
-    A row with outcome `<TBD>` does not count: that is the run *in progress*
-    (this lock exists to stop a second run, which implies the first was
-    already adjudicated).
-    """
-    if not TRIAL_LOG.exists():
-        return
-    body = re.sub(r"<!--.*?-->", "", TRIAL_LOG.read_text(), flags=re.DOTALL)
-    wanted = strategy.upper().replace("-", "")
-    for line in body.splitlines():
-        cells = [c.strip() for c in line.strip().strip("|").split("|")]
-        if len(cells) < 6 or not cells[0].isdigit():
-            continue
-        if (cells[2].replace("-", "") == wanted and cells[4] == "oos"
-                and cells[5] != "<TBD>"):
-            raise SystemExit(
-                f"Strategy {strategy.upper()} already has an adjudicated `oos` row "
-                f"in strategy/trial_log.md ({line.strip()}). Re-running the holdout "
-                f"is prohibited — open a new strategy ID instead.")
-
-
 def _cell_name(instrument: str, window: str, cost: float) -> str:
     return f"{instrument}__{window}__c{cost:g}"
 
@@ -175,6 +171,115 @@ def _data_fingerprint(parquet: str) -> dict:
     finally:
         conn.close()
     return {"path": str(p), "mtime": st.st_mtime, "rows": int(n)}
+
+
+# ---------------------------------------------------------------------------
+# Data-bound OOS consumption (review 2026-10-28 item 6 / reviews 2-4).
+#
+# The trial-log lock above is *label*-based: it stops a second run once an
+# adjudicated `oos` row exists, but it does not know that the *same data* was
+# already used. A strategy whose in-sample numbers were already seen on the
+# holdout could still "cleanly" run `--windows oos`. This ledger binds OOS
+# consumption to the **data fingerprint** and **reserves the attempt before the
+# holdout is loaded**, so a crash mid-run cannot silently open a fresh attempt
+# on the same data. It is a small ledger, not a state-machine framework.
+# ---------------------------------------------------------------------------
+
+def _oos_ledger_path() -> Path:
+    return Path(__file__).resolve().parent / "results" / "oos_consumption.json"
+
+
+def _load_oos_ledger() -> dict:
+    p = _oos_ledger_path()
+    if not p.exists():
+        return {}
+    try:
+        data = json.loads(p.read_text())
+        return data if isinstance(data, dict) else {}
+    except (json.JSONDecodeError, OSError):
+        return {}
+
+
+def _save_oos_ledger(ledger: dict) -> None:
+    p = _oos_ledger_path()
+    p.parent.mkdir(parents=True, exist_ok=True)
+    tmp = p.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(ledger, indent=2, sort_keys=True))
+    tmp.replace(p)  # atomic-ish: readers never see a torn file
+
+
+def _fingerprint_key(fp: dict | None) -> str | None:
+    """Stable identity of a data fingerprint (path + mtime + rows)."""
+    if not fp:
+        return None
+    return f"{fp.get('path')}|{fp.get('mtime')}|{fp.get('rows')}"
+
+
+def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> None:
+    """Record an OOS attempt **before** the holdout is consumed (review item 6).
+
+    Keyed on the canonical strategy id + data-fingerprint, so a second run on
+    the *same* data is refused by :func:`_check_oos_once`, while a genuine
+    re-validation on a **new** dataset (rebuilt parquet) is still allowed.
+    """
+    ledger = _load_oos_ledger()
+    sid = strategy.upper().replace("-", "")
+    entry = {
+        "strategy": sid,
+        "fingerprint_key": _fingerprint_key(fingerprint),
+        "fingerprint": fingerprint,
+        "manifest": manifest,
+        "reserved_at": date.today().isoformat(),
+        "status": "reserved",
+    }
+    # Keep one record per (strategy, data). A new dataset supersedes the old.
+    ledger[sid] = entry
+    _save_oos_ledger(ledger)
+
+
+def _check_oos_once(strategy: str, fingerprint: dict | None = None,
+                    manifest: dict | None = None) -> None:
+    """Refuse a holdout run that is already spent.
+
+    Two independent locks (either one blocks):
+      1. **Label** (repo_review_20261027 §1.1): an adjudicated `oos` trial-log
+         row for this strategy. Backward-compatible with the original lock.
+      2. **Data** (review 2026-10-28 item 6): the consumption ledger already
+         records this strategy against the *same* data fingerprint. This is
+         what stops a strategy whose numbers were already seen on the holdout
+         from being re-run "cleanly", even before a trial row is written.
+    """
+    # (1) label-based lock — unchanged behaviour, existing test still passes.
+    if not TRIAL_LOG.exists():
+        pass
+    else:
+        body = re.sub(r"<!--.*?-->", "", TRIAL_LOG.read_text(), flags=re.DOTALL)
+        wanted = strategy.upper().replace("-", "")
+        for line in body.splitlines():
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) < 6 or not cells[0].isdigit():
+                continue
+            if (cells[2].replace("-", "") == wanted and cells[4] == "oos"
+                    and cells[5] != "<TBD>"):
+                raise SystemExit(
+                    f"Strategy {strategy.upper()} already has an adjudicated `oos` row "
+                    f"in strategy/trial_log.md ({line.strip()}). Re-running the holdout "
+                    f"is prohibited — open a new strategy ID instead.")
+
+    # (2) data-bound lock — refuses a re-consumption of the same dataset.
+    if fingerprint is None:
+        return
+    ledger = _load_oos_ledger()
+    sid = strategy.upper().replace("-", "")
+    entry = ledger.get(sid)
+    if not entry:
+        return
+    if entry.get("fingerprint_key") == _fingerprint_key(fingerprint):
+        raise SystemExit(
+            f"Strategy {strategy.upper()} already consumed this exact OOS dataset "
+            f"(data fingerprint {entry.get('fingerprint_key')}) at "
+            f"{entry.get('reserved_at')}. Re-running the holdout on the same data "
+            f"is prohibited — re-validate on a new dataset or open a new strategy ID.")
 
 
 def run_matrix(
@@ -206,18 +311,35 @@ def run_matrix(
         raise SystemExit(
             f"Strategy {strategy.upper()} is registered for timeframe {expected} "
             f"(config/strategies.yml); refusing to run it on {timeframe}.")
-    if "oos" in windows:
-        _check_oos_once(strategy)
-
     parquet = {
         "5m": "data/ohlcv_5m_features/ohlcv_5m_features.parquet",
         "1h": "data/ohlcv_1h_features/ohlcv_1h_features.parquet",
     }[timeframe]
 
+    fingerprint = _data_fingerprint(parquet)
+
+    if "oos" in windows:
+        manifest = {
+            "strategy": strategy,
+            "instruments": instruments,
+            "windows": windows,
+            "cost_tiers": cost_tiers,
+            "timeframe": timeframe,
+            "entry_guard": entry_guard,
+        }
+        # (1) Data-bound lock (review 2026-10-28 item 6): refuse a re-consumption
+        #     of the same dataset *and* the legacy label-based lock.
+        # (2) Reserve the attempt BEFORE the holdout is loaded, so a crash
+        #     mid-run cannot silently open a fresh attempt on identical data.
+        # (3) OOS output goes to its own directory so it can never overwrite
+        #     the in-sample matrix.md / summary.csv.
+        _check_oos_once(strategy, fingerprint, manifest)
+        _reserve_oos(strategy, fingerprint, manifest)
+        out_dir = out_dir.parent / (out_dir.name + "_oos")
+
     out_dir.mkdir(parents=True, exist_ok=True)
     cells: list[dict] = []
     failures: list[tuple[str, str]] = []
-    fingerprint = _data_fingerprint(parquet)
 
     for instrument in instruments:
         for window in windows:
@@ -293,8 +415,8 @@ def write_markdown(cells: list[dict], path: Path) -> None:
             "",
             f"### Window: `{window}`",
             "",
-            "| Instrument | Cost (bps) | Ret % | Buy-hold % | Trades | Win % | MaxDD % | Sharpe | Exposure % |",
-            "|---|---|---|---|---|---|---|---|---|",
+            "| Instrument | Cost (bps) | Ret % | Buy-hold % | Trades | Win % | MaxDD % | Sharpe | Sharpe (weekly) | Trades/yr | Exposure % |",
+            "|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         for c in cells:
             if c["window"] != window:
@@ -303,7 +425,8 @@ def write_markdown(cells: list[dict], path: Path) -> None:
                 f"| {c['instrument']} | {c['cost_bps']:g} | {_fmt(c['total_return_pct'])} "
                 f"| {_fmt(c['buyhold_return_pct'])} | {c['n_trades']} "
                 f"| {c['win_rate_pct']:.1f} | {c['max_drawdown_pct']:.1f} "
-                f"| {c['sharpe']:+.2f} | {c['exposure_pct']:.0f} |"
+                f"| {c['sharpe']:+.2f} | {c.get('sharpe_weekly', 0.0):+.2f} "
+                f"| {c.get('trades_per_year', 0.0):.1f} | {c['exposure_pct']:.0f} |"
             )
     lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
@@ -314,7 +437,7 @@ def write_csv(cells: list[dict], path: Path) -> None:
         "strategy", "instrument", "window", "timeframe", "cost_bps", "entry_guard",
         "start", "end", "n_bars", "n_trades", "total_return_pct", "buyhold_return_pct",
         "max_drawdown_pct", "win_rate_pct", "avg_trade_return_pct", "sharpe",
-        "exposure_pct", "span_years",
+        "sharpe_weekly", "trades_per_year", "exposure_pct", "span_years",
     ]
     with open(path, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")

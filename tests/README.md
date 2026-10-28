@@ -8,7 +8,7 @@ any environment and are the intended basis for a future CI.
 Run with:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q        # 96 tests
+.venv/bin/python -m pytest tests/ -q        # 98 tests
 ```
 
 ## What is covered

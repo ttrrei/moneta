@@ -97,6 +97,8 @@ class BacktestResult:
     win_rate_pct: float
     avg_trade_return_pct: float
     sharpe: float                 # annualised, trade-rate based (NOT comparable across strategies — see METRIC_FORMULAS)
+    sharpe_weekly: float          # annualised Sharpe of the equity curve on a weekly basis (COMPARABLE across strategies)
+    trades_per_year: float        # opportunity frequency (trades / span_years) — how often it trades
     exposure_pct: float
     span_years: float             # observed window length in (fractional) years
     trades: Sequence[Trade] = field(default_factory=list, repr=False)
@@ -107,6 +109,8 @@ class BacktestResult:
     raw_win_rate_pct: float = 0.0
     raw_avg_trade_return_pct: float = 0.0
     raw_sharpe: float = 0.0
+    raw_sharpe_weekly: float = 0.0
+    raw_trades_per_year: float = 0.0
     raw_exposure_pct: float = 0.0
 
     def to_dict(self) -> dict:
@@ -120,6 +124,8 @@ class BacktestResult:
             "win_rate_pct": self.win_rate_pct,
             "avg_trade_return_pct": self.avg_trade_return_pct,
             "sharpe": self.sharpe,
+            "sharpe_weekly": self.sharpe_weekly,
+            "trades_per_year": self.trades_per_year,
             "exposure_pct": self.exposure_pct,
             "span_years": round(self.span_years, 4),
         }
@@ -352,15 +358,29 @@ def run_backtest(
         sharpe = 0.0
 
     exposure_raw = bars_in_market / n * 100
+
+    # Cross-strategy-comparable metrics (strategy/metrics.py):
+    #  * sharpe_weekly — Sharpe of the per-bar equity curve on a weekly close
+    #    basis; depends on the equity path, not the trade count, so it is
+    #    comparable across strategies (unlike the trade-rate ``sharpe`` above).
+    #  * trades_per_year — opportunity frequency, surfaced so a strategy that
+    #    barely trades is visible (item 4: "I cannot afford very few trades").
+    from strategy.metrics import sharpe_weekly as _sw, trades_per_year as _tpy
+    n_trades_int = int(len(trades))
+    sw = _sw(equity, getattr(bars, "time", None))
+    tpy = _tpy(n_trades_int, span_years)
+
     return BacktestResult(
         n_bars=int(n),
-        n_trades=int(len(trades)),
+        n_trades=n_trades_int,
         total_return_pct=round(total_return * 100, 2),
         buyhold_return_pct=round(buyhold * 100, 2),
         max_drawdown_pct=round(max_dd * 100, 2),
         win_rate_pct=round(win_rate, 2),
         avg_trade_return_pct=round(avg_trade_ret, 4),
         sharpe=round(sharpe, 2),
+        sharpe_weekly=round(sw, 2),
+        trades_per_year=round(tpy, 2),
         exposure_pct=round(exposure_raw, 2),
         span_years=span_years,
         trades=trades,
@@ -370,6 +390,8 @@ def run_backtest(
         raw_win_rate_pct=win_rate,
         raw_avg_trade_return_pct=avg_trade_ret,
         raw_sharpe=sharpe,
+        raw_sharpe_weekly=sw,
+        raw_trades_per_year=tpy,
         raw_exposure_pct=exposure_raw,
     )
 
@@ -394,8 +416,19 @@ METRIC_FORMULAS: dict[str, str] = {
               "30x the trades yields ~sqrt(30) higher Sharpe), so it is NOT "
               "comparable across strategies with different trade counts. Use it "
               "only to compare the SAME strategy across windows/cost tiers. "
-              "For cross-strategy ranking prefer return-vs-buyhold at 2bps and "
-              "max drawdown. A daily-equity Sharpe is a policy change not yet made.",
+              "For cross-strategy ranking prefer sharpe_weekly, "
+              "return-vs-buyhold at 2bps and max drawdown.",
+    "sharpe_weekly": "Annualised Sharpe of the per-bar EQUITY curve resampled to "
+              "weekly closes: mean(weekly_ret)/std(weekly_ret, ddof=1) * "
+              "sqrt(52). Depends on the equity path (drawups/drawdowns), not on "
+              "how many trades produced it, so it IS comparable across "
+              "strategies. Weekly (not daily) because a sparse strategy yields "
+              "too few daily samples for a stable estimate.",
+    "trades_per_year": "Opportunity frequency: n_trades / span_years. Surfaced "
+              "explicitly so a strategy that barely trades over the window (few "
+              "opportunities) is visible next to its total return — a high "
+              "return from very few trades is a different proposition than one "
+              "from many.",
     "exposure_pct": "fraction of bars with a non-zero position, in %.",
 }
 

@@ -319,6 +319,50 @@ def test_run_matrix_oos_once_lock(tmp_path, monkeypatch):
     rm._check_oos_once("s01")  # must not raise
 
 
+def test_oos_data_bound_lock(tmp_path, monkeypatch):
+    """Data-bound OOS lock (review 2026-10-28 item 6): once a strategy has
+    consumed a specific dataset, it cannot be re-consumed on that same data —
+    even before any trial-log row exists — but a *new* dataset is allowed."""
+    import strategy.run_matrix as rm
+
+    # Point the ledger and trial log at a scratch location (no real repo writes).
+    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")  # absent -> label lock off
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
+
+    fp_a = {"path": "a.parquet", "mtime": 100.0, "rows": 1000}
+    fp_b = {"path": "b.parquet", "mtime": 200.0, "rows": 2000}
+
+    # First run on dataset A: allowed, then reserved.
+    rm._check_oos_once("s01", fp_a, {})
+    rm._reserve_oos("s01", fp_a, {})
+
+    # Second run on the SAME dataset A is refused (data-bound).
+    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
+        rm._check_oos_once("s01", fp_a, {})
+
+    # A genuinely different dataset B is still allowed (new data, new attempt).
+    rm._check_oos_once("s01", fp_b, {})
+
+    # Case/dash-insensitive: "S-01" and "s01" are the same strategy.
+    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
+        rm._check_oos_once("S-01", fp_a, {})
+
+
+def test_oos_reserve_is_idempotent_for_same_data(tmp_path, monkeypatch):
+    """Reserving twice on the same data keeps a single ledger entry (no growth)."""
+    import strategy.run_matrix as rm
+
+    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
+
+    fp = {"path": "x.parquet", "mtime": 1.0, "rows": 5}
+    rm._reserve_oos("s02", fp, {"k": 1})
+    rm._reserve_oos("s02", fp, {"k": 2})  # supersede, not append
+    ledger = rm._load_oos_ledger()
+    assert list(ledger.keys()) == ["S02"]
+    assert ledger["S02"]["manifest"] == {"k": 2}
+
+
 def test_run_matrix_n_tried_before_counts_distinct_strategies():
     """`n_tried_before` counts *distinct other* strategies, so repeated rows of
     the same strategy do not inflate the 'best of N' denominator
