@@ -21,6 +21,8 @@
 | S-02 | RSI mean-reversion (1h) | 1h | `rsi_24` | RSI_24 < 30 | RSI_24 > 55 | long | candidate | — | — | — | (planned: same rule, 1/12 the trade count & cost of S-01) |
 | S-03 | RSI + trend filter | 5m | `rsi_24`, `ema_24` | RSI_24 < 30 AND close > ema_24 | RSI_24 > 55 | long | candidate | — | — | — | (planned: trade only with the trend) |
 | S-04 | Squeeze release | 5m | `sqz_on_24`, `bb_mid_24` | sqz_on_24 = 1 + direction vs bb_mid_24 | RSI-style or time stop | long/short | candidate | — | — | — | (planned: volatility-compression event, far fewer trades) |
+| S-05 | SuperTrend follower | 5m | `st_dir_24_2` | st_dir_24_2 up | st_dir_24_2 down | long | **rejected** | [strategy_supertrend_lib.py](strategy_supertrend_lib.py) | [results/S05/matrix.md](results/S05/matrix.md) | 2026-10-27 | Loses on all 3 instruments once cost ≥ 2 bps (BTC last-12m c0 +28.7% vs BH +77%, c2 −38%); ~1,900 trades over-trades. Slower 60/3 & 120/3 never beat buy-hold either → cost × frequency, reject. |
+| S-06 | EMA-spread trend follower | 5m | `ema_spread_24_120` | spread > 0 | spread ≤ 0 | long | **rejected** | [strategy_ema_spread_lib.py](strategy_ema_spread_lib.py) | [results/S06/matrix.md](results/S06/matrix.md) | 2026-10-27 | **BTC-only edge**: beats buy-hold on BTC across all 3 cost tiers (full c0/c2/c5 = +2421/+911/+157% vs BH +1536%), but **loses on EUR and XAU** (full c2/c5 −66/−92%, −33/−83%) — single-instrument, not cross-market → not promotable. |
 
 ## Indicator usage map
 
@@ -32,12 +34,16 @@ Which key indicators are already *claimed* by tested/candidate strategies (helps
 | `ema_24` | S-03 |
 | `sqz_on_24` | S-04 |
 | `bb_mid_24` | S-04 |
+| `st_dir_24_2` | S-05 |
+| `ema_spread_24_120` | S-06 |
 
 ## Rejected combinations — do not re-test without a new hypothesis
 
 | Combination | Why rejected |
 |---|---|
 | 5m RSI_24 30/55 long-only (S-01) | Cost × frequency: ~1,000 trades × 4 bps round-trip ≈ 40% of equity paid in spread; per-trade edge (±0.03%) smaller than per-trade cost. See [S-01 report](docs/strategy_rsi_report.md) §3. |
+| 5m SuperTrend 24/2 follower (S-05) | Cost × frequency: ~1,900 trades (last-12m); only c0 is even positive, and never beats buy-hold; slower 60/3 & 120/3 variants never beat buy-hold either. [matrix](results/S05/matrix.md) |
+| 5m EMA-spread 24/120 follower (S-06) | Not cross-market: beats buy-hold on BTC only; loses on EUR/XAU at cost ≥ 2 bps. Single-instrument fit, not a general edge. [matrix](results/S06/matrix.md) |
 
 ## Conventions
 

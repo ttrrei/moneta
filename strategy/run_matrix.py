@@ -61,7 +61,21 @@ def _register_s01() -> None:
     _STRATEGIES["s01"] = {"label": "S-01 RSI-24 mean-reversion", "run": run_rsi}
 
 
+def _register_s05() -> None:
+    from strategy.strategy_supertrend_lib import run
+
+    _STRATEGIES["s05"] = {"label": "S-05 SuperTrend-24 follower", "run": run}
+
+
+def _register_s06() -> None:
+    from strategy.strategy_ema_spread_lib import run
+
+    _STRATEGIES["s06"] = {"label": "S-06 EMA-spread-24/120 follower", "run": run}
+
+
 _register_s01()
+_register_s05()
+_register_s06()
 
 
 def _load_config() -> dict:

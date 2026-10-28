@@ -71,6 +71,10 @@ oos:
 strategies:
   S-01:
     timeframe: "5m"
+  S-05:
+    timeframe: "5m"
+  S-06:
+    timeframe: "5m"
 
 # ---------------------------------------------------------------------------
 # Trial log (0.5). Every attempt — including rejected and parked ones — is
