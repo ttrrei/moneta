@@ -153,7 +153,10 @@ strategy/
 ├── STRATEGY_BACKGROUND.md   ← this file (read me first)
 ├── STRATEGY_REGISTRY.md     ← check before creating, update after running
 ├── engine.py                ← shared backtest engine (accounting + metrics)
-├── strategy_rsi_lib.py      ← S-01 rule (shared by CLI + matrix runner)
+├── strategy_lib.py          ← shared data/eval core every strategy builds on
+├── strategy_rsi_lib.py      ← S-01 rule
+├── strategy_supertrend_lib.py  ← S-05 rule
+├── strategy_ema_spread_lib.py  ← S-06 rule
 ├── run_matrix.py            ← 3 inst × 2 windows × 3 cost tiers → strategy/results/
 ├── code/                    ← one self-contained CLI .py per strategy
 │   └── strategy_rsi.py

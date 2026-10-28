@@ -19,12 +19,15 @@ Implemented and tracked in Git:
   (1m → 5m/1h), `indicators.py` (**feature engine**, source of truth),
   `sanity_check.py`, `profile_check.py`, `table_catalog.py`.
 - **Strategy layer** (`strategy/`): `engine.py` (**shared backtest engine** —
-  accounting + metric definitions, long & short, tested), `strategy_rsi_lib.py`
-  (S-01 rule + data loading, shared by CLI and matrix runner),
-  `code/strategy_rsi.py` (S-01 CLI), `run_matrix.py` (automated 3×2×3 matrix
-  runner → `strategy/results/`), `WORKFLOW.md` (steps 0–7 + gates),
-  `STRATEGY_REGISTRY.md`, `STRATEGY_BACKGROUND.md`, `generated_strategy.md`,
-  `trial_log.md` (OOS / best-of-N discipline), `docs/strategy_rsi_report.md`.
+  accounting + metric definitions, long & short, tested), `strategy_lib.py`
+  (**shared data/eval core** every strategy builds on: parquet loading, the
+  timeframe guard, bar-frame build, run wrapper, trade distribution),
+  `strategy_rsi_lib.py` (S-01 rule), `strategy_supertrend_lib.py` (S-05),
+  `strategy_ema_spread_lib.py` (S-06), `code/strategy_rsi.py` (S-01 CLI),
+  `run_matrix.py` (automated 3×2×3 matrix runner → `strategy/results/`),
+  `WORKFLOW.md` (steps 0–7 + gates), `STRATEGY_REGISTRY.md`,
+  `STRATEGY_BACKGROUND.md`, `generated_strategy.md`, `trial_log.md` (OOS /
+  best-of-N discipline), `docs/strategy_rsi_report.md`.
 - **Config** (`config/`): `indicators.yml` (feature spec), `strategies.yml`
   (evaluation windows + OOS holdout + trial-log rules), `history_map.yml`,
   `setting.example.yml`.
@@ -82,12 +85,15 @@ moneta/
 │   ├── supertrend.py  psar.py  utils.py    ← causal, pure-NumPy, tested in isolation
 ├── strategy/                    ← the research loop
 │   ├── engine.py                ← shared backtest engine (accounting + metrics)
+│   ├── strategy_lib.py          ← shared data/eval core every strategy uses
 │   ├── strategy_rsi_lib.py      ← S-01 rule (shared by CLI + matrix runner)
+│   ├── strategy_supertrend_lib.py  ← S-05 rule
+│   ├── strategy_ema_spread_lib.py  ← S-06 rule
 │   ├── code/strategy_rsi.py     ← S-01 reference strategy CLI
 │   ├── run_matrix.py            ← 3 inst × 2 windows × 3 cost tiers → strategy/results/
 │   ├── WORKFLOW.md  STRATEGY_REGISTRY.md  STRATEGY_BACKGROUND.md
 │   ├── generated_strategy.md  trial_log.md
-│   ├── results/S01/             ← per-cell JSON + matrix.md + summary.csv
+│   ├── results/S01|S05|S06/     ← per-cell JSON + matrix.md + summary.csv
 │   └── docs/strategy_rsi_report.md
 ├── config/                      ← indicators.yml, strategies.yml, history_map.yml
 ├── tests/                       ← 86 pytest tests (pipeline + engine + metrics + custom indicators)

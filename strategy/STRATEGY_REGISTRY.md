@@ -53,10 +53,18 @@ Which key indicators are already *claimed* by tested/candidate strategies (helps
   re-implementing fills/costs/Sharpe inline. This keeps fill-at-open-T+1, both-legs cost,
   long/short handling, force-close and the annualised Sharpe identical across strategies —
   the source of the T0 fixes (see `docs/SAD.md` §7.2 for the locked formulas).
-- **Shared strategy lib (preferred):** keep the signal rule + data loading in a
-  `strategy/strategy_<name>_lib.py` module (see [`strategy_rsi_lib.py`](strategy_rsi_lib.py))
-  and expose it as a thin CLI in `strategy/code/strategy_<name>.py`. The lib is also
-  what `run_matrix.py` calls, so the matrix runner and the CLI never diverge.
+- **Shared strategy core (required):** every new strategy builds on
+  [`strategy_lib.py`](strategy_lib.py) for parquet loading, the timeframe guard,
+  the bar-frame build and the run wrapper (plus the trade-distribution metric),
+  and only declares *what signal* it trades (a rule builder + the columns it
+  reads). See [`strategy_supertrend_lib.py`](strategy_supertrend_lib.py) and
+  [`strategy_ema_spread_lib.py`](strategy_ema_spread_lib.py) as references.
+  (S-01's [`strategy_rsi_lib.py`](strategy_rsi_lib.py) predates the core but
+  exposes the same `run`/`load_bars` surface.)
+- **Shared strategy lib (preferred):** keep the signal rule in a
+  `strategy/strategy_<name>_lib.py` module and expose it as a thin CLI in
+  `strategy/code/strategy_<name>.py`. The lib is also what `run_matrix.py`
+  calls, so the matrix runner and the CLI never diverge.
 - **Result column:** latest full-history result for the *primary* instrument, plus buy-hold reference. State the cost tier(s) and the entry-guard setting used.
 - **Cost assumption:** 2 bps one-way (OANDA CFD spread) unless the report states otherwise.
 - **No-lookahead:** every strategy must signal on a closed bar and fill at the next bar's open (spec §3.3); the engine enforces the fill convention.

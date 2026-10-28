@@ -80,11 +80,16 @@ ls data/ohlcv_1h_features/ohlcv_1h_features.parquet   # must exist (1h layer —
 
 ## Step 3 — Implement
 
-**Action:** create `code/strategy_<name>.py`:
-- Self-contained CLI: `--instrument --timeframe --since --parquet --cost-bps
-  --json` (defaults: EUR_USD, **5m**, none, 2 bps). Use the shared engine
-  (`strategy/engine.py`) for accounting & metrics — do **not** re-implement the
-  event loop or the metric formulas.
+**Action:** create the strategy lib + CLI. Build the data loading, timeframe
+guard, bar-frame build and run wrapper on the **shared core**
+(`strategy/strategy_lib.py`) — do **not** re-implement the parquet load, the
+B1 guard or the metric glue (references: `strategy_supertrend_lib.py`,
+`strategy_ema_spread_lib.py`); only declare the signal rule and the columns it
+reads. Then:
+- Thin CLI: `code/strategy_<name>.py` with `--instrument --timeframe --since
+  --parquet --cost-bps --json` (defaults: EUR_USD, **5m**, none, 2 bps). Use the
+  shared engine (`strategy/engine.py`) for accounting & metrics — do **not**
+  re-implement the event loop or the metric formulas.
 - **Pin the table to the timeframe (B1).** `--timeframe 5m|1h` selects the
   matching feature parquet; the loader **must** verify the observed bar length
   (median `time` diff) matches the timeframe and **fail loudly** on a mismatch.
