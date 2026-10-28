@@ -150,25 +150,27 @@ def make_bars(df: pd.DataFrame, timeframe: str, entry_guard: bool = False) -> Ba
 
 def trade_distribution(bars: BarFrame, trades: Sequence) -> dict:
     """Bucket each closed trade by the *entry* bar's calendar month (1-12) and
-    weekday (Mon=0..Sun=4).
+    weekday (Mon=0 .. Sun=6, all seven days).
 
     This is the check the strategy review asks for: are the trading
     opportunities spread across the year / the week, or clustered in a few
     months or days? (A cluster means the edge — if any — is seasonal, not
-    general.) ``entry_time`` is the index of the bar whose open filled the
-    entry, so we read it back off ``bars.time``.
+    general.) All seven weekdays are reported because crypto is a 24/7 market —
+    folding the weekend into a weekday would hide real weekend volume.
+    ``entry_time`` is the index of the bar whose open filled the entry, so we
+    read it back off ``bars.time``.
     """
     if not trades or len(bars.time) == 0:
-        return {"by_month": [0] * 12, "by_weekday": [0] * 5}
+        return {"by_month": [0] * 12, "by_weekday": [0] * 7}
     times = pd.DatetimeIndex(bars.time, tz="UTC")  # DatetimeIndex has .month/.weekday
     months = times.month
     weekdays = times.weekday  # Mon=0 .. Sun=6
     idx = [t.entry_time for t in trades if t.entry_time < len(bars.time)]
     by_month = [0] * 12
-    by_weekday = [0] * 5
+    by_weekday = [0] * 7
     for i in idx:
         by_month[months[i] - 1] += 1
-        by_weekday[weekdays[i] % 5] += 1
+        by_weekday[weekdays[i]] += 1
     return {"by_month": by_month, "by_weekday": by_weekday}
 
 
