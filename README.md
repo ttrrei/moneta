@@ -128,7 +128,7 @@ pip install -r requirement.txt
 Then run things from the repo root:
 
 ```bash
-# Tests (61, no network needed):
+# Tests (86, no network needed):
 .venv/bin/python -m pytest tests/ -q
 
 # Rebuild the feature tables (only after data or spec changes; ~5 min, streams per instrument):
