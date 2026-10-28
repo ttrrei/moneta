@@ -8,7 +8,11 @@ The in-sample matrix for S-01 (WORKFLOW.md Step 4):
   3 instruments × 2 windows (full, last_12m) × 3 cost tiers (0/2/5 bps) = 18 cells.
 
 Windows are read verbatim from ``config/strategies.yml`` (fixed anchors, B4) —
-never recomputed at run time.
+never recomputed at run time. Both in-sample windows are capped at
+``until: 2025-07-31`` (the day before the OOS holdout), so no in-sample run can
+tune on holdout data. ``oos`` is the single out-of-sample check and is gated by
+the one-time lock (a strategy with an already-adjudicated ``oos`` row is
+refused a second holdout run).
 
 Output layout (default ``--out strategy/results``)::
 
@@ -67,17 +71,96 @@ def _load_config() -> dict:
         return yaml.safe_load(fh)
 
 
-def _window_since(cfg: dict, window: str) -> str | None:
-    """Resolve a window name to its `since` date from config (fixed anchor)."""
+def _window_bounds(cfg: dict, window: str) -> tuple[str | None, str | None]:
+    """Resolve a window name to (since, until) from config (fixed anchors).
+
+    The holdout window is named ``oos``; every other window must carry an
+    ``until`` cap so in-sample runs can never tune on holdout data
+    (repo_review_20261027 §1.1). An empty window (since > until) is a config
+    error — the runner refuses to run it instead of returning zero bars.
+    """
     try:
-        since = cfg["windows"][window]["since"]
+        spec = cfg["windows"][window]
     except KeyError as exc:
         raise SystemExit(f"Unknown window {window!r}; see windows: in config/strategies.yml") from exc
-    return None if since is None else str(since)
+    since = spec.get("since")
+    until = spec.get("until")
+    if window != "oos" and until is None:
+        raise SystemExit(
+            f"Window {window!r} has no `until` cap in config/strategies.yml; "
+            f"in-sample windows must stop before oos.holdout_start.")
+    if since is not None and until is not None and str(since) >= str(until):
+        raise SystemExit(
+            f"Window {window!r} is empty (since {since} >= until {until}). "
+            f"Re-anchor the window in config/strategies.yml before running it.")
+    return (None if since is None else str(since),
+            None if until is None else str(until))
+
+
+def _registered_timeframe(cfg: dict, strategy: str) -> str | None:
+    """The timeframe a strategy is registered on (config `strategies:` block).
+
+    Config keys are canonical (e.g. ``S-01``); the runner may pass a lowercase
+    id (``s01``), so compare case- and dash-insensitively.
+    """
+    wanted = strategy.upper().replace("-", "")
+    for key, spec in (cfg.get("strategies") or {}).items():
+        if key.upper().replace("-", "") == wanted:
+            return spec.get("timeframe")
+    return None
+
+
+def _registered_id(cfg: dict, strategy: str) -> str | None:
+    """Canonical strategy id from the config registry (e.g. ``s01`` → ``S-01``)."""
+    wanted = strategy.upper().replace("-", "")
+    for key in (cfg.get("strategies") or {}):
+        if key.upper().replace("-", "") == wanted:
+            return key
+    return None
+
+
+def _check_oos_once(strategy: str) -> None:
+    """One-time OOS lock (repo_review_20261027 §1.1 step 3): if the trial log
+    already records an `oos` window row for this strategy, re-running the
+    holdout would be re-tuning on the OOS span — refuse.
+
+    A row with outcome `<TBD>` does not count: that is the run *in progress*
+    (this lock exists to stop a second run, which implies the first was
+    already adjudicated).
+    """
+    if not TRIAL_LOG.exists():
+        return
+    body = re.sub(r"<!--.*?-->", "", TRIAL_LOG.read_text(), flags=re.DOTALL)
+    wanted = strategy.upper().replace("-", "")
+    for line in body.splitlines():
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        if len(cells) < 6 or not cells[0].isdigit():
+            continue
+        if (cells[2].replace("-", "") == wanted and cells[4] == "oos"
+                and cells[5] != "<TBD>"):
+            raise SystemExit(
+                f"Strategy {strategy.upper()} already has an adjudicated `oos` row "
+                f"in strategy/trial_log.md ({line.strip()}). Re-running the holdout "
+                f"is prohibited — open a new strategy ID instead.")
 
 
 def _cell_name(instrument: str, window: str, cost: float) -> str:
     return f"{instrument}__{window}__c{cost:g}"
+
+
+def _data_fingerprint(parquet: str) -> dict:
+    """Identity of the input data for a cell (repo_review_20261027 §2.2):
+    path + mtime + row count, so a rerun after a data rebuild can be told
+    apart from a rerun on identical data."""
+    p = Path(parquet)
+    st = p.stat()
+    import duckdb
+    conn = duckdb.connect()
+    try:
+        n = conn.execute("SELECT count(*) FROM read_parquet(?)", [str(p)]).fetchone()[0]
+    finally:
+        conn.close()
+    return {"path": str(p), "mtime": st.st_mtime, "rows": int(n)}
 
 
 def run_matrix(
@@ -88,13 +171,30 @@ def run_matrix(
     timeframe: str,
     entry_guard: bool,
     out_dir: Path,
+    allow_partial: bool = False,
 ) -> list[dict]:
-    """Run every cell, persist per-cell JSON, and return the result list."""
+    """Run every cell, persist per-cell JSON, and return the result list.
+
+    Any failed cell aborts the run with a non-zero exit unless
+    ``allow_partial`` is set (repo_review_20261027 §1.10: a 1-of-18 success
+    must not be summarised as a full matrix).
+    """
     if strategy not in _STRATEGIES:
         raise SystemExit(f"Unknown strategy {strategy!r}; registered: {sorted(_STRATEGIES)}")
     run = _STRATEGIES[strategy]["run"]
 
     cfg = _load_config()
+
+    # Timeframe binding (repo_review_20261027 §1.7): the strategy's registered
+    # timeframe is authoritative; the CLI cannot silently run it on 5m.
+    expected = _registered_timeframe(cfg, strategy)
+    if expected is not None and expected != timeframe:
+        raise SystemExit(
+            f"Strategy {strategy.upper()} is registered for timeframe {expected} "
+            f"(config/strategies.yml); refusing to run it on {timeframe}.")
+    if "oos" in windows:
+        _check_oos_once(strategy)
+
     parquet = {
         "5m": "data/ohlcv_5m_features/ohlcv_5m_features.parquet",
         "1h": "data/ohlcv_1h_features/ohlcv_1h_features.parquet",
@@ -103,13 +203,14 @@ def run_matrix(
     out_dir.mkdir(parents=True, exist_ok=True)
     cells: list[dict] = []
     failures: list[tuple[str, str]] = []
+    fingerprint = _data_fingerprint(parquet)
 
     for instrument in instruments:
         for window in windows:
-            since = _window_since(cfg, window)
+            since, until = _window_bounds(cfg, window)
             for cost in cost_tiers:
                 name = _cell_name(instrument, window, cost)
-                print(f"[{len(cells) + 1}/{len(instruments) * len(windows) * len(cost_tiers)}] "
+                print(f"[{len(cells) + 1 + len(failures)}/{len(instruments) * len(windows) * len(cost_tiers)}] "
                       f"{name} ... ", end="", flush=True)
                 try:
                     result = run(
@@ -117,10 +218,13 @@ def run_matrix(
                         instrument=instrument,
                         timeframe=timeframe,
                         since=since,
+                        until=until,
                         cost_bps=cost,
                         entry_guard=entry_guard,
                     )
                     result["window"] = window
+                    result["window_until"] = until
+                    result["data_fingerprint"] = fingerprint
                     result["matrix"] = {
                         "strategy": strategy,
                         "instruments": instruments,
@@ -137,9 +241,13 @@ def run_matrix(
                 except SystemExit as exc:
                     print(f"FAIL ({exc})")
                     failures.append((name, str(exc)))
+                    if not allow_partial:
+                        raise
                 except Exception as exc:  # noqa: BLE001 — one cell must not kill the matrix
                     print(f"ERROR ({exc!r})")
                     failures.append((name, repr(exc)))
+                    if not allow_partial:
+                        raise
 
     if failures:
         print(f"\n{len(failures)} cell(s) failed: " +
@@ -203,23 +311,55 @@ def write_csv(cells: list[dict], path: Path) -> None:
             w.writerow(row)
 
 
-def _next_trial_log_number() -> int:
-    """Highest real row number in trial_log.md (HTML-comment examples excluded),
-    so the next number and n_tried_before stay honest."""
+def _trial_log_rows() -> list[list[str]]:
+    """All real trial_log.md data rows (HTML-comment examples excluded)."""
     if not TRIAL_LOG.exists():
-        return 1
-    # Strip HTML comment blocks so the "example next row" in the footer doesn't
-    # get counted as a real attempt.
+        return []
     body = re.sub(r"<!--.*?-->", "", TRIAL_LOG.read_text(), flags=re.DOTALL)
-    nums = [int(m) for m in re.findall(r"^\|\s*(\d+)\s*\|", body, re.MULTILINE)]
-    return max(nums) + 1 if nums else 1
+    rows: list[list[str]] = []
+    for line in body.splitlines():
+        line = line.strip()
+        if not line.startswith("|"):
+            continue
+        cells = [c.strip() for c in line.strip("|").split("|")]
+        if len(cells) >= 8 and cells[0].isdigit():
+            rows.append(cells)
+    return rows
 
 
-def write_trial_row(cells: list[dict], strategy: str, window: str, hypothesis: str) -> str:
+def _next_trial_log_number() -> int:
+    """Highest real row number in trial_log.md, +1."""
+    rows = _trial_log_rows()
+    return max(int(r[0]) for r in rows) + 1 if rows else 1
+
+
+def _n_tried_before(rows: list[list[str]], strategy: str) -> int:
+    """Distinct strategies attempted *before* this row (repo_review_20261027
+    §2.1: the old `row_number - 1` was wrong whenever a strategy had more
+    than one row)."""
+    wanted = strategy.upper().replace("-", "")
+    tried: set[str] = set()
+    for r in rows:
+        sid = r[2].upper().replace("-", "")
+        if sid != wanted:
+            tried.add(sid)
+    return len(tried)
+
+
+def write_trial_row(
+    cells: list[dict],
+    strategy: str,
+    window: str,
+    hypothesis: str,
+    outcome: str = "<TBD>",
+    cfg: dict | None = None,
+) -> str:
     """Append one row to strategy/trial_log.md (T0 OOS discipline).
 
-    Column order matches the existing table:
-    | # | date | strategy_id | hypothesis | window | outcome | ret vs BH (primary) | n_tried_before |
+    The strategy ID is written *as registered* (e.g. ``S-01``), not upper-cased
+    (repo_review_20261027 §2.1). ``outcome`` defaults to ``<TBD>`` when the
+    run is recorded before the Gate 6/7 decision; pass the final outcome
+    (``tested`` / ``parked`` / ``rejected``) when adjudicating.
     """
     # Primary reference cell: EUR_USD @ 2 bps in the requested window (else first cell).
     primary = next((c for c in cells
@@ -229,11 +369,19 @@ def write_trial_row(cells: list[dict], strategy: str, window: str, hypothesis: s
         primary = cells[0]
         print(f"NOTE: no EUR_USD@2bps/{window} cell; using {primary['instrument']} "
               f"@ {primary['cost_bps']:g} bps / {primary['window']} for the trial row.")
+    rows = _trial_log_rows()
     number = _next_trial_log_number()
+    tried_before = _n_tried_before(rows, strategy)
+    # Canonical strategy id (repo_review_20261027 §2.1): the old
+    # ``strategy.upper()`` wrote ``S01`` while the registry/trial_log canon is
+    # ``S-01``. Resolve the registered form when known.
+    sid = _registered_id(cfg, strategy) if cfg is not None else strategy.upper()
+    if sid is None:
+        sid = strategy.upper()
     ret = (f"{primary['total_return_pct']:+.1f}% vs {primary['buyhold_return_pct']:+.1f}% "
            f"({primary['instrument']})")
-    line = (f"| {number} | {date.today().isoformat()} | {strategy.upper()} "
-            f"| {hypothesis} | {window} | <TBD> | {ret} | {number - 1} |")
+    line = (f"| {number} | {date.today().isoformat()} | {sid} "
+            f"| {hypothesis} | {window} | {outcome} | {ret} | {tried_before} |")
     with open(TRIAL_LOG, "a", encoding="utf-8") as fh:
         fh.write("\n" + line)
     return line
@@ -256,6 +404,12 @@ def main() -> None:
     ap.add_argument("--trial-row", action="store_true",
                     help="append one row to strategy/trial_log.md after the run")
     ap.add_argument("--hypothesis", default="", help="one-line hypothesis for the trial row")
+    ap.add_argument("--outcome", default="<TBD>",
+                    help="trial row outcome: tested | parked | rejected (default <TBD> "
+                         "= run recorded, Gate 6/7 decision still open)")
+    ap.add_argument("--allow-partial", action="store_true",
+                    help="summarise even when some cells fail (default: any failure "
+                         "aborts with a non-zero exit code)")
     args = ap.parse_args()
 
     out_dir = Path(args.out) if args.out else (
@@ -268,6 +422,7 @@ def main() -> None:
         timeframe=args.timeframe,
         entry_guard=args.entry_guard,
         out_dir=out_dir,
+        allow_partial=args.allow_partial,
     )
     md_path = out_dir / "matrix.md"
     csv_path = out_dir / "summary.csv"
@@ -277,7 +432,9 @@ def main() -> None:
     print(f"\n{len(cells)} cells → {out_dir}/  ({out_dir.name}.json per cell, matrix.md, summary.csv)")
     if args.trial_row:
         hypothesis = args.hypothesis or f"matrix run of {_STRATEGIES[args.strategy]['label']}"
-        line = write_trial_row(cells, args.strategy, args.windows[0], hypothesis)
+        cfg = _load_config()
+        line = write_trial_row(cells, args.strategy, args.windows[0], hypothesis,
+                               outcome=args.outcome, cfg=cfg)
         print(f"Trial log row appended:\n{line}")
 
 

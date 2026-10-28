@@ -127,10 +127,13 @@ correct table:
 1. Full history:
    `.venv/bin/python strategy/code/strategy_<name>.py --instrument <SYM> --timeframe <TF> --cost-bps 0`
    … same with `--cost-bps 2` and `--cost-bps 5`
-2. Last 12 months: same three commands with the **fixed anchor**
-   `--since 2025-10-27` (from `config/strategies.yml` → `windows.last_12m.since`),
-   **not** "12 months before today". A fixed anchor is what keeps every strategy
-   — this run and the next — evaluating the *identical* span (B4).
+2. Last 12 months: same three commands with the **fixed anchor** from
+   `config/strategies.yml` → `windows.last_12m` (`since` + `until`), **not**
+   "12 months before today". A fixed anchor is what keeps every strategy — this
+   run and the next — evaluating the *identical* span (B4). In practice, prefer
+   `strategy/run_matrix.py --windows full last_12m` which applies the config
+   bounds (including the `until` cap that keeps both windows in-sample)
+   automatically instead of passing `--since` by hand.
 3. If the strategy supports the B6 entry guard (`--entry-guard`), run the matrix
    both ways and record which is the reported baseline (S-01 baseline: **off**).
 

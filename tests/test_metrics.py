@@ -162,6 +162,27 @@ def test_short_side_symmetry():
     assert res.raw_total_return_pct == pytest.approx((100.0 / 98.0 - 1.0) * 100, rel=1e-12)
 
 
+def test_short_cost_direction():
+    """With non-zero cost the short return must be *lower* than the cost-free
+    one (sell at px_entry*(1-cost), buy back at px_exit*(1+cost)). The pre-fix
+    formula px_entry*(1+cost)/(px_exit*(1-cost)) - 1 inverted this: higher
+    cost gave a HIGHER short return (legacy review 1.2)."""
+    open_ = [100.0, 99.0, 98.0]
+    close = [99.0, 98.0, 97.0]
+
+    class _Short:
+        def desired_position(self, i: int) -> int:
+            return -1 if i < 2 else 0
+
+    c = 2.0 / 10_000.0
+    expected = 100.0 * (1 - c) / (98.0 * (1 + c)) - 1.0
+    res = run_backtest(_bars(open_, close), _Short(), cost_bps=2.0)
+    assert res.raw_total_return_pct == pytest.approx(expected * 100, rel=1e-12)
+    # Cost must reduce, not increase, the short profit (100 -> 98 is a win).
+    res0 = run_backtest(_bars(open_, close), _Short(), cost_bps=0.0)
+    assert res.raw_total_return_pct < res0.raw_total_return_pct
+
+
 def test_long_only_clamps_shorts():
     bars = _bars([100.0, 99.0, 98.0], [99.0, 98.0, 97.0])
     # _always_short wants to be short every bar; long_only must clamp to flat.
@@ -235,12 +256,102 @@ def test_run_matrix_cell_names_are_stable():
     names = {
         _cell_name(inst, win, cost)
         for inst in ("EUR_USD", "BTC_USD", "XAU_USD")
-        for win in ("full", "last_12m")
+        for win in ("full", "last_12m", "oos")
         for cost in (0.0, 2.0, 5.0)
     }
-    assert len(names) == 18
+    assert len(names) == 27
     assert _cell_name("EUR_USD", "full", 2.0) == "EUR_USD__full__c2"
     assert _cell_name("EUR_USD", "last_12m", 0.0) == "EUR_USD__last_12m__c0"
+    assert _cell_name("EUR_USD", "oos", 5.0) == "EUR_USD__oos__c5"
+
+
+def test_run_matrix_window_bounds():
+    """In-sample windows must be capped by `until`; the `oos` window is the
+    only one allowed without one; empty windows (since >= until) are a config
+    error, not a silent empty run (repo_review_20261027 §1.1)."""
+    from strategy.run_matrix import _window_bounds
+
+    cfg = {"windows": {
+        "full": {"since": None, "until": "2025-07-31"},
+        "last_12m": {"since": "2024-08-01", "until": "2025-07-31"},
+        "oos": {"since": "2025-08-01", "until": None},
+        "uncapped": {"since": "2024-01-01"},
+        "empty": {"since": "2025-10-27", "until": "2025-07-31"},
+    }}
+    assert _window_bounds(cfg, "full") == (None, "2025-07-31")
+    assert _window_bounds(cfg, "last_12m") == ("2024-08-01", "2025-07-31")
+    assert _window_bounds(cfg, "oos") == ("2025-08-01", None)
+    with pytest.raises(SystemExit):
+        _window_bounds(cfg, "uncapped")
+    with pytest.raises(SystemExit):
+        _window_bounds(cfg, "empty")
+    with pytest.raises(SystemExit):
+        _window_bounds(cfg, "nope")
+
+
+def test_run_matrix_oos_once_lock(tmp_path, monkeypatch):
+    """A strategy that already has an adjudicated `oos` row in the trial log
+    must be refused a second holdout run (repo_review_20261027 §1.1 step 3)."""
+    import strategy.run_matrix as rm
+
+    log = tmp_path / "trial_log.md"
+    log.write_text(
+        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
+        "|---|------|-------------|------------|--------|---------|-----|---|\n"
+        "| 1 | 2026-10-26 | S-01 | hyp | full | rejected | x | 0 |\n"
+        "| 2 | 2026-10-27 | S-01 | hyp | oos | tested | y | 1 |\n")
+    monkeypatch.setattr(rm, "TRIAL_LOG", log)
+    with pytest.raises(SystemExit, match="already has an adjudicated"):
+        rm._check_oos_once("s01")
+    # A `<TBD>` row (run in progress, not yet adjudicated) must not lock.
+    log.write_text(
+        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
+        "|---|------|-------------|------------|--------|---------|-----|---|\n"
+        "| 1 | 2026-10-26 | S-01 | hyp | oos | <TBD> | y | 1 |\n")
+    rm._check_oos_once("s01")  # must not raise
+
+
+def test_run_matrix_n_tried_before_counts_distinct_strategies():
+    """`n_tried_before` counts *distinct other* strategies, so repeated rows of
+    the same strategy do not inflate the 'best of N' denominator
+    (repo_review_20261027 §2.1)."""
+    import strategy.run_matrix as rm
+
+    rows = [
+        ["1", "d", "S-01", "h", "full", "rejected", "r", "0"],
+        ["2", "d", "S-01", "h", "full", "rejected", "r", "0"],
+        ["3", "d", "S-02", "h", "full", "parked", "r", "1"],
+    ]
+    # Trying S-01: the only *other* strategy on record is S-02 → 1
+    # (two S-01 rows must not double-count).
+    assert rm._n_tried_before(rows, "s01") == 1
+    # Trying S-02: the only *other* strategy is S-01 → 1 (not 2).
+    assert rm._n_tried_before(rows, "s02") == 1
+    assert rm._n_tried_before([], "s01") == 0
+    # Case/dash-insensitive: "s01" must match the "S-01" rows and be excluded.
+    assert rm._n_tried_before(rows, "S-01") == 1
+
+
+def test_run_matrix_trial_row_uses_canonical_id(tmp_path, monkeypatch):
+    """The trial row must use the *registered* id (``S-01``), not the upper-cased
+    runner id (``S01``) — the old ``strategy.upper()`` broke the registry canon
+    (repo_review_20261027 §2.1)."""
+    import strategy.run_matrix as rm
+
+    log = tmp_path / "trial_log.md"
+    log.write_text(
+        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
+        "|---|------|-------------|------------|--------|---------|-----|---|\n")
+    monkeypatch.setattr(rm, "TRIAL_LOG", log)
+    cfg = {"strategies": {"S-01": {"timeframe": "5m"}}}
+    cells = [{"instrument": "EUR_USD", "cost_bps": 2.0, "window": "full",
+              "total_return_pct": -21.6, "buyhold_return_pct": 0.3}]
+    rm.write_trial_row(cells, "s01", "full", "hyp", cfg=cfg)
+    line = log.read_text().splitlines()[-1]
+    assert "S-01" in line
+    assert "S01" not in line
+    # n_tried_before should be 0 (no other strategies on record).
+    assert "| 0 |" in line
 
 
 # ---------------------------------------------------------------------------
@@ -303,7 +414,45 @@ def test_entry_guard_does_not_block_exits_or_flips():
     assert res.raw_total_return_pct == pytest.approx(2.0, rel=1e-12)
 
 
-def test_entry_guard_mask_length_must_match():
+def test_rule_called_exactly_once_per_bar():
+    """``desired_position`` must be evaluated exactly n times — the pre-fix
+    clamp called it a second time whenever the answer was >= 0, silently
+    breaking any rule with side effects (legacy review 1.6)."""
+    n = 5
+    bars = _bars([100.0] * n, [100.0] * n)
+
+    class _Counting:
+        calls = 0
+
+        def desired_position(self, i: int) -> int:
+            _Counting.calls += 1
+            return 1 if i % 2 == 0 else 0
+
+    run_backtest(bars, _Counting(), cost_bps=0.0)
+    assert _Counting.calls == n
+    # Same guarantee with long_only clamping (the old double-call path).
+    _Counting.calls = 0
+    run_backtest(bars, _Counting(), cost_bps=0.0, long_only=True)
+    assert _Counting.calls == n
+
+
+def test_span_years_fallback_uses_bar_seconds():
+    """With no timestamps, the annualisation span must come from the frame's
+    bar_seconds, not a hard-coded 300s (legacy review 1.8: a 1h bar with
+    time=None inflated Sharpe ~3.5x)."""
+    n = 24 * 365  # one calendar year of 1h bars (engine year = 365.25 d)
+    bars = BarFrame(open=np.full(n, 100.0), close=np.full(n, 101.0),
+                    time=None, bar_seconds=3600)
+    res = run_backtest(bars, _always_long(), cost_bps=0.0)
+    assert res.span_years == pytest.approx(365.0 / 365.25, rel=1e-9)
+    # And the same bar count at 5m cadence must give a 12x smaller span.
+    bars5 = BarFrame(open=np.full(n, 100.0), close=np.full(n, 101.0),
+                     time=None, bar_seconds=300)
+    res5 = run_backtest(bars5, _always_long(), cost_bps=0.0)
+    assert res5.span_years == pytest.approx(res.span_years / 12.0, rel=1e-9)
+
+
+
     with pytest.raises(ValueError):
         run_backtest(
             _bars_with_mask([100.0, 101.0], [101.0, 102.0], no_entry=[True, False, True]),

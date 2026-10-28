@@ -148,10 +148,13 @@ class FlatRule:
         return 0
 
 
-def _span_years(time: np.ndarray | None, n_bars: int) -> float:
+def _span_years(time: np.ndarray | None, n_bars: int, bar_seconds: int = 300) -> float:
     """Observed window length in fractional years, from the timestamps.
 
-    Falls back to the nominal bar cadence (24/7) when ``time`` is unavailable.
+    Falls back to the nominal bar cadence (24/7) when ``time`` is unavailable;
+    the fallback uses the frame's ``bar_seconds`` so 1h bars are not annualised
+    as 5m (legacy review: ``_span_years`` hard-coded 300s and
+    ``BarFrame.bar_seconds`` was never read).
     """
     if time is not None and len(time) > 1:
         diff = time[-1] - time[0]
@@ -159,8 +162,8 @@ def _span_years(time: np.ndarray | None, n_bars: int) -> float:
                              if hasattr(diff, "total_seconds")
                              else (int(time[-1]) - int(time[0])) / 1_000_000_000.0)
         return span_seconds / (365.25 * 86_400.0)
-    # Fallback: n bars at bar_seconds apart (caller-independent default of 5m).
-    return (n_bars * 300.0) / (365.25 * 86_400.0)
+    # Fallback: n bars at bar_seconds apart.
+    return (n_bars * float(bar_seconds)) / (365.25 * 86_400.0)
 
 
 def annualised_sharpe(per_trade_returns: Sequence[float], span_years: float) -> float:
@@ -225,20 +228,31 @@ def run_backtest(
         raise ValueError("no_entry_mask length must match number of bars")
 
     cost = cost_bps / 10_000.0
-    span_years = _span_years(bars.time, n)
+    span_years = _span_years(bars.time, n, bars.bar_seconds)
 
-    # desired[i] = position intended at the open of bar i, from close-of-(i-1) info.
-    desired = np.array([
-        0 if (long_only and rule.desired_position(i) < 0)
-        else rule.desired_position(i)
-        for i in range(n)
-    ], dtype=np.int8)
+    # desired[i] = position intended at the open of bar i, from close-of-(i-1)
+    # info. ``desired_position`` is called *exactly once per bar* — the old
+    # clamp ``0 if long_only and rule(...) < 0 else rule(...)`` evaluated it
+    # twice whenever the answer was >= 0, which silently broke any rule with
+    # side effects (legacy review 1.6).
+    desired = np.array([rule.desired_position(i) for i in range(n)], dtype=np.int8)
+    if long_only:
+        desired = np.maximum(desired, 0)
 
     def _trade_ret(px_exit: float, px_entry: float, direction: float) -> float:
-        """Return on entry notional, one-way cost at both legs (S-01 convention)."""
+        """Return on entry notional, one-way cost at both legs (S-01 convention).
+
+        Long:  buy at px_entry*(1+cost), sell at px_exit*(1-cost)  →
+            px_exit*(1-cost) / (px_entry*(1+cost)) - 1
+        Short: sell at px_entry*(1-cost), buy back at px_exit*(1+cost) →
+            px_entry*(1-cost) / (px_exit*(1+cost)) - 1
+        (The pre-fix short formula ``px_entry*(1+cost)/(px_exit*(1-cost)) - 1``
+        had the *direction* of the cost effect inverted: higher cost gave a
+        higher short return. Legacy review 1.2.)
+        """
         if direction > 0:
             return px_exit * (1.0 - cost) / (px_entry * (1.0 + cost)) - 1.0
-        return px_entry * (1.0 + cost) / (px_exit * (1.0 - cost)) - 1.0
+        return px_entry * (1.0 - cost) / (px_exit * (1.0 + cost)) - 1.0
 
     pos = 0.0            # signed position held during the bar (after the open fill)
     entry_px = np.nan

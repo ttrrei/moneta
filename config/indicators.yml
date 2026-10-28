@@ -7,7 +7,7 @@
 # IMPORTANT:
 #   - The authoritative implementation is `pipeline/indicators.py` (orchestration
 #     + TA-Lib calls); the custom indicators (Supertrend, PSAR direction) live in
-#     the `indicators/` package and are imported there. If any of these and this
+#     the `library/` package and are imported there. If any of these and this
 #     file disagree, the code wins — update this file in the same change
 #     (see docs/README.md "Maintenance rule").
 #   - The 5m table = the 1h table PLUS the `h1_*` context block (last 35 columns).
@@ -19,7 +19,6 @@
 #   - A prior legacy version of this file listed classic US-equity windows
 #     (ema_9/21/50, sma_200, rsi_14, cci_20, bb(20), kc(20,14), obv, vwap "per
 #     UTC day"). That has been superseded by the CFD grid below and removed.
-#     (Original preserved in the session artifacts folder as indicators.yml.legacy.bak.)
 #   - Placeholders: {n} = a window from parameter_grid.windows_n;
 #     {f}_{s} = one of parameter_grid.macd_pairs (fast_slow).
 
@@ -112,7 +111,7 @@ timeframes:
     per_window_n_x_mult:       # k = multiplier tag (2.5 -> 2p5); dir = +1 up / -1 down
       - st_{n}_{k}
       - st_dir_{n}_{k}
-    notes: "TA-Lib; dc = Donchian channel; aroon = AROON up/down; MACD signal period = fast. PSAR via talib.SAR (direction ours); Supertrend is our own causal implementation (indicators/supertrend.py)."
+    notes: "TA-Lib; dc = Donchian channel; aroon = AROON up/down; MACD signal period = fast. PSAR via talib.SAR (direction ours); Supertrend is our own causal implementation (library/supertrend.py)."
 
   momentum:
     per_window_n:

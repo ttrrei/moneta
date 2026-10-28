@@ -64,8 +64,10 @@ in spread while edge/trade ≈ 0.03%. Your strategy must structurally beat that:
    exposure_pct).
 3. **Run protocol (mandatory, all of it):**
    - Instruments: **EUR_USD + BTC_USD + XAU_USD**
-   - Windows: **full history** and **last 12 months** (fixed anchor
-     `2025-10-27`, from `config/strategies.yml` — not "12 months ago")
+   - Windows: **full history** and **last 12 months** (fixed `since`/`until`
+     bounds from `config/strategies.yml` → `windows` — not "12 months ago"; both
+     are capped before the OOS holdout, so use `run_matrix.py --windows full
+     last_12m` to apply them)
    - Costs: **0 / 2 / 5 bps** sensitivity table
    - **OOS:** if a stop condition is *not* met and the strategy is a finalist,
      run it **once** on the reserved holdout (`oos.holdout_start` → latest) and

@@ -50,11 +50,20 @@ class RsiState:
         return self.state
 
 
-def load_bars(parquet: str, instrument: str, since: str | None = None) -> pd.DataFrame:
+def load_bars(
+    parquet: str,
+    instrument: str,
+    since: str | None = None,
+    until: str | None = None,
+) -> pd.DataFrame:
     """Load ``time, open, close, is_gap_bar, is_near_market_close, rsi_24``.
 
     The flag columns feed the B6 entry guard (no new entries on gap / near
     market-close bars); strategies that do not want the guard can ignore them.
+
+    ``until`` caps the window at the day before the OOS holdout for
+    in-sample windows (config/strategies.yml), so in-sample runs can never
+    tune on holdout data (repo_review_20261027 §1.1).
     """
     import duckdb
 
@@ -65,6 +74,9 @@ def load_bars(parquet: str, instrument: str, since: str | None = None) -> pd.Dat
         if since:
             where.append("time >= ?")
             params.append(since)
+        if until:
+            where.append("time <= ?")
+            params.append(until)
         sql = (
             "SELECT time, open, close, is_gap_bar, is_near_market_close, " + RSI_COL +
             " FROM read_parquet(?) WHERE " + " AND ".join(where) +
@@ -93,11 +105,13 @@ def detect_bar_seconds(df: pd.DataFrame) -> int:
     return int(np.median(diffs))
 
 
-def make_bars(df: pd.DataFrame, timeframe: str, entry_guard: bool = True) -> BarFrame:
+def make_bars(df: pd.DataFrame, timeframe: str, entry_guard: bool = False) -> BarFrame:
     """Build an engine :class:`BarFrame` from a loaded frame.
 
     ``entry_guard=True`` enables the B6 rule: no *new* entries on
     ``is_gap_bar`` / ``is_near_market_close`` bars (exits are never blocked).
+    Default OFF to match the documented S-01 baseline (the registry and the
+    published report both record entry-guard **off**).
     """
     expected_seconds = TIMEFRAME_SECONDS[timeframe]
 
@@ -131,17 +145,22 @@ def run_rsi(
     instrument: str,
     timeframe: str = "5m",
     since: str | None = None,
+    until: str | None = None,
     cost_bps: float = COST_BPS,
-    entry_guard: bool = True,
+    entry_guard: bool = False,
 ) -> dict:
     """Run the S-01 rule for one instrument / window / cost tier.
+
+    ``entry_guard`` defaults to OFF, matching the documented S-01 baseline
+    (registry + report both record entry-guard off) and the CLI.
 
     Returns the full result dict (metadata + engine metrics block) in the same
     shape the CLI prints — ready to serialise to JSON.
     """
-    df = load_bars(parquet, instrument, since)
+    df = load_bars(parquet, instrument, since, until)
     if len(df) < 1_000:
-        raise SystemExit(f"Only {len(df)} bars loaded for {instrument}; not enough to backtest.")
+        raise SystemExit(f"Only {len(df)} bars loaded for {instrument} "
+                         f"(window {since or 'start'}..{until or 'latest'}); not enough to backtest.")
 
     bars = make_bars(df, timeframe, entry_guard=entry_guard)
     result = run_backtest(bars, RsiState(df[RSI_COL].to_numpy(np.float64)),
@@ -151,6 +170,7 @@ def run_rsi(
         "instrument": instrument,
         "timeframe": timeframe,
         "window_since": since,
+        "window_until": until,
         "start": str(df["time"].iloc[0]),
         "end": str(df["time"].iloc[-1]),
         "cost_bps": cost_bps,

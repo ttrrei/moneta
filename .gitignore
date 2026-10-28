@@ -235,5 +235,7 @@ config/setting.yml
 # backfill run logs
 logs/
 
-# Matrix runner output (generated per run; matrix.md + summary.csv regenerate from JSON):
-strategy/results/
+# Matrix runner output (generated per run). Per-cell JSON stays ignored (large,
+# regenerable); the human-readable summaries are committed so registry/report
+# links resolve on a fresh clone (repo_review_20261027 §2.3).
+strategy/results/**/*.json

@@ -19,7 +19,7 @@ feature table:
 Gate 2 (start-independence / warm-up convergence) and Gate 5 (dual-library
 parity) are exercised at the smoke level here; the full parity harness
 (``scripts/verify_indicator_parity.py`` from the spec) is a separate, larger
-artifact (see docs/legacy_full.md T0-4).
+artifact (see docs/repo_review_20261026.md T0-4).
 """
 
 from __future__ import annotations

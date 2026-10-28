@@ -27,8 +27,11 @@ def validate_free_params(
     silently defaulted to a library value (B10/B11).
     """
     for accel, mx in psar_params:
-        if not (0 < accel <= mx):
-            raise ValueError(f"PSAR needs 0 < acceleration <= maximum, got ({accel}, {mx})")
+        # ``maximum < 1`` is the authoritative bound (see library/psar.py —
+        # Wilder's convention); kept here so the free-param sanity check
+        # rejects the same values psar() would. (repo_review_20261027 §3.4)
+        if not (0 < accel <= mx < 1.0):
+            raise ValueError(f"PSAR needs 0 < acceleration <= maximum < 1, got ({accel}, {mx})")
     for m in st_mults:
         if not m > 0:
             raise ValueError(f"Supertrend multiplier must be > 0, got {m}")

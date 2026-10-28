@@ -54,7 +54,7 @@ tables.
 | **Bronze (raw)** | `data/raw_csv/**/*.csv` | 1 bar (tick-mid) per row | OANDA mid/bid/ask OHLC, `is_complete`, `time` (UTC). Collision-safe naming; `extract_oci` leaves subdirs untouched. |
 | **1-minute (clean)** | `data/all_data/all_data.parquet` | one 1-min bar / instrument | De-dup on `(instrument,time)`, `is_complete=false` dropped. |
 | **OHLCV** | `data/ohlcv_5m/...parquet`, `data/ohlcv_1h/...parquet` | one 5m / 1h bar / instrument | `open/close` first/last source bar, `high/low` min/max, `volume` sum, `n_bars` count. |
-| **Features** | `data/ohlcv_5m_features/...`, `data/ohlcv_1h_features/...` | one bar / instrument | 5m = 1h **plus** the `h1_*` context block (last 25 cols). `float32` at write, `float64` in compute. |
+| **Features** | `data/ohlcv_5m_features/...`, `data/ohlcv_1h_features/...` | one bar / instrument | 5m = 1h **plus** the `h1_*` context block (last 35 cols). `float32` at write, `float64` in compute. |
 | **Metadata** | `data/metadata.duckdb` | per-table row | `data_tables` catalog + `main.<name>` Parquet-backed **views**. No row data. |
 
 **Grain rule:** `time` is the bar **OPEN** time (UTC); close time = `time + interval`.

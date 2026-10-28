@@ -17,6 +17,15 @@
 > report's numbers are the **guard-off** baseline (944/1011/920 trades); the
 > guard-on variant drops a few gap-bar entries (e.g. EUR 944→941, −21.58%→−21.25%).
 
+> **OOS caveat (2026-10-28):** the numbers above were produced *before* the
+> out-of-sample discipline was in place — the `full`/`last_12m` windows then
+> ran over the most recent data, which is now reserved as the OOS holdout
+> (`oos.holdout_start = 2025-08-01` in `config/strategies.yml`). They are
+> therefore **not** a valid out-of-sample result and must not be cited as
+> such. Going forward, in-sample windows are capped at `until: 2025-07-31`
+> and the holdout may be run exactly once per strategy
+> ([repo_review_20261027.md](../../docs/repo_review_20261027.md) §1.1).
+
 ---
 
 ## 1. The strategy (the simplest possible)

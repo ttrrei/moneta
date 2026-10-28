@@ -28,7 +28,7 @@ registry that prevents duplicate work.
 | Design / code / test a **new strategy** by hand | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
 | Understand the **feature/indicator engine** (305/270 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` + `library/` (custom: Supertrend, PSAR) |
 | Understand the **data** (rows, grain, dtypes, gotchas) | [data_profile.md](data_profile.md) | `pipeline/sanity_check.py`, `pipeline/profile_check.py` |
-| Review the **roadmap** of known gaps (consolidated legacy reviews, T0→T3 ranked) | [legacy_full.md](legacy_full.md) | raw reviews in `legacy/` (git-ignored) |
+| Review the **roadmap** of known gaps (consolidated legacy reviews, T0→T3 ranked) | [repo_review_20261026.md](repo_review_20261026.md) | raw reviews in `legacy/` (git-ignored) |
 | Ingest / backfill data | `pipeline/README.md` | `pipeline/extract_oanda.py`, `load_data.py`, `aggregate_ohlcv.py` |
 
 ## Authoritative sources (do NOT trust this index over them)

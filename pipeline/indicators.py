@@ -24,6 +24,7 @@ import math
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
+from zoneinfo import ZoneInfo
 
 import numpy as np
 import pandas as pd
@@ -79,28 +80,26 @@ def validate_grid(n_grid: Iterable[int], pairs: Iterable[tuple[int, int]]) -> No
 # (month = 1..12 of the *first* month of the DST-active half-year).
 # ---------------------------------------------------------------------------
 
-DST_EU_START_MONTH = 3
-DST_EU_END_MONTH = 10
-
-
-def _eu_dst_active(month: int) -> bool:
-    return DST_EU_START_MONTH <= month < DST_EU_END_MONTH
-
-
 @dataclass(frozen=True)
 class SessionAnchor:
-    """Day-reset anchor for one instrument, in local market time."""
+    """Day-reset anchor for one instrument, in local market time.
+
+    ``tz`` is the IANA zone of the market that defines the anchor; the
+    UTC offset is resolved *per date* through it (US DST switches on the
+    2nd Sunday of March / 1st of November, EU on the last Sunday of
+    March/October — a month-based approximation was wrong for US anchors
+    in ~2-3 weeks per year).
+    """
 
     local_hour: int
     local_minute: int
-    utc_offset_winter: float  # hours, local = UTC + offset
-    utc_offset_summer: float
+    tz: str = "UTC"
 
 
 SESSION_ANCHORS: dict[str, SessionAnchor] = {
-    # FX & spot metals: 17:00 New York (EST -5 / EDT -4)
+    # FX & spot metals: 17:00 New York
     **{
-        i: SessionAnchor(17, 0, -5.0, -4.0)
+        i: SessionAnchor(17, 0, tz="America/New_York")
         for i in (
             "EUR_USD", "GBP_USD", "USD_JPY", "USD_CAD", "USD_CHF", "NZD_USD",
             "AUD_USD", "XAU_USD", "XAG_USD",
@@ -108,21 +107,21 @@ SESSION_ANCHORS: dict[str, SessionAnchor] = {
     },
     # US index CFDs: 09:30 New York (regular trading session open)
     **{
-        i: SessionAnchor(9, 30, -5.0, -4.0)
+        i: SessionAnchor(9, 30, tz="America/New_York")
         for i in ("US30_USD", "SPX500_USD", "NAS100_USD")
     },
     # European index CFDs: 08:00 CET/BST
     **{
-        i: SessionAnchor(8, 0, 1.0, 2.0)
+        i: SessionAnchor(8, 0, tz="Europe/Berlin")
         for i in ("DE30_EUR", "UK100_GBP")
     },
-    # Asia index CFDs: local exchange open
-    "JP225_USD": SessionAnchor(9, 0, 9.0, 9.0),
-    "HK33_HKD": SessionAnchor(9, 30, 8.0, 8.0),
-    "CN50_USD": SessionAnchor(9, 30, 8.0, 8.0),
+    # Asia index CFDs: local exchange open (no DST)
+    "JP225_USD": SessionAnchor(9, 0, tz="Asia/Tokyo"),
+    "HK33_HKD": SessionAnchor(9, 30, tz="Asia/Hong_Kong"),
+    "CN50_USD": SessionAnchor(9, 30, tz="Asia/Shanghai"),
     # Commodities & crypto: UTC midnight
     **{
-        i: SessionAnchor(0, 0, 0.0, 0.0)
+        i: SessionAnchor(0, 0, tz="UTC")
         for i in ("WTICO_USD", "BCO_USD", "BTC_USD", "ETH_USD")
     },
 }
@@ -137,26 +136,52 @@ def session_anchor(instrument: str) -> SessionAnchor:
         ) from None
 
 
-def _reset_utc_hour(anchor: SessionAnchor, month: int) -> float:
-    offset = anchor.utc_offset_summer if _eu_dst_active(month) else anchor.utc_offset_winter
-    return (anchor.local_hour + anchor.local_minute / 60.0 - offset) % 24.0
+_TZ_CACHE: dict[str, tzinfo] = {}
+
+
+def _tz(anchor: SessionAnchor) -> ZoneInfo:
+    try:
+        return _TZ_CACHE[anchor.tz]
+    except KeyError:
+        _TZ_CACHE[anchor.tz] = tz = ZoneInfo(anchor.tz)
+        return tz
+
+
+def _utc_offset_for(anchor: SessionAnchor, dates: pd.DatetimeIndex) -> np.ndarray:
+    """UTC offset (hours) of the anchor's market zone on each UTC date.
+
+    Computed from the zone's *actual* DST transitions (``zoneinfo``), so US
+    anchors switch on the 2nd Sunday of March / 1st of November, not on a
+    calendar-month boundary. One value per bar, aligned to ``dates``.
+    """
+    zone = _tz(anchor)
+    offset = {
+        str(d.date()): (pd.Timestamp(d).tz_convert(zone).utcoffset().total_seconds() / 3600.0)
+        for d in dates.unique()
+    }
+    return np.asarray([offset[str(d.date())] for d in dates], dtype=np.float64)
+
+
+def _reset_utc_hour(anchor: SessionAnchor, offset_hours: np.ndarray) -> np.ndarray:
+    local = anchor.local_hour + anchor.local_minute / 60.0
+    return (local - offset_hours) % 24.0
 
 
 def session_reset_index(ts: pd.Series, anchor: SessionAnchor) -> np.ndarray:
     """For each bar (UTC) return the id of its session: the index of the most
     recent reset instant <= the bar timestamp (spec section 4.2 dynamic VWAP).
     """
-    times = ts.dt.tz_convert("UTC").to_numpy(dtype="datetime64[ns]")
-    ns = times.astype("int64")  # epoch ns, UTC
-    months = ts.dt.month.to_numpy()
-    # One reset per day; the UTC hour of the reset depends on the DST month.
-    # We compute, for each bar, the reset instant of *its* day; sessions are
-    # contiguous in time so grouping by that instant is sufficient even when
-    # the UTC hour of the anchor shifts across DST dates (a bar is always
-    # compared against resets on-or-before itself).
+    times = ts.dt.tz_convert("UTC")
+    ns = times.to_numpy(dtype="datetime64[ns]").astype("int64")  # epoch ns, UTC
+    # One reset per day; the UTC hour of the reset depends on the *date's*
+    # DST offset (per-date, resolved via the market zone). We compute, for
+    # each bar, the reset instant of *its* day; sessions are contiguous in
+    # time so grouping by that instant is sufficient even when the UTC hour
+    # of the anchor shifts across DST dates (a bar is always compared
+    # against resets on-or-before itself).
     DAY_NS = 86_400 * 1_000_000_000
     day_ns = (ns // DAY_NS) * DAY_NS
-    hour = np.vectorize(lambda m: _reset_utc_hour(anchor, int(m)))(months)
+    hour = _reset_utc_hour(anchor, _utc_offset_for(anchor, pd.DatetimeIndex(times)))
     reset_ns = day_ns + (hour * 3600.0).astype(np.int64) * 1_000_000_000
     # A bar before its own day's reset belongs to the previous day's session.
     prev_day_reset = reset_ns - DAY_NS
@@ -202,25 +227,24 @@ def is_partial_series(n_bars: np.ndarray, interval_seconds: int) -> np.ndarray:
 
 
 def is_near_market_close_series(times: pd.Series, anchor: SessionAnchor) -> np.ndarray:
-    """1 during the 2 hours before the instrument's session anchor on Fridays."""
-    # Friday = weekday 4; window [anchor-2h, anchor) in local time.
+    """1 during the 2 hours before the instrument's session anchor on Fridays.
+
+    The window is evaluated with the anchor's DST offset *per date* (the
+    union of the winter and summer windows marked 3 UTC hours, not the
+    documented 2 — legacy review 1.4).
+    """
     dt = times.dt
     weekday = dt.weekday.to_numpy()
-    # Local time of each bar using both offsets; a bar is "near close" if it
-    # falls inside the 2h window under either DST state.
-    def in_window(offset: float) -> np.ndarray:
-        local_h = (times.dt.hour.to_numpy() + times.dt.minute.to_numpy() / 60.0
-                   + times.dt.second.to_numpy() / 3600.0 + offset) % 24.0
-        start = (anchor.local_hour - 2.0) % 24.0
-        end = anchor.local_hour % 24.0
-        if start < end:
-            inside = (local_h >= start) & (local_h < end)
-        else:
-            inside = (local_h >= start) | (local_h < end)
-        return inside
-
-    w = (in_window(anchor.utc_offset_winter) | in_window(anchor.utc_offset_summer))
-    return (w & (weekday == 4)).astype(np.int8)
+    offset = _utc_offset_for(anchor, pd.DatetimeIndex(times.dt.tz_convert("UTC")))
+    local_h = (dt.hour.to_numpy() + dt.minute.to_numpy() / 60.0
+               + dt.second.to_numpy() / 3600.0 + offset) % 24.0
+    start = (anchor.local_hour - 2.0) % 24.0
+    end = anchor.local_hour % 24.0
+    if start < end:
+        inside = (local_h >= start) & (local_h < end)
+    else:
+        inside = (local_h >= start) | (local_h < end)
+    return (inside & (weekday == 4)).astype(np.int8)
 
 
 # ---------------------------------------------------------------------------
@@ -240,14 +264,7 @@ class BaseFeatureGroup(abc.ABC):
     ) -> dict[str, np.ndarray]:
         """Return {column name: float64 1-D array} aligned to the input rows."""
 
-    @property
-    @abc.abstractmethod
-    def required_columns(self) -> list[str]:
-        ...
-
-
 class TrendGroup(BaseFeatureGroup):
-    required_columns = ["high", "low", "close"]
 
     def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
         out: dict[str, np.ndarray] = {}
@@ -290,7 +307,6 @@ class TrendGroup(BaseFeatureGroup):
 
 
 class MomentumGroup(BaseFeatureGroup):
-    required_columns = ["high", "low", "close"]
 
     def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
         out: dict[str, np.ndarray] = {}
@@ -310,7 +326,6 @@ class MomentumGroup(BaseFeatureGroup):
 
 
 class VolatilityGroup(BaseFeatureGroup):
-    required_columns = ["high", "low", "close"]
 
     def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
         out: dict[str, np.ndarray] = {}
@@ -342,7 +357,6 @@ class VolatilityGroup(BaseFeatureGroup):
 
 
 class RegimeGroup(BaseFeatureGroup):
-    required_columns = ["high", "low", "close"]
 
     def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
         s = pd.Series
@@ -356,7 +370,6 @@ class RegimeGroup(BaseFeatureGroup):
 
 
 class CandleStructureGroup(BaseFeatureGroup):
-    required_columns = ["open", "high", "low", "close"]
 
     def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
         rng = np.maximum(h - l, EPS)
@@ -369,7 +382,6 @@ class CandleStructureGroup(BaseFeatureGroup):
 
 
 class VolumeProxyGroup(BaseFeatureGroup):
-    required_columns = ["high", "low", "close", "volume"]
 
     def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
         aux = aux or {}
@@ -387,7 +399,6 @@ class VolumeProxyGroup(BaseFeatureGroup):
 
 
 class DerivedFeatureGroup(BaseFeatureGroup):
-    required_columns = ["open", "high", "low", "close"]
 
     def compute(self, o, h, l, c, v, n_grid, pairs, aux=None):
         aux = aux or {}
@@ -448,7 +459,10 @@ class DerivedFeatureGroup(BaseFeatureGroup):
         return out
 
 
-GROUPS = (
+# The full feature stack, in compute order (self-contained groups first, then
+# the dependency groups that read intermediates). `compute_instrument_features`
+# names the groups explicitly — do not re-introduce a positional slice over it.
+FEATURE_GROUPS = (
     TrendGroup,
     MomentumGroup,
     VolatilityGroup,
@@ -510,7 +524,10 @@ def compute_instrument_features(
     aux: dict = {"vwap": vwap, "atr_norm": atr24,
                  "psar_params": tuple(psar_params), "st_mults": tuple(st_mults)}
     out: dict[str, np.ndarray] = {}
-    for group_cls in GROUPS[:5]:  # trend..candle: self-contained
+    # Self-contained groups: computed directly from OHLCV (no dependency on
+    # other groups' intermediates). Named explicitly rather than sliced
+    # positionally so a re-order of GROUPS cannot silently drop a family.
+    for group_cls in (TrendGroup, MomentumGroup, VolatilityGroup, RegimeGroup, CandleStructureGroup):
         out.update(group_cls().compute(o, h, l, c, v, n_grid, pairs, aux))
     # Feed computed intermediates to volume/derived groups.
     aux.update(out)

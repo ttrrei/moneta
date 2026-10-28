@@ -5,8 +5,9 @@ Rules (default on 5m bars, one instrument at a time):
   * Exit long   at bar T+1 open  when RSI_24(T) >  55.
   * One position at a time, long only, position size = 1 unit.
   * One-way cost of 2 bps applied at entry and exit (typical OANDA CFD spread).
-  * B6 entry guard (default ON): no *new* entries on gap bars or near market
-    close (exits are never blocked). Disable with ``--no-entry-guard``.
+  * B6 entry guard (default OFF, to match the documented S-01 baseline): no
+    *new* entries on gap bars or near market close (exits are never blocked).
+    Enable with ``--entry-guard``.
 
 Execution model follows the indicator spec: a signal computed on a closed bar
 T is traded at the next bar's open (no same-bar fill, no lookahead).

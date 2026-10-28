@@ -8,27 +8,35 @@
 # Read by:
 #   * strategy/WORKFLOW.md (Step 4 window selection, Step 6 OOS gate)
 #   * strategy/generated_strategy.md §5 (stop conditions / OOS requirement)
-#   * any automated runner (strategy/run_matrix.py, T1) to read a single source
-#     of truth instead of re-deriving dates at run time.
-#
-# This is *config, not code*: nothing loads it at runtime yet. When code
-# (run_matrix.py / check_registry.py) is added, it should read these values
-# verbatim so the windows cannot drift between runs.
+#   * strategy/run_matrix.py and strategy/strategy_rsi_lib.py — both load
+#     these values verbatim so the windows cannot drift between runs.
 
 # ---------------------------------------------------------------------------
 # Evaluation windows (Step 4). Fixed anchors so every strategy — this run and
 # every future run — evaluates the *identical* data spans. This is what makes
 # cross-strategy and cross-run comparisons valid (B4).
+#
+# IMPORTANT (repo_review_20261027 §1.1): in-sample windows are capped with
+# `until` at the day before the OOS holdout, so no in-sample run can ever
+# tune on holdout data. `oos` is the holdout itself — run exactly once per
+# strategy by the runner (one-time lock, see strategy/run_matrix.py).
 # ---------------------------------------------------------------------------
 windows:
-  # "full": no lower bound (whole available history, warm-up already dropped).
+  # "full": all history, but strictly before the holdout.
   full:
     since: null
-  # "last_12m": a *fixed* 12-month window anchored to a specific date, NOT
-  # "12 months before now". Every strategy references the same anchor.
+    until: "2025-07-31"        # day before oos.holdout_start
+  # "last_12m": a *fixed* 12-month window anchored to specific dates, NOT
+  # "12 months before now". Every strategy references the same anchor (B4).
+  # It ends exactly at the holdout boundary so it stays in-sample; the
+  # original 2025-10-27 anchor sat *inside* the holdout and had to move.
   last_12m:
-    since: "2025-10-27"        # anchor (review2 B4): pinned, not computed at run time
-    # end is always "now"/latest bar; pinning only the start keeps it stable.
+    since: "2024-08-01"
+    until: "2025-07-31"
+  # "oos": the holdout — the single, final, out-of-sample check.
+  oos:
+    since: "2025-08-01"
+    until: null
 
 # ---------------------------------------------------------------------------
 # Out-of-sample holdout (0.5 OOS discipline). This span is **never** used for
@@ -50,6 +58,19 @@ oos:
     The in-sample window for discovery/tuning is data < holdout_start.
     The holdout is the single, final, out-of-sample check. Recording which
     strategies were tried against it (trial_log) is mandatory.
+
+# ---------------------------------------------------------------------------
+# Strategy registry (config side). Each entry pins what the *runner* must
+# enforce before any bar is loaded.
+#
+# `timeframe` is the bar cadence the strategy is registered on. run_matrix
+# refuses to start a strategy on any other timeframe instead of letting it
+# silently run on the wrong table (repo_review_20261027 §1.7: S-02 is a 1h
+# strategy and the runner defaulted to 5m with no error).
+# ---------------------------------------------------------------------------
+strategies:
+  S-01:
+    timeframe: "5m"
 
 # ---------------------------------------------------------------------------
 # Trial log (0.5). Every attempt — including rejected and parked ones — is
