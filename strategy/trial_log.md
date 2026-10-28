@@ -27,6 +27,7 @@
 | 4 | 2026-10-29 | S-02 | same RSI-24 30/55 rule on 1h bars (1/12 the cost of S-01) | full | **rejected** | 74–79 trades (full), below buy-hold at every cost tier (c0 EUR −5.2%/BTC +21%/XAU +6.7% all < buy-hold) — signal quality, not frequency | 3 |
 | 5 | 2026-10-29 | S-03 | RSI-24 < 30 AND close > ema_24 (buy dips in an uptrend) | full | **rejected** | **0 trades** in all 18 cells: `rsi_24<30` and `close>ema_24` never co-occur on this data (verified intersection = 0 on all 3 instruments) — empty signal, not a bug | 4 |
 | 6 | 2026-10-29 | S-04 | Bollinger squeeze-onset follower (long/short, enter on 0→1 onset, exit on 1→0) | full | **rejected** | ~10,500 trades (full), ~1,900/yr; below buy-hold at every cost tier incl. 0 bps (c0 EUR −7.8%/BTC −57.8%/XAU −20.9%) — cost × frequency, "low-frequency" premise false at 5m | 5 |
+| 7 | 2026-10-29 | S-07 | Regime-gated slow trend: ST-120 flips taken only while ADX-24>25 (1h, long/short) | full | **rejected** | ~68–105/yr (low-freq ✓) but below buy-hold at every cost tier incl. 0 bps (c0 EUR −5.1%/BTC +73.6%/XAU −16.2% vs +3.1/+1288/+110); win 33–37% — signal quality, not frequency | 6 |
 
 <!--
 Append a new row for every attempt. Keep `n_tried_before` = (previous max #) so

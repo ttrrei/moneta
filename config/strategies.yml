@@ -81,6 +81,8 @@ strategies:
     timeframe: "5m"
   S-06:
     timeframe: "5m"
+  S-07:
+    timeframe: "1h"
 
 # ---------------------------------------------------------------------------
 # Trial log (0.5). Every attempt — including rejected and parked ones — is

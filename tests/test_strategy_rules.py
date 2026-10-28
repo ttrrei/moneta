@@ -21,6 +21,7 @@ import pytest
 from pipeline.indicators import SessionAnchor, _utc_offset_for
 from strategy.strategy_supertrend_lib import SupertrendState
 from strategy.strategy_ema_spread_lib import EmaSpreadState
+from strategy.strategy_regime_trend_lib import RegimeTrendState
 
 
 # ---------------------------------------------------------------------------
@@ -80,6 +81,61 @@ def test_ema_spread_is_nan_safe():
     assert s.desired_position(1) == 0     # bar0 NaN -> flat
     assert s.desired_position(2) == 1     # bar1 +0.5 -> long
     assert s.desired_position(3) == 1     # bar2 NaN -> keep long
+
+
+# ---------------------------------------------------------------------------
+# RegimeTrendState: enter only on a SuperTrend *flip* whose bar is trending
+# (ADX above threshold); hold between flips; flat on a flip in a weak regime.
+# ---------------------------------------------------------------------------
+
+def test_regime_trend_is_flat_on_bar_zero():
+    rt = RegimeTrendState(np.array([1.0, 1.0, 1.0]), np.array([40.0, 40.0, 40.0]))
+    assert rt.desired_position(0) == 0  # no previous bar -> flat
+    assert rt.desired_position(1) == 0  # one previous bar -> still flat
+
+
+def test_regime_trend_enters_on_gated_flip():
+    # flip 1 -> -1 between bar2 and bar3; ADX(3)=40 > 25 -> short taken at bar4
+    dirn = np.array([1.0, 1.0, 1.0, -1.0, -1.0])
+    adx = np.array([0.0, 0.0, 0.0, 40.0, 0.0])
+    rt = RegimeTrendState(dirn, adx, threshold=25.0)
+    assert rt.desired_position(2) == 0   # no flip yet -> flat
+    assert rt.desired_position(3) == 0   # no flip yet -> flat
+    assert rt.desired_position(4) == -1  # gated flip (ADX 40>25) -> short
+    assert rt.desired_position(5) == -1  # no flip -> hold the short
+
+
+def test_regime_trend_ignores_flip_in_weak_regime():
+    # same flip, but ADX(3)=10 <= 25 -> stand flat (the gate is doing its job)
+    dirn = np.array([1.0, 1.0, 1.0, -1.0, -1.0])
+    adx = np.array([0.0, 0.0, 0.0, 10.0, 0.0])
+    rt = RegimeTrendState(dirn, adx, threshold=25.0)
+    assert rt.desired_position(4) == 0   # flip in a weak regime -> flat
+    assert rt.desired_position(5) == 0   # no flip -> stay flat
+
+
+def test_regime_trend_reverses_on_next_gated_flip():
+    # dir: 1 1 1 -1 -1  1 1 1   (indices 0..7)
+    # flip 1->-1 lands on bar3 (i=4); flip -1->+1 lands on bar5 (i=6).
+    # Both flips have ADX>25 -> short then long; holds persist between flips.
+    dirn = np.array([1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, 1.0])
+    adx = np.array([0.0, 0.0, 0.0, 40.0, 0.0, 40.0, 0.0, 0.0])
+    rt = RegimeTrendState(dirn, adx, threshold=25.0)
+    assert rt.desired_position(4) == -1  # gated 1->-1 flip (ADX40>25) -> short
+    assert rt.desired_position(5) == -1  # no flip -> hold the short
+    assert rt.desired_position(6) == 1   # gated -1->+1 flip (ADX40>25) -> long
+    assert rt.desired_position(7) == 1   # no flip -> hold the long
+
+
+def test_regime_trend_is_nan_safe():
+    # enter short, then a NaN direction bar must be ignored (state preserved)
+    dirn = np.array([1.0, -1.0, -1.0, np.nan, -1.0])
+    adx = np.array([0.0, 40.0, 0.0, 0.0, 0.0])
+    rt = RegimeTrendState(dirn, adx, threshold=25.0)
+    assert rt.desired_position(2) == -1  # bar1 flip gated (ADX40) -> short
+    assert rt.desired_position(3) == -1  # bar2 hold -> short
+    assert rt.desired_position(4) == -1  # bar3 NaN -> keep short
+    assert rt.desired_position(5) == -1  # bar4 no flip -> keep short
 
 
 # ---------------------------------------------------------------------------

@@ -96,7 +96,7 @@ moneta/
 │   ├── history_map.yml          ← per-instrument backfill ranges
 │   ├── indicators.yml           ← indicator/feature spec (matches pipeline/indicators.py)
 │   └── strategies.yml           ← evaluation windows + OOS holdout + trial-log rules
-├── tests/                       ← pytest suite (98): pipeline + engine + metrics + strategy rules + custom indicators (no network)
+├── tests/                       ← pytest suite (103): pipeline + engine + metrics + strategy rules + custom indicators (no network)
 └── data/                        ← Parquet tables + metadata.duckdb (git-ignored contents)
 ```
 
@@ -106,7 +106,7 @@ moneta/
 .venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01
 .venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --timeframe 1h
 .venv/bin/python -m pipeline.indicators                    # rebuild features (~5 min)
-.venv/bin/python -m pytest tests/ -q                       # 98 tests (pipeline + engine + metrics + strategy rules)
+.venv/bin/python -m pytest tests/ -q                       # 103 tests (pipeline + engine + metrics + strategy rules)
 # ad-hoc query via the registered Parquet-backed views:
 .venv/bin/python -c "import duckdb;print(duckdb.connect('data/metadata.duckdb', read_only=True).execute('SELECT * FROM main.ohlcv_5m_features LIMIT 3').fetchdf())"
 ```

@@ -23,6 +23,7 @@
 | S-04 | Squeeze-onset follower | 5m | `sqz_on_24`, `bb_mid_24` | sqz onset (0→1) + direction by close vs bb_mid_24, held through episode | squeeze-off (1→0) | long/short | **rejected** | [code/strategy_squeeze.py](code/strategy_squeeze.py) | [docs/strategy_squeeze_report.md](docs/strategy_squeeze_report.md) | 2026-10-29 | cost × frequency: ~10,500 trades (full), ~1,900/yr — the "low-frequency" premise is false at 5m; below buy-hold at every cost tier incl. 0 bps (full c0 EUR −7.8% vs +2.3%; BTC −57.8% vs +1538%; XAU −20.9% vs +113%). See report §3. |
 | S-05 | SuperTrend-24 direction follower | 5m | `st_dir_24_2` | st_dir_24_2 up | st_dir_24_2 down | long | **rejected** | [code/strategy_supertrend.py](code/strategy_supertrend.py) | [docs/strategy_supertrend_report.md](docs/strategy_supertrend_report.md) | 2026-10-28 | cost × frequency: 10,402 trades (full), below buy-hold at every cost tier on all 3 instruments (full c2 EUR −98.95% vs +2.3%; BTC −96.73% vs +1538%; XAU −98.23% vs +113%) → reject. See report §3. |
 | S-06 | EMA-spread trend follower | 5m | `ema_spread_24_120` | spread > 0 | spread ≤ 0 | long | **rejected** | [code/strategy_ema_spread.py](code/strategy_ema_spread.py) | [docs/strategy_ema_spread_report.md](docs/strategy_ema_spread_report.md) | 2026-10-28 | not a cross-market edge: above buy-hold on BTC at **0 bps only** (full c0 +2402% vs BH +1538%), below buy-hold at 2/5 bps (+903/+154%); below buy-hold on EUR at every tier; below buy-hold on XAU at every tier. Long-only beta on a bullish BTC sample — see report §3. |
+| S-07 | Regime-gated slow-trend follower | 1h | `st_dir_120_2`, `adx_24` | ST-120 flip while adx_24 > 25 | next ST-120 flip (or adx-weak flip → flat) | long/short | **rejected** | [code/strategy_regime_trend.py](code/strategy_regime_trend.py) | [docs/strategy_regime_trend_report.md](docs/strategy_regime_trend_report.md) | 2026-10-29 | low-frequency (~68/yr) as intended, but below buy-hold at **every** cost tier incl. 0 bps (full c0 EUR −5.1% vs +3.1%; BTC +73.6% vs +1288%; XAU −16.2% vs +110%) — signal quality, not frequency. See report §3. |
 
 ## Indicator usage map
 
@@ -35,6 +36,8 @@ Which key indicators are already *claimed* by tested/candidate strategies (helps
 | `sqz_on_24` | S-04 |
 | `bb_mid_24` | S-04 |
 | `st_dir_24_2` | S-05 |
+| `st_dir_120_2` | S-07 |
+| `adx_24` | S-07 |
 | `ema_spread_24_120` | S-06 |
 
 ## Rejected combinations — do not re-test without a new hypothesis
@@ -45,6 +48,7 @@ Which key indicators are already *claimed* by tested/candidate strategies (helps
 | 1h RSI_24 30/55 long-only (S-02) | Slower and less negative than S-01, but below buy-hold at every cost tier (0 bps: EUR −5.2%, BTC +21%, XAU +6.7% all < buy-hold). Signal quality, not frequency. See [S-02 report](docs/strategy_rsi_1h_report.md) §3. |
 | 5m RSI_24 < 30 AND close > ema_24 (S-03) | Empty signal: the two predicates never co-occur on this data (verified intersection = 0 on all 3 instruments). Not re-testable without a new, mismatched-window rule. See [S-03 report](docs/strategy_rsi_trend_report.md) §3. |
 | 5m squeeze-onset long/short (S-04) | Cost × frequency: ~10,500 trades (full); below buy-hold at every cost tier incl. 0 bps. The "low-frequency" premise is false at 5m (the squeeze fires ~1,900 times/yr, not rarely). [matrix](results/S04/matrix.md) |
+| 1h ADX-gated SuperTrend-120 (S-07) | Signal quality: low-frequency (~68/yr) as intended, but below buy-hold at every cost tier incl. 0 bps on all 3 instruments. See [S-07 report](docs/strategy_regime_trend_report.md) §3. |
 | 5m SuperTrend 24/2 follower (S-05) | Cost × frequency: 10,402 trades (full); below buy-hold at every cost tier on all 3 instruments. [matrix](results/S05/matrix.md) |
 | 5m EMA-spread 24/120 follower (S-06) | Not cross-market: above buy-hold on BTC only, and only at 0 bps; below buy-hold on EUR/XAU at every cost tier. Single-instrument fit, not a general edge. [matrix](results/S06/matrix.md) |
 

@@ -91,12 +91,19 @@ def _register_s04() -> None:
     _STRATEGIES["s04"] = {"label": "S-04 Squeeze-onset follower", "run": run}
 
 
+def _register_s07() -> None:
+    from strategy.strategy_regime_trend_lib import run
+
+    _STRATEGIES["s07"] = {"label": "S-07 Regime-gated slow trend (ADX gate)", "run": run}
+
+
 _register_s01()
 _register_s05()
 _register_s06()
 _register_s02()
 _register_s03()
 _register_s04()
+_register_s07()
 
 
 def _load_config() -> dict:
