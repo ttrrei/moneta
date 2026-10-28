@@ -93,6 +93,11 @@ def load_bars(
     cols = list(BASE_COLS) + [c for c in feature_cols if c not in BASE_COLS]
     conn = duckdb.connect()
     try:
+        # Pin the session timezone so the ``until`` date bound is interpreted
+        # identically on every machine (review 2026-10-28 §4.1: a date-only
+        # bound is otherwise read in the local timezone and the "fixed anchor"
+        # drifts ~10h between machines). The pipeline does the same.
+        conn.execute("SET TimeZone = 'UTC'")
         where = ["instrument = ?"]
         params: list = [parquet, instrument]
         for col in (not_null_cols or ()):

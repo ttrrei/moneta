@@ -27,7 +27,9 @@ the pipeline *and* checked in isolation.
 ## Conventions (apply to every module here)
 
 1. **Causal** — bar `T` uses only bars `≤ T`. Path-dependent recursions are
-   still causal; the pipeline drops `WARMUP_DROP` leading rows.
+   still causal; the pipeline drops `WARMUP_DROP` leading rows to *reduce*
+   start-point dependence — a fixed warmup does **not** guarantee the state
+   has converged (see `supertrend.py` and `docs/indicators.md` §8 Gate 2).
 2. **No synthetic data** — undefined values are `NaN`, never imputed.
 3. **Free parameters are explicit** — multipliers / accelerations are named
    by the caller, never library defaults (B10/B11 in `docs/indicators.md` §4.1).

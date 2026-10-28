@@ -69,6 +69,9 @@ def load_bars(
 
     conn = duckdb.connect()
     try:
+        # Pin the session timezone so the ``until`` date bound is interpreted
+        # identically on every machine (review 2026-10-28 §4.1).
+        conn.execute("SET TimeZone = 'UTC'")
         where = ["instrument = ?", RSI_COL + " IS NOT NULL"]
         params: list = [parquet, instrument]
         if since:

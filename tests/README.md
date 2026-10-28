@@ -8,7 +8,7 @@ any environment and are the intended basis for a future CI.
 Run with:
 
 ```bash
-.venv/bin/python -m pytest tests/ -q        # 86 tests
+.venv/bin/python -m pytest tests/ -q        # 96 tests
 ```
 
 ## What is covered
@@ -41,6 +41,13 @@ Run with:
   (invariant to sample length, unlike the old `* sqrt(n_trades * 12)` form),
   and the **B6 entry guard** (`no_entry_mask` blocks new entries from flat but
   never blocks exits or the end-of-data force-close).
+
+- `test_strategy_rules.py` — **deterministic rule + DST regression tests**
+  (pure numpy/pandas, no data): the two trend-follower state rules
+  (`SupertrendState`, `EmaSpreadState`) signal on the *previous* closed bar,
+  are long-only and NaN-safe; and `_utc_offset_for` resolves a US anchor's
+  offset **per date** across a real DST transition (the 10-27 review's
+  `zoneinfo` fix, now regression-locked).
 
 ## Conventions
 

@@ -21,9 +21,9 @@
 
 | # | date | strategy_id | hypothesis (one line) | window | outcome | ret vs BH (primary) | n_tried_before |
 |---|------|-------------|-----------------------|--------|---------|---------------------|----------------|
-| 1 | 2026-10-26 | S-01 | 5m RSI-24 30/55 long-only mean reversion | full | **rejected** | −21.6% vs +0.3% (EUR_USD) | 0 |
-| 2 | 2026-10-27 | S-05 | 5m SuperTrend-24 direction follower (long-only) | full | **rejected** | −32.7% vs +2.6% (EUR_USD); loses at cost ≥2bps, slower 60/3 & 120/3 never beat buy-hold | 1 |
-| 3 | 2026-10-27 | S-06 | 5m EMA-spread 24/120 trend follower (long-only) | full | **rejected** | −11.0% vs +2.6% (EUR_USD); beats buy-hold on BTC only (+2421/+911/+157% @ 0/2/5bps) — single-instrument, not cross-market | 2 |
+| 1 | 2026-10-28 | S-01 | 5m RSI-24 30/55 long-only mean reversion | full | **rejected** | full c2 −19.2% vs +2.3% (EUR_USD); −34.8% vs +1538% (BTC_USD); 777 trades — cost × frequency | 0 |
+| 2 | 2026-10-28 | S-05 | 1h SuperTrend(10,3) flip trend-following (long-only) | full | **rejected** | 10,402 trades (full); below buy-hold at every cost tier on all 3 instruments (full c2 EUR −99%/BTC −97%/XAU −98%) — cost × frequency | 1 |
+| 3 | 2026-10-28 | S-06 | 1h EMA-spread 24/120 trend follower (long-only) | full | **rejected** | full c0 +2402% vs BH +1538% (BTC only), below buy-hold at 2/5 bps (+903/+154%); loses on EUR at every tier — single-instrument, not cross-market | 2 |
 
 <!--
 Append a new row for every attempt. Keep `n_tried_before` = (previous max #) so

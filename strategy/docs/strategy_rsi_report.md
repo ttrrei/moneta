@@ -7,24 +7,22 @@
 > **Data:** `data/ohlcv_5m_features/ohlcv_5m_features.parquet` (built 2026-10-26) ·
 > **Registry ID:** S-01 — see [STRATEGY_REGISTRY.md](../STRATEGY_REGISTRY.md)
 
-> **Update (2026-10-27):** the strategy now runs through the shared
+> **Re-run (2026-10-28):** the strategy now runs through the shared
 > [engine](../engine.py) and is exposed as a lib
 > ([strategy_rsi_lib.py](../strategy_rsi_lib.py)) plus a thin CLI. The standard
 > 3×2×3 evaluation is automated by [run_matrix.py](../run_matrix.py); the
 > current matrix (all 18 cells, this exact baseline) is at
 > [results/S01/matrix.md](../results/S01/matrix.md). A B6 entry-guard option
 > (`--entry-guard`) blocks new entries on gap / near-market-close bars — this
-> report's numbers are the **guard-off** baseline (944/1011/920 trades); the
-> guard-on variant drops a few gap-bar entries (e.g. EUR 944→941, −21.58%→−21.25%).
+> report's numbers are the **guard-off** baseline.
 
-> **OOS caveat (2026-10-28):** the numbers above were produced *before* the
-> out-of-sample discipline was in place — the `full`/`last_12m` windows then
-> ran over the most recent data, which is now reserved as the OOS holdout
-> (`oos.holdout_start = 2025-08-01` in `config/strategies.yml`). They are
-> therefore **not** a valid out-of-sample result and must not be cited as
-> such. Going forward, in-sample windows are capped at `until: 2025-07-31`
-> and the holdout may be run exactly once per strategy
-> ([repo_review_20261027.md](../../docs/repo_review_20261027.md) §1.1).
+> **OOS caveat (2026-10-28):** the numbers in this report were re-run on the
+> **capped** in-sample window (`until: 2025-07-31`, the day before the OOS
+> holdout `oos.holdout_start = 2025-08-01` in `config/strategies.yml`). The
+> *earlier* figures (944/1,011/920 trades, −21.6%/−41.9%/−29.2%) ran over the
+> most recent data — i.e. the OOS holdout — and are **invalid** evidence; they
+> have been replaced by the capped numbers in §2. The holdout may be run
+> exactly once per strategy ([repo_review_20261027.md](../../docs/repo_review_20261027.md) §1.1).
 
 ---
 
@@ -38,28 +36,27 @@
 | Position | Long-only, one position at a time, 1 unit, fully closed at data end |
 | Cost | **2 bps one-way** (typical OANDA CFD spread), applied at entry and exit |
 | Causality | Signal on closed bar T, fill at next bar's open — **no lookahead** (spec §3.3) |
-| Data | 2020-01 → 2026-10, ~500k 5m bars per instrument |
+| Data | 2020-01 → 2025-07-31 (capped in-sample), ~416k 5m bars per instrument |
 
 Why RSI-24: it is the most universally understood oscillator, it is already in
 the feature table, and the 30/55 thresholds are the classic "oversold /
 neutral" levels. It needs no parameters beyond the window we already fixed on
 the CFD grid.
 
-## 2. Results (full history, 2020-01 → 2026-10)
+## 2. Results (full history, 2020-01 → 2025-07-31, cost 2 bps, guard off)
 
 | Instrument | Trades | Win rate | **Strategy** | Buy & hold | Max DD | Avg trade | Exposure |
 |---|---:|---:|---:|---:|---:|---:|---:|
-| **EUR_USD** | 944 | 54.3% | **−21.6%** | +0.3% | 22.2% | −0.026% | 12.5% |
-| **BTC_USD** | 1,011 | 63.2% | **−41.9%** | +1031% | 68.0% | −0.028% | 14.3% |
-| **XAU_USD** | 920 | 62.2% | **−29.2%** | +159% | 37.1% | −0.035% | 12.8% |
-| **NAS100_USD** | 1,075 | 62.5% | **−34.6%** | +230% | 50.1% | −0.035% | 14.1% |
+| **EUR_USD** | 777 | 54.3% | **−19.2%** | +2.3% | 21.0% | −0.027% | 12.8% |
+| **BTC_USD** | 813 | 64.1% | **−34.8%** | +1538% | 66.2% | −0.023% | 14.1% |
+| **XAU_USD** | 752 | 62.2% | **−12.6%** | +113% | 24.8% | −0.016% | 12.6% |
 
-**Verdict: the strategy loses money on every instrument tested**, roughly in
-proportion to the transaction cost of its ~1,000 trades.
+**Verdict: the strategy loses money on every instrument tested** at a realistic
+cost, roughly in proportion to the transaction cost of its ~800 trades.
 
 ## 3. Why it loses — diagnosis
 
-1. **Costs dominate.** At ~1,000 trades × 4 bps round-trip ≈ **40% of equity
+1. **Costs dominate.** At ~800 trades × 4 bps round-trip ≈ **30% of equity
    paid in spread** over the period. The average trade is only ±0.03%, i.e.
    the *edge per trade is smaller than the cost per trade*. No signal quality
    question: the trade frequency is structurally uneconomic for a CFD spread.

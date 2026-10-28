@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# The results check is the load-bearing job: it is what catches a committed
+# matrix that ran outside its declared window (the OOS holdout). It has zero
+# dependencies, so it can never be red for an unrelated reason.
+jobs:
+  results-check:
+    name: committed results are legal
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: checker self-test (15 mutation cases)
+        run: python scripts/test_check_results.py
+
+      - name: check the committed results
+        run: python scripts/check_results.py
+
+  pytest:
+    name: unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: install TA-Lib (C library)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ta-lib libta-dev
+
+      - name: install dependencies (pinned)
+        # requirements.lock pins every version (review 2026-10-28 §B2), so this
+        # job is now deterministic and blocks the merge on a real test failure.
+        run: pip install -r requirements.lock
+
+      - name: run the test suite
+        run: python -m pytest tests/ -q

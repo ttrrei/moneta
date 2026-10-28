@@ -7,8 +7,16 @@ no talib) and run in any environment / CI.
 Key regression covered here: the old reference ``sharpe`` was
 ``mean(tr)/std(tr) * sqrt(n_trades * 12)`` — a number that *grows with the
 number of trades*. These tests pin the corrected, annualised-by-trading-rate
-Sharpe and prove it is independent of sample length (same edge, longer sample →
-same Sharpe), which is what makes it comparable across strategies and windows.
+Sharpe and prove it is independent of sample length at a fixed rate (same edge,
+same trades/yr, longer sample → same Sharpe).
+
+.. note::
+   "Rate-based" does NOT mean "comparable across strategies": because the
+   metric scales with trades/year, two strategies with the same per-trade edge
+   but different trade counts get different Sharpes (the higher-frequency one
+   scores higher). ``test_sharpe_depends_on_trades_per_year`` therefore pins
+   that frequency-dependent behaviour as a *known property*, not a bug — and
+   the metric must not be used to rank strategies against each other.
 """
 
 from __future__ import annotations

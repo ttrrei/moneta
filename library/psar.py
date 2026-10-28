@@ -13,7 +13,9 @@ Supertrend:
   defaulted to library values (B10/B11).
 
 Causality: TA-Lib's SAR is a causal recursion (each value uses prior bars
-only); it is path-dependent, so the pipeline drops the leading warm-up rows.
+only); it is path-dependent, so the pipeline drops the leading warm-up rows
+(reducing but not eliminating the start-point dependence — a fixed warmup is
+not proof the state has converged).
 """
 
 from __future__ import annotations

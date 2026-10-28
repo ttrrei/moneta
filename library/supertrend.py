@@ -18,8 +18,10 @@ Causality: bar ``T`` uses only bars ``<= T`` (the recursion reads the
 previous close, which is closed by then). The recursion is
 **path-dependent** — starting later gives a different state — so the
 pipeline drops the leading warm-up rows (``WARMUP_DROP``) before any feature
-is used; see ``docs/indicators.md`` §8 Gate 2 (start-independence) for the
-reason.
+is used. **Note: dropping ``WARMUP_DROP`` rows reduces but does *not*
+eliminate the start-point dependence** — a fixed-length warmup is not proof
+the state has converged; see ``docs/indicators.md`` §8 Gate 2
+(start-independence) for the reason.
 
 Parameters
 ----------

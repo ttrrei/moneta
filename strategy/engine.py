@@ -96,7 +96,7 @@ class BacktestResult:
     max_drawdown_pct: float
     win_rate_pct: float
     avg_trade_return_pct: float
-    sharpe: float                 # annualised, comparable across strategies
+    sharpe: float                 # annualised, trade-rate based (NOT comparable across strategies — see METRIC_FORMULAS)
     exposure_pct: float
     span_years: float             # observed window length in (fractional) years
     trades: Sequence[Trade] = field(default_factory=list, repr=False)
@@ -176,6 +176,13 @@ def annualised_sharpe(per_trade_returns: Sequence[float], span_years: float) -> 
     over a longer sample therefore yields the *same* Sharpe — unlike the old
     reference formula ``* sqrt(n_trades * 12)``, which inflated with sample
     length. See :data:`METRIC_FORMULAS`.
+
+    .. note::
+       Because it scales with trades/year, two strategies with the *same*
+       per-trade edge but *different* trade counts will NOT have comparable
+       Sharpes (the higher-frequency one scores higher). Use it to compare the
+       SAME strategy across windows/cost tiers only — not to rank strategies
+       against each other.
     """
     x = np.asarray(list(per_trade_returns), dtype=np.float64)
     if x.size < 2:
@@ -382,9 +389,13 @@ METRIC_FORMULAS: dict[str, str] = {
     "win_rate_pct": "fraction of closed trades with net return > 0, in %.",
     "avg_trade_return_pct": "mean per-trade net return (net_pnl / entry notional), in %.",
     "sharpe": "Annualised, trade-rate-based Sharpe: "
-              "mean(tr)/std(tr, ddof=1) * sqrt(n_trades / span_years). Depends on "
-              "the RATE of trading, not the total count — comparable across "
-              "strategies and windows (independent of sample length).",
+              "mean(tr)/std(tr, ddof=1) * sqrt(n_trades / span_years). "
+              "WARNING: this REWARDS trade frequency (same per-trade edge with "
+              "30x the trades yields ~sqrt(30) higher Sharpe), so it is NOT "
+              "comparable across strategies with different trade counts. Use it "
+              "only to compare the SAME strategy across windows/cost tiers. "
+              "For cross-strategy ranking prefer return-vs-buyhold at 2bps and "
+              "max drawdown. A daily-equity Sharpe is a policy change not yet made.",
     "exposure_pct": "fraction of bars with a non-zero position, in %.",
 }
 

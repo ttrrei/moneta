@@ -50,6 +50,10 @@ def main() -> None:
     ap.add_argument("--timeframe", default="5m", choices=sorted(TIMEFRAME_SECONDS),
                     help="bar timeframe; selects the matching feature parquet")
     ap.add_argument("--since", default=None, help="ISO date, e.g. 2023-01-01")
+    ap.add_argument("--until", default=None,
+                    help="ISO date, inclusive upper bound. For in-sample runs use "
+                         "config/strategies.yml windows (until: 2025-07-31) so the "
+                         "holdout is never touched by a manual run.")
     ap.add_argument("--parquet", default=None,
                     help="override feature parquet (defaults by --timeframe)")
     ap.add_argument("--cost-bps", type=float, default=COST_BPS,
@@ -65,6 +69,7 @@ def main() -> None:
         instrument=args.instrument,
         timeframe=args.timeframe,
         since=args.since,
+        until=args.until,
         cost_bps=args.cost_bps,
         entry_guard=args.entry_guard,
     )
