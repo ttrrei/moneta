@@ -79,6 +79,7 @@ def load_bars(
     not_null_cols: list[str] | tuple[str, ...] | None = None,
     since: str | None = None,
     until: str | None = None,
+    oos_token: object | None = None,
 ) -> pd.DataFrame:
     """Load a strategy's columns from the feature parquet, windowed.
 
@@ -87,8 +88,20 @@ def load_bars(
     a warm-up / NaN head). ``until`` caps the window at the day before the OOS
     holdout for in-sample windows (config/strategies.yml), so in-sample runs can
     never tune on holdout data (repo_review_20261027 §1.1).
+
+    The holdout gate now lives here, in the data layer (follow-up review of
+    repo_review_20261029): a window that reaches the holdout (``until`` unset,
+    i.e. "read everything", or ``until`` on/after ``oos.holdout_start``) is
+    **refused** unless ``oos_token`` is a valid :class:`strategy.oos_token.
+    OOSToken`. That token is only ever minted by ``run_matrix`` after it has
+    appended a committed ledger reservation — so a new script or an AI session
+    calling ``load_bars`` directly cannot read the holdout (``assert_access``
+    is fail-closed and re-verifies the token against the ledger).
     """
     import duckdb
+
+    from strategy import oos_token as _oos
+    _oos.assert_access(until, oos_token)
 
     cols = list(BASE_COLS) + [c for c in feature_cols if c not in BASE_COLS]
     conn = duckdb.connect()

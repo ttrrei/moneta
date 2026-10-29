@@ -35,24 +35,30 @@ windows:
     until: "2025-07-31"
   # "oos": the holdout — the single, final, out-of-sample check.
   #
-  # Window bounds are INCLUSIVE of the last fully-closed day and EXCLUSIVE of
-  # the first partial day. The loader (strategy/strategy_lib.py::load_bars)
-  # applies them as `time >= since` and `time <= until`, where a date-only
-  # bound is read at UTC midnight (session timezone pinned to UTC). So:
-  #   * since = 2025-08-01        -> includes every bar from 2025-08-01 00:00 on
-  #   * until = 2026-10-23        -> `time <= 2026-10-23 00:00`, i.e. it includes
-  #                                  ALL bars of 2026-10-22 and EXCLUDES every
-  #                                  bar on/after 2026-10-23 00:00.
-  # The last fully-closed UTC day for all 3 instruments is **2026-10-22**
-  # (2026-10-23 is partial: 252/288 on 5m, 21/24 on 1h — not yet closed), so
-  # `until` is set to the day AFTER it (2026-10-23) to include the full 2026-10-22.
-  # This is the same convention as the in-sample caps: `full.until: 2025-07-31`
-  # leaves the (harmless, no-leak) one-day gap of 2025-07-31 before `since`.
+  # Single source of truth for the holdout's END (follow-up review, issue 5):
+  #   * `oos.holdout_end` (2026-10-22) is the last fully-closed UTC day.
+  #   * `windows.oos.until` is DERIVED from it: until = holdout_end + 1 day
+  #     (2026-10-23). The checker (L0) enforces until == holdout_end + 1 day,
+  #     so the two can no longer drift apart. Edit `holdout_end` and bump
+  #     `until` to the day after — never the other way round.
+  #
+  # Why "until = holdout_end + 1 day" and not "until = holdout_end": the loader
+  # (strategy/strategy_lib.py::load_bars) applies the bound as `time <= until`,
+  # where a date-only bound is read at UTC midnight (session timezone pinned to
+  # UTC). So `time <= 2026-10-23 00:00` **includes** every bar of 2026-10-22
+  # *and* the single 2026-10-23 00:00 bar, and excludes everything after
+  # 2026-10-23 00:00. (Correcting the earlier comment, which wrongly said the
+  # 2026-10-23 bar was excluded — the `time <=` bound actually includes the
+  # 00:00 bar of `until`; it excludes all *later* bars.) The extra 00:00 bar is
+  # the first bar of the partial day and carries no holdout signal; the real
+  # intent — "include all of the last fully-closed day, exclude the rest of the
+  # partial day" — is met.
+  # Since bound: `time >= 2025-08-01` includes every bar from 2025-08-01 00:00.
   # New market data arriving after 2026-10-22 therefore never enters this
   # holdout — it belongs to a future `oos2` window under a new holdout id.
   oos:
     since: "2025-08-01"
-    until: "2026-10-23"
+    until: "2026-10-23"        # derived: oos.holdout_end (2026-10-22) + 1 day
 
 # ---------------------------------------------------------------------------
 # Out-of-sample holdout (0.5 OOS discipline). This span is **never** used for

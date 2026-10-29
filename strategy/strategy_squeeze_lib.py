@@ -56,11 +56,16 @@ def build_rule(df) -> "SqueezeState":
 
 
 def load_squeeze_bars(parquet: str, instrument: str, since: str | None = None,
-                      until: str | None = None):
-    """Load the squeeze + Bollinger-mid columns (plus base pricing) for one window."""
+                      until: str | None = None, oos_token: object | None = None):
+    """Load the squeeze + Bollinger-mid columns (plus base pricing) for one window.
+
+    ``oos_token`` is required for any window that reaches the OOS holdout
+    (the data-layer gate in :func:`strategy_lib.load_bars`).
+    """
     return strategy_lib.load_bars(
         parquet, instrument, feature_cols=[SQZ_COL, BBMID_COL],
-        not_null_cols=[SQZ_COL, BBMID_COL], since=since, until=until)
+        not_null_cols=[SQZ_COL, BBMID_COL], since=since, until=until,
+        oos_token=oos_token)
 
 
 class SqueezeState:
@@ -105,13 +110,16 @@ def run_squeeze(
     until: str | None = None,
     cost_bps: float = COST_BPS,
     entry_guard: bool = False,
+    oos_token: object | None = None,
 ) -> dict:
     """Run the S-04 rule for one instrument / window / cost tier.
 
     Two-sided (long/short) — the only candidate that trades both sides.
     ``entry_guard`` defaults to OFF to match the S-01 baseline convention.
+    ``oos_token`` is required for a window that reaches the OOS holdout (the
+    data-layer gate).
     """
-    df = load_squeeze_bars(parquet, instrument, since, until)
+    df = load_squeeze_bars(parquet, instrument, since, until, oos_token=oos_token)
     if len(df) < 1_000:
         raise SystemExit(f"Only {len(df)} bars loaded for {instrument} "
                          f"(window {since or 'start'}..{until or 'latest'}); not enough to backtest.")
@@ -140,9 +148,11 @@ def run(
     until: str | None = None,
     cost_bps: float = COST_BPS,
     entry_guard: bool = False,
+    oos_token: object | None = None,
 ) -> dict:
     """Matrix-runner entry point (keyword-compatible with :func:`run_squeeze`)."""
-    return run_squeeze(parquet, instrument, timeframe, since, until, cost_bps, entry_guard)
+    return run_squeeze(parquet, instrument, timeframe, since, until,
+                       cost_bps, entry_guard, oos_token=oos_token)
 
 
 __all__ = [

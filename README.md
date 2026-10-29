@@ -22,16 +22,21 @@ Implemented and tracked in Git:
   accounting + metric definitions, long & short, tested), `strategy_lib.py`
   (**shared data/eval core** every strategy builds on: parquet loading, the
   timeframe guard, bar-frame build, run wrapper, trade distribution),
+  `oos_token.py` (**data-layer holdout gate** — `load_bars` refuses any window
+  that reaches the OOS holdout unless the caller holds a token minted by
+  `run_matrix` after a committed ledger reservation; the one-shot gate now
+  lives at the point the bars are read, not only in the runner),
   `strategy_rsi_lib.py` (S-01 rule), `strategy_supertrend_lib.py` (S-05),
   `strategy_ema_spread_lib.py` (S-06), `code/strategy_rsi.py` (S-01 CLI),
-  `run_matrix.py` (automated 3×2×3 matrix runner → `strategy/results/`),
-  `WORKFLOW.md` (steps 0–7 + gates), `STRATEGY_REGISTRY.md`,
+  `run_matrix.py` (automated 3×2×3 matrix runner + OOS gate → `strategy/results/`),
+  `oos_ledger.json` (append-only one-shot holdout ledger),
+  `WORKFLOW.md` (steps 0–7.5 + gates), `STRATEGY_REGISTRY.md`,
   `STRATEGY_BACKGROUND.md`, `generated_strategy.md`, `trial_log.md` (OOS /
   best-of-N discipline), `docs/strategy_rsi_report.md`.
 - **Config** (`config/`): `indicators.yml` (feature spec), `strategies.yml`
   (evaluation windows + OOS holdout + trial-log rules), `history_map.yml`,
   `setting.example.yml`.
-- **Tests** (`tests/`): **120 passing** unit tests covering the pipeline
+- **Tests** (`tests/`): **153 passing** unit tests covering the pipeline
   (`extract_oci`, `extract_oanda`, `aggregate_ohlcv`), the feature engine
   (`test_indicators.py` — the six quality gates on synthetic data), and the
   shared engine's metric definitions (`test_metrics.py`). Run with `pytest -q`.
@@ -99,7 +104,7 @@ moneta/
 │   ├── results/S01|S05|S06/     ← per-cell JSON + matrix.md + summary.csv
 │   └── docs/strategy_rsi_report.md
 ├── config/                      ← indicators.yml, strategies.yml, history_map.yml
-├── tests/                       ← 140 pytest tests (pipeline + engine + metrics + strategy rules + OOS gate + custom indicators)
+├── tests/                       ← 153 pytest tests (pipeline + engine + metrics + strategy rules + OOS gate + data-layer holdout guard + custom indicators)
 ├── scripts/  data/  legacy/     ← helpers / runtime artifacts / notes (git-ignored contents)
 └── requirement.txt
 ```
@@ -131,7 +136,7 @@ pip install -r requirement.txt
 Then run things from the repo root:
 
 ```bash
-# Tests (120, no network needed):
+# Tests (153, no network needed):
 .venv/bin/python -m pytest tests/ -q
 
 # Rebuild the feature tables (only after data or spec changes; ~5 min, streams per instrument):
@@ -223,7 +228,7 @@ Done (tracked in Git):
 - [x] Gold feature wide tables — **305 / 270 columns** (`pipeline/indicators.py` + `library/`, spec in `docs/indicators.md`)
 - [x] **Shared, tested backtest engine** with standard metrics, cost handling, and buy-and-hold (`strategy/engine.py`)
 - [x] Strategy registry + background/checklist + trial log + OOS holdout discipline
-- [x] Automated tests — **140 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS gate: finalist-only + one-shot + fail-closed + machine pass/fail)
+- [x] Automated tests — **153 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS gate: finalist-only + one-shot + fail-closed + machine pass/fail + **data-layer holdout guard** (a direct `load_bars(until=None)` / holdout-window read is refused without a run_matrix token) + holdout-window identity lock + void flow)
 
 Not yet done (future, see BRD §5.3 / §11):
 

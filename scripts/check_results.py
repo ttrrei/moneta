@@ -55,12 +55,24 @@ What it checks
   F1  if the feature parquet is present and is *newer* than the summary.csv,
       the committed results predate the current data build (stale)
 
+**OOS holdout ledger (append-only + cross-consistency, follow-up review)**
+  L0  ``windows.oos.until`` equals ``oos.holdout_end`` + 1 day (single source
+      of truth for the holdout's end; the loader is inclusive of ``until``, so
+      the last fully-closed day is ``holdout_end``)
+  L1  the committed ``oos_ledger.json`` is a **superset** of the base ledger
+      (``--base-ledger``) — a holdout record may never be *removed*; the ledger
+      must only ever grow (CI: pass the base branch's ledger)
+  L2  the ledger and ``trial_log.md`` agree: every adjudicated ``oos`` trial
+      row has a ledger consumption record, and every ``completed`` ledger
+      record has an adjudicated ``oos`` trial row
+
 Usage
 -----
     python scripts/check_results.py                # human-readable report
     python scripts/check_results.py --json         # machine-readable
     python scripts/check_results.py --strict       # warnings become failures
     python scripts/check_results.py --root /path/to/moneta
+    python scripts/check_results.py --base-ledger /path/to/base/oos_ledger.json
 
 Exit codes: 0 = no failures (warnings may exist); 1 = at least one failure.
 """
@@ -73,7 +85,7 @@ import json
 import re
 import sys
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
@@ -1047,7 +1059,169 @@ def check_cross_artifacts(root: Path, cfg: dict, registry: dict, trials: list[di
 # Entry point
 # ---------------------------------------------------------------------------
 
-def run(root: Path) -> Report:
+# ---------------------------------------------------------------------------
+# OOS holdout ledger — append-only + cross-consistency (follow-up review)
+# ---------------------------------------------------------------------------
+
+def _ledger_path(root: Path) -> Path:
+    return root / "strategy" / "oos_ledger.json"
+
+
+def _ledger_records(p: Path) -> list[dict] | None:
+    """The ledger's ``consumptions`` list, or ``None`` when the file is absent,
+    not JSON, or not a list. (``None`` = "cannot verify", distinct from `[]`.)"""
+    if not p.exists():
+        return None
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if not isinstance(data, dict):
+        return None
+    cons = data.get("consumptions")
+    return cons if isinstance(cons, list) else None
+
+
+def _rec_key(rec: dict) -> tuple | None:
+    """A comparable identity for a ledger consumption record."""
+    if not isinstance(rec, dict):
+        return None
+    return (norm_id(rec.get("strategy", "")),
+            str(rec.get("holdout_id", "")),
+            str(rec.get("holdout_start", "")),
+            str(rec.get("holdout_end", "")),
+            rec.get("status"))
+
+
+def _norm_id_of(s: str) -> str:
+    return norm_id(s)
+
+
+def check_oos_end_field(cfg: dict, rep: Report, where: str) -> None:
+    """L0 — the holdout end has a single source of truth.
+
+    ``windows.oos.until`` must equal ``oos.holdout_end`` + 1 day. The loader
+    is inclusive of ``until`` (a date-only bound is read at UTC midnight), so
+    the last fully-closed holdout day is ``holdout_end`` and ``until`` is the
+    day after it. Two hand-edited fields previously diverged (and the config
+    comment was wrong about which bars were included); this check makes them
+    agree or fails.
+    """
+    oos = cfg.get("oos") or {}
+    windows = cfg.get("windows") or {}
+    oos_win = windows.get("oos")
+    holdout_end = as_date(oos.get("holdout_end"))
+    if holdout_end is None:
+        rep.fail("L0", where, "config has no parseable `oos.holdout_end` — "
+                              "the holdout end is undefined")
+        return
+    if not isinstance(oos_win, dict):
+        rep.fail("L0", where, "config has no `windows.oos` mapping — the "
+                              "holdout window is undefined")
+        return
+    until = as_date(oos_win.get("until"))
+    if until is None:
+        rep.fail("L0", "config windows.oos", "windows.oos has no parseable `until`")
+        return
+    expected = holdout_end + timedelta(days=1)
+    if until != expected:
+        rep.fail("L0", "config windows.oos",
+                 f"windows.oos.until={until} does not equal oos.holdout_end"
+                 f"+1d ({holdout_end}+1d = {expected}). Set until to the day "
+                 f"after the last fully-closed holdout day so the two fields "
+                 f"cannot drift apart.")
+
+
+def check_oos_ledger(root: Path, trials: list[dict], rep: Report,
+                     base_ledger: Path | None = None) -> None:
+    """L1 / L2 — the OOS ledger is append-only and agrees with trial_log.
+
+    L1 (append-only): the committed ledger's records must be a *superset* of
+       the base ledger's (``--base-ledger``). A holdout record may never be
+       removed; the ledger only grows. Without ``--base-ledger`` there is no
+       baseline to diff against, so L1 is skipped (still verified by CI, which
+       always passes the base branch's ledger).
+
+    L2 (cross-consistency): adjudicated OOS trial rows and ``completed`` ledger
+       records must agree — every adjudicated ``oos`` trial row has a ledger
+       consumption record, and every ``completed`` ledger record has an
+       adjudicated ``oos`` trial row.
+    """
+    ledger_p = _ledger_path(root)
+    if not ledger_p.exists():
+        rep.fail("L1", "strategy/oos_ledger.json",
+                 "OOS ledger is missing — a ledger reset is an append-only "
+                 "violation; restore it (or pass the base ledger to --base-ledger)")
+        return
+    recs = _ledger_records(ledger_p)
+    if recs is None:
+        rep.fail("L1", "strategy/oos_ledger.json",
+                 "OOS ledger is not a valid JSON object with a `consumptions` "
+                 "list — refusing to verify append-only (fail closed)")
+        return
+
+    # ---- L1: superset of the base ledger (append-only) ---------------------
+    if base_ledger is not None:
+        if not base_ledger.exists():
+            rep.fail("L1", str(base_ledger),
+                     f"--base-ledger {base_ledger} does not exist — cannot "
+                     f"verify the ledger is append-only")
+            return
+        base_recs = _ledger_records(base_ledger)
+        if base_recs is None:
+            rep.fail("L1", str(base_ledger),
+                     f"base ledger {base_ledger} is not valid JSON with a "
+                     f"`consumptions` list — cannot verify append-only (fail closed)")
+            return
+        cur_keys = {_rec_key(r) for r in recs if _rec_key(r) is not None}
+        for br in base_recs:
+            k = _rec_key(br)
+            if k is None:
+                continue
+            if k not in cur_keys:
+                rep.fail("L1", "strategy/oos_ledger.json",
+                         f"append-only violation: the base ledger's record "
+                         f"({k[0]!r}, {k[1]!r}, {k[2]}..{k[3]}, {k[4]!r}) is "
+                         f"missing from the committed ledger. A holdout "
+                         f"consumption may not be removed.")
+
+    # ---- L2: ledger <-> trial_log agree -----------------------------------
+    def _oos_trials_for(sid_norm: str) -> list[dict]:
+        return [t for t in trials
+                if _norm_id_of(t["strategy_id"]) == sid_norm
+                and (t["window"] or "").strip().lower() == "oos"
+                and (t["outcome"] or "").strip().lower() not in ("<tbd>", "", "tbd")]
+
+    # (a) every adjudicated OOS trial row must have a ledger record.
+    for t in trials:
+        if (t["window"] or "").strip().lower() != "oos":
+            continue
+        if (t["outcome"] or "").strip().lower() in ("<tbd>", "", "tbd"):
+            continue  # not adjudicated yet — no ledger record required
+        sid = _norm_id_of(t["strategy_id"])
+        matched = [r for r in recs
+                   if isinstance(r, dict)
+                   and _norm_id_of(r.get("strategy", "")) == sid
+                   and r.get("status") in ("reserved", "completed")]
+        if not matched:
+            rep.fail("L2", f"trial_log {t['strategy_id']}",
+                     f"adjudicated `oos` trial row (strategy {t['strategy_id']}, "
+                     f"outcome {t['outcome']!r}) has no matching OOS ledger "
+                     f"consumption — the holdout was used without a reservation.")
+
+    # (b) every `completed` ledger record must have an adjudicated OOS trial row.
+    for r in recs:
+        if not isinstance(r, dict) or r.get("status") != "completed":
+            continue
+        sid = _norm_id_of(r.get("strategy", ""))
+        if not _oos_trials_for(sid):
+            rep.fail("L2", "strategy/oos_ledger.json",
+                     f"ledger record for strategy {sid!r} is `completed` but "
+                     f"trial_log.md has no adjudicated `oos` row for it — a "
+                     f"holdout result must be recorded before it is completed.")
+
+
+def run(root: Path, base_ledger: Path | None = None) -> Report:
     rep = Report()
     cfg_path = root / "config" / "strategies.yml"
     if not cfg_path.exists():
@@ -1058,6 +1232,11 @@ def run(root: Path) -> Report:
     trials = parse_trial_log(root / "strategy" / "trial_log.md")
 
     check_windows(cfg, rep, "config/strategies.yml")
+
+    # OOS holdout ledger — append-only (L1) + cross-consistency (L2) and the
+    # single-source end-date (L0) (follow-up review).
+    check_oos_end_field(cfg, rep, "config/strategies.yml")
+    check_oos_ledger(root, trials, rep, base_ledger)
 
     results: list[StrategyResults] = []
     results_root = root / "strategy" / "results"
@@ -1103,10 +1282,14 @@ def main() -> int:
                     help="repo root (default: the parent of this script's directory)")
     ap.add_argument("--json", action="store_true", help="emit JSON instead of a text report")
     ap.add_argument("--strict", action="store_true", help="treat warnings as failures")
+    ap.add_argument("--base-ledger", default=None,
+                    help="path to the base branch's oos_ledger.json (CI): the "
+                         "committed ledger must be a superset of it (append-only)")
     args = ap.parse_args()
 
     root = Path(args.root).resolve() if args.root else Path(__file__).resolve().parents[1]
-    rep = run(root)
+    base_ledger = Path(args.base_ledger).resolve() if args.base_ledger else None
+    rep = run(root, base_ledger)
 
     if args.json:
         print(json.dumps({

@@ -46,6 +46,7 @@ if str(_REPO_ROOT) not in sys.path:
 
 import strategy.registry as registry_mod  # noqa: E402  (shared gate parsing, §1.6)
 import strategy.schema as schema         # noqa: E402  (shared CSV contract + OOS pass/fail, §2.4/§3.2)
+import strategy.oos_token as _oos_token_mod  # noqa: E402  (data-layer holdout gate + token mint)
 
 CONFIG_PATH = _REPO_ROOT / "config" / "strategies.yml"
 TRIAL_LOG = _REPO_ROOT / "strategy" / "trial_log.md"
@@ -447,6 +448,77 @@ def _complete_oos(strategy: str) -> None:
     _save_oos_ledger(ledger)
 
 
+def _check_holdout_window(cfg: dict, ledger: dict | None = None) -> None:
+    """Refuse a holdout that reuses, overlaps, or retreats from any ledger window
+    (follow-up review, "必须修: holdout_id 一改就重置").
+
+    The lock used to compare only the ``holdout_id`` string, so renaming
+    ``oos1`` → ``oos2`` (same dates) or shifting the start a few days to make an
+    overlapping window let **every** strategy re-consume the same holdout. This
+    check keys on the *windows themselves*, using the dates the ledger already
+    records for each consumption. Two rules, both fail closed:
+
+      * **Same id**  — a holdout ``id`` that already appears in the ledger must
+        carry exactly the same ``holdout_start`` / ``holdout_end`` as every
+        record under that id; any other date is a different window reusing an
+        old id → refused.
+      * **New id**   — a holdout whose ``id`` is not in the ledger must start
+        **strictly after the latest ``holdout_end``** already consumed. An
+        overlapping (or earlier) window under a new id is a re-run of spent
+        data → refused.
+
+    ``ledger`` defaults to the committed ledger (loaded here, fail closed).
+    """
+    from datetime import date as _date
+    holdout_id, _max, h_start, h_end = _oos_holdout_spec(cfg)
+    if ledger is None:
+        ledger = _load_oos_ledger()
+    consumptions = ledger["consumptions"]
+    # A `voided` reservation was never consumed (a crash invalidated by a human
+    # ledger commit), so it neither pins the id's dates nor blocks a later
+    # window — only real `reserved`/`completed` consumptions do.
+    live = lambda r: isinstance(r, dict) and r.get("status") in ("reserved", "completed")
+    recs = [r for r in consumptions if live(r) and r.get("holdout_id") == holdout_id]
+    if recs:
+        # Same id: the dates must be unchanged. Any drift = a new window wearing
+        # an old id, which would reset the lock for every strategy.
+        for r in recs:
+            if (str(r.get("holdout_start")) != str(h_start)
+                    or str(r.get("holdout_end")) != str(h_end)):
+                raise SystemExit(
+                    f"Holdout id {holdout_id!r} is already in the ledger with "
+                    f"window {r.get('holdout_start')}..{r.get('holdout_end')}, but "
+                    f"the config now declares {h_start}..{h_end}. Reusing a "
+                    f"holdout id for a different window resets the lock for every "
+                    f"strategy — pick a new, strictly-later holdout id instead.")
+        return
+    # New id: it must not overlap any already-consumed holdout, i.e. it must
+    # start strictly after the latest holdout_end the ledger has seen.
+    latest_end: _date | None = None
+    for r in consumptions:
+        if not live(r):
+            continue
+        try:
+            d = _date.fromisoformat(str(r.get("holdout_end"))[:10])
+        except (ValueError, TypeError):
+            continue
+        if latest_end is None or d > latest_end:
+            latest_end = d
+    try:
+        start = _date.fromisoformat(str(h_start)[:10])
+    except (ValueError, TypeError):
+        raise SystemExit(
+            f"Config `oos.holdout_start` = {h_start!r} is not an ISO date; "
+            "refusing to run the holdout (fail closed).")
+    if latest_end is not None and start <= latest_end:
+        raise SystemExit(
+            f"New holdout {holdout_id!r} starts {start} but the ledger already "
+            f"consumed data through {latest_end}. A holdout must be a *new, "
+            f"unseen* window strictly later than every consumed window "
+            f"(no overlap). {start} <= {latest_end} → this would re-run spent "
+            f"data; pick a holdout that starts after {latest_end}.")
+
+
 def _check_oos_once(strategy: str, fingerprint: dict | None = None,
                     manifest: dict | None = None) -> None:
     """Refuse a holdout run unless the strategy is a clean finalist and the
@@ -474,6 +546,12 @@ def _check_oos_once(strategy: str, fingerprint: dict | None = None,
     registry = registry_mod.parse_registry(REGISTRY_PATH)
     trials = registry_mod.parse_trial_log(TRIAL_LOG)
 
+    # (0) Holdout-window identity lock (follow-up review, must-fix): the window
+    #     must be genuinely new — same id must keep its dates, a new id must
+    #     start strictly after the latest consumed window. This is checked
+    #     before the strategy-level gates so it applies to every candidate.
+    _check_holdout_window(cfg, ledger)
+
     # (1) Finalist-only gate (shared registry/trial parsing, §1.6).
     ok, reason = registry_mod.oos_eligible(strategy, cfg, registry, trials)
     if not ok:
@@ -491,8 +569,14 @@ def _check_oos_once(strategy: str, fingerprint: dict | None = None,
     sid = registry_mod.norm_id(strategy)
 
     # (3) Walk **every** consumption record (§1.5), not just the latest: this
-    #     strategy may consume a given holdout exactly once.
+    #     strategy may consume a given holdout exactly once. A `voided`
+    #     reservation (a crash that never produced a result, invalidated by a
+    #     human ledger commit — WORKFLOW Step 7.5) does NOT count as consumed,
+    #     so it is skipped: the holdout is not burned by an infrastructure
+    #     failure (follow-up review, "一次普通崩溃会永久烧掉唯一的 holdout").
     for rec in consumptions:
+        if rec.get("status") == "voided":
+            continue
         if (registry_mod.norm_id(rec.get("strategy", "")) == sid
                 and rec.get("holdout_id") == holdout_id):
             raise SystemExit(
@@ -502,8 +586,11 @@ def _check_oos_once(strategy: str, fingerprint: dict | None = None,
                 f"window under a new holdout id.")
 
     # (4) D1: the holdout is spent once `max_per` distinct strategies consumed it.
+    #     `voided` reservations are excluded — they never consumed the holdout.
     distinct = {registry_mod.norm_id(rec.get("strategy", ""))
-                for rec in consumptions if rec.get("holdout_id") == holdout_id}
+                for rec in consumptions
+                if rec.get("holdout_id") == holdout_id
+                and rec.get("status") != "voided"}
     if sid not in distinct and len(distinct) >= max_per:
         plural = "y" if len(distinct) == 1 else "ies"
         raise SystemExit(
@@ -511,6 +598,46 @@ def _check_oos_once(strategy: str, fingerprint: dict | None = None,
             f"strateg{plural} (the cap is `oos.max_strategies_per_holdout` = {max_per}). "
             f"It is now spent — further research needs a new, unseen holdout window "
             f"under a new holdout id.")
+
+
+def _preflight(strategy: str, run, parquet: str, timeframe: str,
+               entry_guard: bool, cfg: dict) -> None:
+    """Run one small IN-SAMPLE cell through the same code path as the holdout.
+
+    The purpose (follow-up review, "一次普通崩溃会永久烧掉唯一的 holdout") is
+    to catch *infrastructure* failures — a missing feature column, an OOM, a
+    broken rule, a wrong-table load — BEFORE the one-time holdout is reserved.
+    It uses the registered in-sample ``full`` window (never the holdout) on the
+    cheapest instrument so it is fast, and fails loudly if the run raises.
+
+    This is a cheap sanity gate, not a proof the strategy "works": it only
+    guarantees the pipeline is healthy enough to *attempt* the holdout. A
+    genuine crash *after* reservation is still invalidated by the human
+    ``voided`` ledger flow (WORKFLOW Step 7.5).
+    """
+    since, until = _window_bounds(cfg, "full")
+    print(f"preflight: {strategy.upper()} on EUR_USD/full@2bps "
+          f"({since or 'start'}..{until}) ... ", end="", flush=True)
+    try:
+        res = run(
+            parquet=parquet,
+            instrument="EUR_USD",
+            timeframe=timeframe,
+            since=since,
+            until=until,
+            cost_bps=2.0,
+            entry_guard=entry_guard,
+        )
+    except Exception as exc:  # noqa: BLE001 — any failure = don't burn the holdout
+        print("FAIL")
+        raise SystemExit(
+            f"Preflight failed before reserving the holdout: {strategy.upper()} "
+            f"could not run a single in-sample cell "
+            f"({exc!r}). The holdout was NOT consumed. Fix the pipeline (data "
+            f"columns, dependencies, rule) and re-run. This is a cheap sanity "
+            f"gate to avoid burning the only holdout on an infrastructure "
+            f"failure (follow-up review).")
+    print(f"ok  ({res.get('n_trades')} trades) — reserving the holdout.\n")
 
 
 def run_matrix(
@@ -522,12 +649,17 @@ def run_matrix(
     entry_guard: bool,
     out_dir: Path,
     allow_partial: bool = False,
+    preflight: bool = False,
 ) -> list[dict]:
     """Run every cell, persist per-cell JSON, and return the result list.
 
     Any failed cell aborts the run with a non-zero exit unless
     ``allow_partial`` is set (repo_review_20261027 §1.10: a 1-of-18 success
     must not be summarised as a full matrix).
+
+    ``preflight`` (follow-up review): for an OOS run, first prove the strategy
+    runs cleanly on a small in-sample window before the holdout is reserved,
+    so a plain bug does not consume the only holdout.
     """
     if strategy not in _STRATEGIES:
         raise SystemExit(f"Unknown strategy {strategy!r}; registered: {sorted(_STRATEGIES)}")
@@ -559,15 +691,37 @@ def run_matrix(
             "timeframe": timeframe,
             "entry_guard": entry_guard,
         }
-        # (1) Finalist gate + once-per-(strategy,holdout) lock + D1 cap:
-        #     refuse unless a clean finalist and the holdout is unspent.
+        # (1) Finalist gate + once-per-(strategy,holdout) lock + D1 cap +
+        #     holdout-window identity: refuse unless a clean finalist, the
+        #     holdout is unspent, and the window is genuinely new.
+        _check_oos_once(strategy, fingerprint, manifest)
+        # (1b) Preflight (follow-up review, "一次普通崩溃会永久烧掉唯一的
+        #     holdout"): with D1=1 + reserve-before-load, a plain bug in the
+        #     strategy's run() (missing column, OOM, ...) would consume the
+        #     *only* holdout and produce no result. So, when --preflight is set,
+        #     prove the same code path works on a small IN-SAMPLE window (a
+        #     cheap EUR_USD full-window cell at 2 bps) BEFORE reserving. If the
+        #     pipeline is broken it fails here and the holdout stays unspent.
+        #     A genuine crash is still invalidated by the human "voided" ledger
+        #     flow (WORKFLOW Step 7.5) — a voided reservation does not block a
+        #     later, corrected re-run.
+        if preflight:
+            _preflight(strategy, run, parquet, timeframe, entry_guard, cfg)
         # (2) Reserve the attempt BEFORE the holdout is loaded, so a crash
         #     mid-run still counts as consumed (a `reserved` record blocks re-runs).
-        # (3) OOS output goes to its own directory so it can never overwrite
-        #     the in-sample matrix.md / summary.csv.
-        _check_oos_once(strategy, fingerprint, manifest)
         _reserve_oos(strategy, fingerprint, manifest)
+        # (3) The reservation is committed first, THEN mint the data-layer token
+        #     that lets the strategy libs read the holdout via `load_bars`. The
+        #     token is backed by the just-written ledger record, so it can never
+        #     open the holdout on its own (follow-up review: the gate now lives
+        #     in the data layer, not just here).
+        holdout_id = _oos_holdout_spec(cfg)[0]
+        oos_token = _oos_token_mod.create_token(strategy, holdout_id)
+        # (4) OOS output goes to its own directory so it can never overwrite
+        #     the in-sample matrix.md / summary.csv.
         out_dir = out_dir.parent / (out_dir.name + "_oos")
+    else:
+        oos_token = None
 
     out_dir.mkdir(parents=True, exist_ok=True)
     cells: list[dict] = []
@@ -589,6 +743,7 @@ def run_matrix(
                         until=until,
                         cost_bps=cost,
                         entry_guard=entry_guard,
+                        oos_token=oos_token,
                     )
                     result["window"] = window
                     result["window_until"] = until
@@ -799,6 +954,11 @@ def main() -> None:
     ap.add_argument("--allow-partial", action="store_true",
                     help="summarise even when some cells fail (default: any failure "
                          "aborts with a non-zero exit code)")
+    ap.add_argument("--preflight", action="store_true",
+                    help="OOS runs only: before reserving the holdout, run one "
+                         "small in-sample cell first so a plain bug (missing "
+                         "column, OOM, broken rule) does NOT consume the only "
+                         "holdout (follow-up review)")
     args = ap.parse_args()
 
     out_dir = Path(args.out) if args.out else (
@@ -812,6 +972,7 @@ def main() -> None:
         entry_guard=args.entry_guard,
         out_dir=out_dir,
         allow_partial=args.allow_partial,
+        preflight=args.preflight,
     )
     md_path = out_dir / "matrix.md"
     csv_path = out_dir / "summary.csv"

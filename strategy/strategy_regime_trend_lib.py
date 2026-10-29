@@ -59,11 +59,17 @@ def build_rule(df) -> "RegimeTrendState":
 
 
 def load_regime_trend_bars(parquet: str, instrument: str, since: str | None = None,
-                           until: str | None = None):
-    """Load the slow-trend + regime columns (plus base pricing) for one window."""
+                           until: str | None = None, oos_token: object | None = None):
+    """Load the slow-trend + regime columns (plus base pricing) for one window.
+
+    ``oos_token`` is required for any window that reaches the OOS holdout
+    (the data-layer gate in :func:`strategy_lib.load_bars`); in-sample windows
+    load with no token.
+    """
     return strategy_lib.load_bars(
         parquet, instrument, feature_cols=[DIR_COL, REGIME_COL],
-        not_null_cols=[DIR_COL, REGIME_COL], since=since, until=until)
+        not_null_cols=[DIR_COL, REGIME_COL], since=since, until=until,
+        oos_token=oos_token)
 
 
 class RegimeTrendState:
@@ -108,13 +114,15 @@ def run_regime_trend(
     until: str | None = None,
     cost_bps: float = COST_BPS,
     entry_guard: bool = False,
+    oos_token: object | None = None,
 ) -> dict:
     """Run the S-07 rule for one instrument / window / cost tier.
 
     Two-sided (long/short). ``entry_guard`` defaults to OFF to match the
-    S-01 baseline convention. Returns the full result dict.
+    S-01 baseline convention. ``oos_token`` is required for a window that
+    reaches the OOS holdout (the data-layer gate). Returns the full result dict.
     """
-    df = load_regime_trend_bars(parquet, instrument, since, until)
+    df = load_regime_trend_bars(parquet, instrument, since, until, oos_token=oos_token)
     if len(df) < 1_000:
         raise SystemExit(f"Only {len(df)} bars loaded for {instrument} "
                          f"(window {since or 'start'}..{until or 'latest'}); not enough to backtest.")
@@ -142,9 +150,11 @@ def run(
     until: str | None = None,
     cost_bps: float = COST_BPS,
     entry_guard: bool = False,
+    oos_token: object | None = None,
 ) -> dict:
     """Matrix-runner entry point (keyword-compatible with :func:`run_regime_trend`)."""
-    return run_regime_trend(parquet, instrument, timeframe, since, until, cost_bps, entry_guard)
+    return run_regime_trend(parquet, instrument, timeframe, since, until,
+                            cost_bps, entry_guard, oos_token=oos_token)
 
 
 __all__ = [

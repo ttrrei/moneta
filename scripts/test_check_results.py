@@ -72,7 +72,8 @@ def build_fixture(dest: Path) -> None:
         if src.exists():
             shutil.copytree(src, s / "results" / d)
 
-    for f in ("strategy_supertrend_lib.py", "strategy_ema_spread_lib.py"):
+    for f in ("strategy_supertrend_lib.py", "strategy_ema_spread_lib.py",
+              "oos_ledger.json"):
         p = REPO / "strategy" / f
         if p.exists():
             shutil.copy(p, s / f)
@@ -88,9 +89,12 @@ def build_fixture(dest: Path) -> None:
 # harness
 # ---------------------------------------------------------------------------
 
-def run_checker(root: Path) -> tuple[set[str], int, str]:
-    out = subprocess.run([sys.executable, str(CHECKER), "--root", str(root), "--json"],
-                         capture_output=True, text=True)
+def run_checker(root: Path, base_ledger: Path | None = None
+                ) -> tuple[set[str], int, str]:
+    cmd = [sys.executable, str(CHECKER), "--root", str(root), "--json"]
+    if base_ledger is not None:
+        cmd += ["--base-ledger", str(base_ledger)]
+    out = subprocess.run(cmd, capture_output=True, text=True)
     raw = out.stdout + out.stderr
     try:
         data = json.loads(out.stdout)
@@ -169,6 +173,24 @@ def write_oos_dir(work: Path, status: str = "tested",
     # thin CLI + report so X6/X7/X8 (in-sample) are satisfied if ever hit
     (work / "strategy" / "code" / "strategy_syn.py").write_text("stub\n", encoding="utf-8")
     (work / "strategy" / "docs" / "strategy_syn_report.md").write_text("# stub\n", encoding="utf-8")
+
+    # L2: an adjudicated OOS trial row must have a ledger consumption record.
+    # A legal holdout run reserved before loading — so add a `reserved` record
+    # for the synthetic strategy (this satisfies L2 and keeps these cases
+    # testing X13's pass/fail logic, not L2).
+    lp = work / "strategy" / "oos_ledger.json"
+    try:
+        ld = json.loads(lp.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        ld = {"version": 1, "consumptions": []}
+    ld.setdefault("consumptions", [])
+    if not any(isinstance(r, dict) and str(r.get("strategy", "")).upper() == OOS_SID
+               and r.get("holdout_id") == "oos1" for r in ld["consumptions"]):
+        ld["consumptions"].append({
+            "strategy": OOS_SID.lower().replace("-", ""), "holdout_id": "oos1",
+            "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+            "reserved_at": "2026-10-26", "status": "reserved"})
+    lp.write_text(json.dumps(ld, indent=2) + "\n", encoding="utf-8")
 
     fields = _s.OOS_HEADER
     with open(dir_ / "summary.csv", "w", newline="", encoding="utf-8") as fh:
@@ -325,6 +347,63 @@ CASES = [
     ("committed summary.csv missing a shared column -> H1", {"H1"}, 1, None,
      lambda w: _drop_column(w / "strategy" / "results" / "S05" / "summary.csv",
                             "sharpe_weekly")),
+
+    # ---- L0: the holdout end has a single source of truth ----------------
+    # windows.oos.until must be oos.holdout_end + 1 day; if someone edits the
+    # two fields apart the checker must fail (not silently let them drift).
+    ("holdout end fields disagree -> L0", {"L0"}, 1, None,
+     lambda w: replace_in(w / "config/strategies.yml",
+                          'until: "2026-10-23"', 'until: "2026-10-31"')),
+
+    # ---- L1: the ledger is append-only ------------------------------------
+    # The committed ledger is a superset of the base ledger (a record may never
+    # be removed). A base record missing from the current ledger -> L1.
+    ("ledger record removed vs base -> L1", {"L1"}, 1, None,
+     lambda w: (
+         (w / "strategy/oos_ledger.json").write_text(
+             '{"version": 1, "consumptions": []}\n', encoding="utf-8"),
+         (w / "base_oos_ledger.json").write_text(
+             '{"version": 1, "consumptions": ['
+             '{"strategy": "S05", "holdout_id": "oos1", '
+             '"holdout_start": "2025-08-01", "holdout_end": "2026-10-22", '
+             '"status": "reserved"}]}\n', encoding="utf-8")),
+     lambda w: w / "base_oos_ledger.json"),
+    # The base ledger holds one consumption; the committed ledger keeps it
+    # plus one more -> a valid superset -> must PASS (append-only satisfied).
+    ("ledger is a superset of the base -> ok", set(), 0, None,
+     lambda w: (
+         (w / "strategy/oos_ledger.json").write_text(
+             '{"version": 1, "consumptions": ['
+             '{"strategy": "S05", "holdout_id": "oos1", '
+             '"holdout_start": "2025-08-01", "holdout_end": "2026-10-22", '
+             '"status": "reserved"},'
+             '{"strategy": "S06", "holdout_id": "oos1", '
+             '"holdout_start": "2025-08-01", "holdout_end": "2026-10-22", '
+             '"status": "reserved"}]}\n', encoding="utf-8"),
+         (w / "base_oos_ledger.json").write_text(
+             '{"version": 1, "consumptions": ['
+             '{"strategy": "S05", "holdout_id": "oos1", '
+             '"holdout_start": "2025-08-01", "holdout_end": "2026-10-22", '
+             '"status": "reserved"}]}\n', encoding="utf-8")),
+     lambda w: w / "base_oos_ledger.json"),
+
+    # ---- L2: ledger <-> trial_log cross-consistency -----------------------
+    # An adjudicated `oos` trial row must have a ledger consumption record;
+    # with an empty ledger it does not -> L2.
+    ("adjudicated oos trial row without a ledger record -> L2", {"L2"}, 1, None,
+     lambda w: (w / "strategy/trial_log.md").write_text(
+         (w / "strategy/trial_log.md").read_text(encoding="utf-8")
+         + "\n| 9 | 2026-10-28 | S-05 | single holdout run | oos | **rejected** | x | 3 |\n",
+         encoding="utf-8")),
+    # The reverse direction: a `completed` ledger record must have an
+    # adjudicated `oos` trial row. With the ledger saying S-05 `completed` but
+    # no oos trial row, that is L2. (L1 is not in scope — no --base-ledger.)
+    ("completed ledger record without an oos trial row -> L2", {"L2"}, 1, None,
+     lambda w: (w / "strategy/oos_ledger.json").write_text(
+         '{"version": 1, "consumptions": [{"strategy": "S05", '
+         '"holdout_id": "oos1", "holdout_start": "2025-08-01", '
+         '"holdout_end": "2026-10-22", "status": "completed"}]}\n',
+         encoding="utf-8")),
 ]
 
 
@@ -334,13 +413,16 @@ def main() -> int:
     work = tmp / "work"
     passed = failed = 0
     try:
-        for name, expect_codes, expect_exit, expect_output, mutate in CASES:
+        for case in CASES:
+            name, expect_codes, expect_exit, expect_output, mutate = case[:5]
+            base_ledger_fn = case[5] if len(case) > 5 else None  # work -> Path | None
             build_fixture(template)
             if work.exists():
                 shutil.rmtree(work)
             shutil.copytree(template, work)
             mutate(work)
-            got, code, raw = run_checker(work)
+            base_ledger = base_ledger_fn(work) if base_ledger_fn else None
+            got, code, raw = run_checker(work, base_ledger)
             if expect_codes == set():
                 ok = (got == set()) and (code == expect_exit)
             else:

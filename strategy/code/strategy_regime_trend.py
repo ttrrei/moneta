@@ -55,9 +55,11 @@ def main() -> None:
                     help="bar timeframe; selects the matching feature parquet (default 1h)")
     ap.add_argument("--since", default=None, help="ISO date, e.g. 2023-01-01")
     ap.add_argument("--until", default=None,
-                    help="ISO date, inclusive upper bound. For in-sample runs use "
-                         "config/strategies.yml windows (until: 2025-07-31) so the "
-                         "holdout is never touched by a manual run.")
+                    help="ISO date, inclusive upper bound. MUST be strictly before "
+                         "oos.holdout_start (config/strategies.yml) — a manual run "
+                         "with no --until (or one on/after the holdout) is refused "
+                         "by the data-layer gate. Use the in-sample windows "
+                         "(until: 2025-07-31) for normal runs.")
     ap.add_argument("--parquet", default=None, help="override feature parquet")
     ap.add_argument("--cost-bps", type=float, default=COST_BPS,
                     help="one-way transaction cost in basis points (default 2)")

@@ -55,6 +55,7 @@ def load_bars(
     instrument: str,
     since: str | None = None,
     until: str | None = None,
+    oos_token: object | None = None,
 ) -> pd.DataFrame:
     """Load ``time, open, close, is_gap_bar, is_near_market_close, rsi_24``.
 
@@ -64,8 +65,18 @@ def load_bars(
     ``until`` caps the window at the day before the OOS holdout for
     in-sample windows (config/strategies.yml), so in-sample runs can never
     tune on holdout data (repo_review_20261027 §1.1).
+
+    The holdout gate lives here in the data layer (follow-up review): a window
+    that reaches the holdout (``until`` unset, or on/after
+    ``oos.holdout_start``) is **refused** unless ``oos_token`` is a valid
+    :class:`strategy.oos_token.OOSToken` minted by ``run_matrix`` after a
+    committed ledger reservation. A direct ``load_bars(until=None)`` call
+    cannot read the holdout.
     """
     import duckdb
+
+    from strategy import oos_token as _oos
+    _oos.assert_access(until, oos_token)
 
     conn = duckdb.connect()
     try:
@@ -151,16 +162,20 @@ def run_rsi(
     until: str | None = None,
     cost_bps: float = COST_BPS,
     entry_guard: bool = False,
+    oos_token: object | None = None,
 ) -> dict:
     """Run the S-01 rule for one instrument / window / cost tier.
 
     ``entry_guard`` defaults to OFF, matching the documented S-01 baseline
     (registry + report both record entry-guard off) and the CLI.
 
+    ``oos_token`` is required for a window that reaches the OOS holdout (the
+    data-layer gate); in-sample windows load with no token.
+
     Returns the full result dict (metadata + engine metrics block) in the same
     shape the CLI prints — ready to serialise to JSON.
     """
-    df = load_bars(parquet, instrument, since, until)
+    df = load_bars(parquet, instrument, since, until, oos_token=oos_token)
     if len(df) < 1_000:
         raise SystemExit(f"Only {len(df)} bars loaded for {instrument} "
                          f"(window {since or 'start'}..{until or 'latest'}); not enough to backtest.")

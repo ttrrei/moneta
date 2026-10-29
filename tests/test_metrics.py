@@ -21,6 +21,8 @@ same trades/yr, longer sample → same Sharpe).
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pytest
 
@@ -798,3 +800,237 @@ def test_span_years_fallback_uses_bar_seconds():
         run_backtest(
             _bars_with_mask([100.0, 101.0], [101.0, 102.0], no_entry=[True, False, True]),
             _always_long())
+
+
+# ---------------------------------------------------------------------------
+# Data-layer OOS holdout gate (follow-up review: the gate must live in
+# load_bars, not only in run_matrix). Every test here uses tmp_path +
+# monkeypatch against a scratch config/ledger and touches NO real ledger or
+# parquet — the holdout must stay unconsumed.
+# ---------------------------------------------------------------------------
+
+def _oos_env(tmp_path, monkeypatch, holdout_start="2025-08-01",
+             holdout_id="oos1", ledger_consumptions=None):
+    """Point strategy.oos_token at a scratch config + ledger. Returns the paths
+    for later mutation."""
+    import strategy.oos_token as ot
+    cfg = tmp_path / "strategies.yml"
+    cfg.write_text(
+        "oos:\n"
+        f"  holdout_id: '{holdout_id}'\n"
+        f"  holdout_start: '{holdout_start}'\n"
+        "  holdout_end: '2026-10-22'\n"
+        "windows:\n  oos: {since: '2025-08-01', until: '2026-10-23'}\n")
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text(
+        json.dumps({"version": 1,
+                    "consumptions": ledger_consumptions or []}) + "\n",
+        encoding="utf-8")
+    monkeypatch.setattr(ot, "_config_path", lambda: cfg)
+    monkeypatch.setattr(ot, "_ledger_path", lambda: ledger)
+    return {"cfg": cfg, "ledger": ledger}
+
+
+def _tiny_parquet(tmp_path) -> str:
+    """A minimal feature parquet (base cols + rsi_24) for load_bars to read."""
+    import pandas as pd
+    p = tmp_path / "mini.parquet"
+    times = [f"2025-07-{d:02d} 00:00:00" for d in range(1, 5)]
+    df = pd.DataFrame({
+        "instrument": ["EUR_USD"] * 4,
+        "time": pd.to_datetime(times),
+        "open": [1.0, 1.1, 1.2, 1.3],
+        "close": [1.05, 1.15, 1.25, 1.35],
+        "is_gap_bar": [0, 0, 0, 0],
+        "is_near_market_close": [0, 0, 0, 0],
+        "rsi_24": [50.0, 40.0, 30.0, 60.0],
+    })
+    df.to_parquet(p)
+    return str(p)
+
+
+def test_load_bars_until_none_without_token_refuses(tmp_path, monkeypatch):
+    """THE review test: a direct load_bars(until=None) must raise (holdout gate
+    now lives in the data layer). Uses a real parquet so the only thing that
+    can raise is assert_access, not the SQL read."""
+    import strategy.oos_token as ot
+    import strategy.strategy_lib as sl
+    _oos_env(tmp_path, monkeypatch)
+    pq = _tiny_parquet(tmp_path)
+    # until=None means "read everything" -> reaches the holdout -> must refuse.
+    with pytest.raises(SystemExit, match="holdout"):
+        sl.load_bars(pq, "EUR_USD", feature_cols=["rsi_24"],
+                     not_null_cols=["rsi_24"], until=None)
+
+
+def test_load_bars_in_sample_until_reads_without_token(tmp_path, monkeypatch):
+    """An in-sample window (until strictly before holdout_start) loads via the
+    real load_bars with no token — proving the gate is selective, not blanket."""
+    import strategy.strategy_lib as sl
+    _oos_env(tmp_path, monkeypatch)
+    pq = _tiny_parquet(tmp_path)
+    df = sl.load_bars(pq, "EUR_USD", feature_cols=["rsi_24"],
+                      not_null_cols=["rsi_24"], until="2025-07-31")
+    assert len(df) == 4  # all 4 bars are <= 2025-07-31
+
+
+def test_load_bars_in_sample_until_without_token_is_allowed(tmp_path, monkeypatch):
+    """An in-sample window (until strictly before holdout_start) loads freely."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch)
+    ot.assert_access("2025-07-31", None)  # must not raise (strictly before holdout)
+
+
+def test_load_bars_until_at_or_after_holdout_needs_token(tmp_path, monkeypatch):
+    """until == holdout_start (or later) is a holdout window and needs a token."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch)
+    with pytest.raises(SystemExit):
+        ot.assert_access("2025-08-01", None)      # == holdout_start
+    with pytest.raises(SystemExit):
+        ot.assert_access("2026-10-23", None)      # inside the holdout
+
+
+def test_oos_token_backed_by_ledger_allows_holdout(tmp_path, monkeypatch):
+    """A token minted after a real ledger reservation opens the holdout."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch, ledger_consumptions=[
+        {"strategy": "s01", "holdout_id": "oos1",
+         "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+         "reserved_at": "2026-10-29", "status": "reserved"}])
+    tok = ot.create_token("s01", "oos1")
+    ot.assert_access("2026-10-23", tok)  # must not raise
+
+
+def test_fabricated_token_without_ledger_record_refuses(tmp_path, monkeypatch):
+    """A token object with no backing ledger record cannot open the holdout."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch)  # empty ledger
+    tok = ot.create_token("s01", "oos1")
+    with pytest.raises(SystemExit, match="ledger"):
+        ot.assert_access("2026-10-23", tok)
+
+
+def test_oos_token_wrong_holdout_id_refuses(tmp_path, monkeypatch):
+    """A token for a different holdout id does not match the current one."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch, holdout_id="oos1")
+    tok = ot.create_token("s01", "oos2")
+    with pytest.raises(SystemExit, match="holdout"):
+        ot.assert_access("2026-10-23", tok)
+
+
+# ---------------------------------------------------------------------------
+# Holdout-window identity lock (follow-up review, must-fix): renaming the id or
+# shifting the window must not reset the lock for every strategy.
+# ---------------------------------------------------------------------------
+
+def _window_fixture(tmp_path, monkeypatch, holdout_id, h_start, h_end,
+                    consumptions):
+    """Scratch config + ledger for the window-identity lock."""
+    import strategy.run_matrix as rm
+    cfg_path = tmp_path / "strategies.yml"
+    cfg_path.write_text(
+        "oos:\n"
+        f"  holdout_id: '{holdout_id}'\n"
+        f"  holdout_start: '{h_start}'\n"
+        f"  holdout_end: '{h_end}'\n"
+        "  max_strategies_per_holdout: 1\n"
+        "windows:\n  oos: {since: '2025-08-01', until: '2026-10-23'}\n"
+        "strategies:\n  S-01: {timeframe: '5m'}\n")
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text(json.dumps({"version": 1, "consumptions": consumptions}),
+                      encoding="utf-8")
+    monkeypatch.setattr(rm, "CONFIG_PATH", cfg_path)
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: ledger)
+    return {"cfg": cfg_path, "ledger": ledger}
+
+
+def test_window_lock_same_id_same_dates_is_ok(tmp_path, monkeypatch):
+    import strategy.run_matrix as rm
+    _window_fixture(tmp_path, monkeypatch, "oos1", "2025-08-01", "2026-10-22",
+                    [{"strategy": "s01", "holdout_id": "oos1",
+                      "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+                      "status": "reserved"}])
+    rm._check_holdout_window(rm._load_config())  # must not raise
+
+
+def test_window_lock_same_id_changed_dates_refuses(tmp_path, monkeypatch):
+    """Renaming the dates under an existing id must be refused."""
+    import strategy.run_matrix as rm
+    _window_fixture(tmp_path, monkeypatch, "oos1", "2025-09-01", "2026-10-22",
+                    [{"strategy": "s01", "holdout_id": "oos1",
+                      "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+                      "status": "reserved"}])
+    with pytest.raises(SystemExit, match="already in the ledger"):
+        rm._check_holdout_window(rm._load_config())
+
+
+def test_window_lock_new_id_overlapping_window_refuses(tmp_path, monkeypatch):
+    """A new id with an overlapping (earlier/equal) start must be refused."""
+    import strategy.run_matrix as rm
+    _window_fixture(tmp_path, monkeypatch, "oos2", "2025-09-01", "2026-11-01",
+                    [{"strategy": "s01", "holdout_id": "oos1",
+                      "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+                      "status": "completed"}])
+    with pytest.raises(SystemExit, match="strictly later"):
+        rm._check_holdout_window(rm._load_config())
+
+
+def test_window_lock_new_id_strictly_later_is_ok(tmp_path, monkeypatch):
+    import strategy.run_matrix as rm
+    _window_fixture(tmp_path, monkeypatch, "oos2", "2026-10-23", "2027-10-22",
+                    [{"strategy": "s01", "holdout_id": "oos1",
+                      "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+                      "status": "completed"}])
+    rm._check_holdout_window(rm._load_config())  # must not raise
+
+
+# ---------------------------------------------------------------------------
+# Void flow (follow-up review): a `voided` reservation does NOT consume the
+# holdout — it must not block a later, corrected re-run, and it must not be
+# counted as a D1-cap consumption.
+# ---------------------------------------------------------------------------
+
+def test_voided_reservation_does_not_block_re_run(tmp_path, monkeypatch):
+    """A `voided` record for the strategy does not trigger the once-per-lock."""
+    import strategy.run_matrix as rm
+    _window_fixture(tmp_path, monkeypatch, "oos1", "2025-08-01", "2026-10-22",
+                    [{"strategy": "s01", "holdout_id": "oos1",
+                      "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+                      "status": "voided"}])
+    # _check_holdout_window only cares about real (non-voided) consumptions,
+    # so the same-id path sees no live record and does not pin the dates.
+    rm._check_holdout_window(rm._load_config())  # must not raise
+
+
+def test_voided_does_not_count_toward_d1_cap(tmp_path, monkeypatch):
+    """A voided record for strategy A must not spend the D1=1 cap for B."""
+    import strategy.run_matrix as rm
+    cfg_path = tmp_path / "strategies.yml"
+    cfg_path.write_text(
+        "oos:\n  holdout_id: 'oos1'\n  holdout_start: '2025-08-01'\n"
+        "  holdout_end: '2026-10-22'\n  max_strategies_per_holdout: 1\n"
+        "windows:\n  oos: {since: '2025-08-01', until: '2026-10-23'}\n"
+        "strategies:\n  S-01: {timeframe: '5m'}\n  S-02: {timeframe: '1h'}\n")
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text(json.dumps({"version": 1, "consumptions": [
+        {"strategy": "s01", "holdout_id": "oos1",
+         "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+         "status": "voided"}]}), encoding="utf-8")
+    registry = tmp_path / "STRATEGY_REGISTRY.md"
+    registry.write_text(
+        "# Registry\n| ID | Name | Timeframe | Status |\n|---|---|---|---|\n"
+        "| S-02 | B | 1h | **finalist** |\n")
+    trial = tmp_path / "trial_log.md"
+    trial.write_text(
+        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
+        "|---|---|---|---|---|---|---|---|\n"
+        "| 1 | 2026-10-29 | S-02 | hyp | full | **tested** | x | 0 |\n")
+    monkeypatch.setattr(rm, "CONFIG_PATH", cfg_path)
+    monkeypatch.setattr(rm, "REGISTRY_PATH", registry)
+    monkeypatch.setattr(rm, "TRIAL_LOG", trial)
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: ledger)
+    monkeypatch.setattr(rm, "_RETIRED_LEDGER", tmp_path / "absent.json")
+    # S-02 is eligible and the only live consumption is voided -> allowed.
+    rm._check_oos_once("s02")  # must not raise

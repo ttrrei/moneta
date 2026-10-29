@@ -222,6 +222,51 @@ count ≤ 300) — do not restate it here, reference it.
   - [ ] No lookahead (Gate G3 checklist present in report).
   - [ ] Rejected combinations table updated if rejected.
 
+## Step 7.5 — OOS run protocol (before you ever consume the holdout)
+
+**This is the one-time holdout. With D1=1 it is consumed by exactly one
+strategy, and the gate reserves it *before* loading — so a plain bug in the
+run (a missing column, an OOM, a broken rule) would burn the only holdout and
+produce no result. Follow this protocol:**
+
+1. **Preflight — prove the pipeline is healthy first.** Run the strategy once
+   on a small in-sample window so any infrastructure failure surfaces *before*
+   the holdout is touched:
+
+   ```bash
+   python strategy/run_matrix.py --strategy <id> --windows full --timeframe <tf>
+   # OR, for the full OOS run, let run_matrix do it for you (recommended):
+   python strategy/run_matrix.py --strategy <id> --windows oos --timeframe <tf> \
+       --preflight
+   ```
+
+   `--preflight` runs one cheap in-sample cell (EUR_USD/full@2bps) through the
+   *same* code path before reserving. If it fails, the holdout is **not**
+   consumed and you can fix and re-run freely.
+
+2. **Only then run the holdout** (the reservation is appended to
+   `strategy/oos_ledger.json` *before* the bars are read, and the data layer
+   only releases holdout rows to a token backed by that reservation — see
+   `strategy/oos_token.py`). A `reserved` record blocks every re-run until it is
+   `completed` or `voided`.
+
+3. **Invalidating a crashed reservation (the "void" flow).** If the run crashed
+   *after* the reservation — the ledger shows a `reserved` record and **no
+   holdout number was ever seen** — a human may mark it `voided` so the holdout
+   is not permanently burned. This is a **human, reviewed** ledger edit:
+
+   - Change only the record's `"status": "reserved"` → `"voided"` (keep the
+     `fingerprint`/`manifest` as the audit trail of what was attempted).
+   - Commit with a message explaining the infrastructure failure and that no
+     holdout number was observed.
+   - The gate skips `voided` records (they never consumed the holdout), so the
+     strategy — or, for D1=1, *any* strategy — may now legitimately re-run the
+     holdout.
+   - **Never** void a reservation that produced a result (that would re-open
+     data you already saw — that is re-tuning and must open a new S-NN), and
+     **never** delete records from the ledger (append-only; CI enforces the
+     superset via `check_results.py --base-ledger`, check L1).
+
 ## Batch mode (optional, only if explicitly requested)
 
 Repeat Steps 1–7 for N ideas **sequentially**. The registry is the memory:

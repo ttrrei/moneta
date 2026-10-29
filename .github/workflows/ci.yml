@@ -19,11 +19,28 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: checker self-test (16 mutation cases)
+      - name: checker self-test (28 mutation cases)
         run: python scripts/test_check_results.py
 
-      - name: check the committed results
-        run: python scripts/check_results.py
+      - name: check the committed results (append-only ledger enforced vs base)
+        # L1: the committed oos_ledger.json must be a *superset* of the base
+        # branch's ledger — a holdout consumption can never be removed. We
+        # fetch the base ref's ledger and pass it via --base-ledger. On push
+        # to main (no PR) there is no separate base, so the check is a no-op.
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          if [ -n "${BASE_BRANCH:-}" ]; then
+            git fetch --depth=1 origin "$BASE_BRANCH" >/dev/null 2>&1 || true
+            if git show "$BASE_BRANCH:strategy/oos_ledger.json" 2>/dev/null > base_oos_ledger.json && [ -s base_oos_ledger.json ]; then
+              python scripts/check_results.py --base-ledger base_oos_ledger.json
+              exit 0
+            fi
+          fi
+          # No base ledger to diff against (fresh repo / push to main / base
+          # predates the ledger) -> run without the append-only baseline.
+          python scripts/check_results.py
 
   pytest:
     name: unit tests

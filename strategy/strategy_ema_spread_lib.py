@@ -40,11 +40,16 @@ def build_rule(df) -> "EmaSpreadState":
 
 
 def load_ema_spread_bars(parquet: str, instrument: str, since: str | None = None,
-                         until: str | None = None):
-    """Load the EMA-spread column (plus base pricing) for one window."""
+                         until: str | None = None, oos_token: object | None = None):
+    """Load the EMA-spread column (plus base pricing) for one window.
+
+    ``oos_token`` is required for any window that reaches the OOS holdout
+    (the data-layer gate in :func:`strategy_lib.load_bars`); in-sample windows
+    load with no token.
+    """
     return strategy_lib.load_bars(
         parquet, instrument, feature_cols=[SPREAD_COL], not_null_cols=[SPREAD_COL],
-        since=since, until=until)
+        since=since, until=until, oos_token=oos_token)
 
 
 class EmaSpreadState:
@@ -78,13 +83,16 @@ def run_ema_spread(
     until: str | None = None,
     cost_bps: float = COST_BPS,
     entry_guard: bool = False,
+    oos_token: object | None = None,
 ) -> dict:
     """Run the S-06 rule for one instrument / window / cost tier.
 
     ``entry_guard`` defaults to OFF to match the S-01 baseline convention.
+    ``oos_token`` is required for a window that reaches the OOS holdout (the
+    data-layer gate); in-sample windows load with no token.
     Returns the full result dict (metadata + engine metrics + distribution).
     """
-    df = load_ema_spread_bars(parquet, instrument, since, until)
+    df = load_ema_spread_bars(parquet, instrument, since, until, oos_token=oos_token)
     if len(df) < 1_000:
         raise SystemExit(f"Only {len(df)} bars loaded for {instrument} "
                          f"(window {since or 'start'}..{until or 'latest'}); not enough to backtest.")
@@ -112,9 +120,11 @@ def run(
     until: str | None = None,
     cost_bps: float = COST_BPS,
     entry_guard: bool = False,
+    oos_token: object | None = None,
 ) -> dict:
     """Matrix-runner entry point (keyword-compatible with :func:`run_ema_spread`)."""
-    return run_ema_spread(parquet, instrument, timeframe, since, until, cost_bps, entry_guard)
+    return run_ema_spread(parquet, instrument, timeframe, since, until,
+                          cost_bps, entry_guard, oos_token=oos_token)
 
 
 __all__ = [
