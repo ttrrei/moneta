@@ -94,8 +94,14 @@ Stop and report as `rejected` with diagnosis if ANY of:
   (likely overfit, not alpha).
 
 **And, before any promotion to `tested`:** the finalist must pass the one-shot
-out-of-sample check on the reserved holdout (`config/strategies.yml` → `oos`),
-beating buy-hold there. The in-sample windows above are *not* out-of-sample —
+out-of-sample check on the reserved holdout. The pass bar is defined **once** in
+`config/strategies.yml → oos.pass_criteria` (beats buy-hold at 2 bps on
+≥ `min_instruments_beating_bh_at_2bps` instruments, and stays inside
+`max_trades_per_year`) — **do not restate the numbers here**; treat the config
+as the single source of truth. The runner (`run_matrix.py`) writes the machine
+pass/fail into the committed `summary.csv` and the checker (`scripts/check_results.py`,
+check `X13`) re-derives it from those committed numbers, so the verdict cannot
+drift from the config. The in-sample windows above are *not* out-of-sample —
 they are what the rule was tuned against. (Overfitting is the BRD's #1 risk.)
 
 ## 6. Anti-patterns (instant reject)

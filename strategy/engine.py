@@ -100,6 +100,7 @@ class BacktestResult:
     sharpe_weekly: float          # annualised Sharpe of the equity curve on a weekly basis (COMPARABLE across strategies)
     trades_per_year: float        # opportunity frequency (trades / span_years) — how often it trades
     exposure_pct: float
+    mean_net_position_pct: float  # time-weighted SIGNED mean position (report-only sanity check)
     span_years: float             # observed window length in (fractional) years
     trades: Sequence[Trade] = field(default_factory=list, repr=False)
     # Unrounded (test-internal) values:
@@ -112,6 +113,7 @@ class BacktestResult:
     raw_sharpe_weekly: float = 0.0
     raw_trades_per_year: float = 0.0
     raw_exposure_pct: float = 0.0
+    raw_mean_net_position_pct: float = 0.0
 
     def to_dict(self) -> dict:
         """JSON-serialisable metrics block (the ``trades`` ledger is omitted)."""
@@ -127,6 +129,7 @@ class BacktestResult:
             "sharpe_weekly": self.sharpe_weekly,
             "trades_per_year": self.trades_per_year,
             "exposure_pct": self.exposure_pct,
+            "mean_net_position_pct": self.mean_net_position_pct,
             "span_years": round(self.span_years, 4),
         }
 
@@ -275,6 +278,7 @@ def run_backtest(
     equity = np.empty(n)
     in_trade = np.zeros(n, dtype=bool)
     bars_in_market = 0
+    signed_position_sum = 0.0   # sum of the signed position held on each bar
     base = 1.0           # compounded value of closed trades
     pending_ret: float | None = None  # a trade closed at this bar's open, not yet booked
 
@@ -324,6 +328,7 @@ def run_backtest(
         else:
             equity[t] = base
         in_trade[t] = pos != 0.0
+        signed_position_sum += pos   # signed (long +1, short -1, flat 0)
 
     # Force-close an open position at the last close (counted as a trade).
     if pos != 0.0:
@@ -358,6 +363,12 @@ def run_backtest(
         sharpe = 0.0
 
     exposure_raw = bars_in_market / n * 100
+    # Time-weighted SIGNED mean position (repo_review_20261029 §2.2). It is
+    # report-only (a sanity check next to buy-hold's +100% exposure) — not a
+    # pass/fail gate. When positions are in {-1, 0, +1}, mean |position|
+    # (== exposure_pct/100) is NOT this; this is the signed mean, so a
+    # short-only strategy reads ~-100% while a long-only one reads ~+100%.
+    mean_net_position_raw = signed_position_sum / n * 100
 
     # Cross-strategy-comparable metrics (strategy/metrics.py):
     #  * sharpe_weekly — Sharpe of the per-bar equity curve on a weekly close
@@ -382,6 +393,7 @@ def run_backtest(
         sharpe_weekly=round(sw, 2),
         trades_per_year=round(tpy, 2),
         exposure_pct=round(exposure_raw, 2),
+        mean_net_position_pct=round(mean_net_position_raw, 2),
         span_years=span_years,
         trades=trades,
         raw_total_return_pct=total_return * 100,
@@ -393,6 +405,7 @@ def run_backtest(
         raw_sharpe_weekly=sw,
         raw_trades_per_year=tpy,
         raw_exposure_pct=exposure_raw,
+        raw_mean_net_position_pct=mean_net_position_raw,
     )
 
 
@@ -430,6 +443,14 @@ METRIC_FORMULAS: dict[str, str] = {
               "return from very few trades is a different proposition than one "
               "from many.",
     "exposure_pct": "fraction of bars with a non-zero position, in %.",
+    "mean_net_position_pct": "Time-weighted SIGNED mean position held (bars "
+              "long count +1, short -1, flat 0), in %. Report-only sanity "
+              "check shown next to buy-hold's +100% exposure: a long-only "
+              "strategy reads ~+100, a short-only one ~-100. It is NOT a "
+              "pass/fail gate. When positions are in {-1,0,+1} it differs "
+              "from exposure_pct (which is the fraction non-zero, i.e. mean "
+              "of |position|), so the two are reported together, not "
+              "redundantly.",
 }
 
 

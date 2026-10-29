@@ -199,6 +199,76 @@ def test_long_only_clamps_shorts():
     assert res.raw_total_return_pct == 0.0
 
 
+# ---------------------------------------------------------------------------
+# mean_net_position_pct (repo_review_20261029 §2.2) — the time-weighted
+# *signed* mean position. Report-only (a sanity check next to buy-hold's
+# +100% exposure); must NOT change any pre-existing metric.
+# ---------------------------------------------------------------------------
+
+def _rule(positions: list[int]) -> object:
+    """A rule whose desired position is a fixed per-bar list (length n)."""
+    class _R:
+        def desired_position(self, i: int) -> int:
+            return int(positions[i])
+    return _R()
+
+
+def test_mean_net_position_long_only():
+    """Long every bar → signed mean is +100% (full, one-sided long)."""
+    bars = _bars([100.0, 101.0, 102.0], [101.0, 102.0, 105.0])
+    res = run_backtest(bars, _always_long(), cost_bps=0.0)
+    assert res.raw_mean_net_position_pct == pytest.approx(100.0, rel=1e-12)
+    # Full long → exposure (fraction non-zero) is also 100%.
+    assert res.raw_exposure_pct == pytest.approx(100.0, rel=1e-12)
+
+
+def test_mean_net_position_short_only():
+    """Short every bar → signed mean is -100% (the SIGN is what exposure
+    cannot see)."""
+    bars = _bars([100.0, 99.0, 98.0], [99.0, 98.0, 97.0])
+    res = run_backtest(bars, _always_short(), cost_bps=0.0)
+    assert res.raw_mean_net_position_pct == pytest.approx(-100.0, rel=1e-12)
+    # Exposure is still 100% (all bars non-zero) — the two differ by sign.
+    assert res.raw_exposure_pct == pytest.approx(100.0, rel=1e-12)
+
+
+def test_mean_net_position_flat():
+    """Never in the market → signed mean is 0 and exposure is 0."""
+    bars = _bars([100.0, 101.0, 102.0], [101.0, 102.0, 103.0])
+    res = run_backtest(bars, _rule([0, 0, 0]), cost_bps=0.0)
+    assert res.raw_mean_net_position_pct == pytest.approx(0.0, abs=1e-12)
+    assert res.raw_exposure_pct == pytest.approx(0.0, abs=1e-12)
+    assert res.n_trades == 0
+
+
+def test_mean_net_position_mixed_differs_from_exposure():
+    """Long 2 bars, short 1 bar: signed mean = (1+1-1)/3 = +33.33%, while
+    exposure (all bars non-zero) is 100%. Proves mean_net_position_pct is
+    NOT redundant with exposure_pct (review §2.2)."""
+    bars = _bars([100.0, 101.0, 102.0], [101.0, 102.0, 103.0])
+    res = run_backtest(bars, _rule([1, 1, -1]), cost_bps=0.0)
+    assert res.raw_mean_net_position_pct == pytest.approx(100.0 / 3.0, rel=1e-12)
+    assert res.raw_exposure_pct == pytest.approx(100.0, rel=1e-12)
+    assert res.mean_net_position_pct != res.exposure_pct
+
+
+def test_mean_net_position_added_changes_no_existing_metric():
+    """§2.2 'additive only': the new field must not perturb any pre-existing
+    metric. A fixed known case pins the legacy values."""
+    open_ = [100.0, 101.0, 102.0]
+    close = [101.0, 102.0, 105.0]
+    res = run_backtest(_bars(open_, close), _always_long(), cost_bps=0.0)
+    # entry@100 (bar0 open), force-closed at close[2]=105 → +5%
+    assert res.raw_total_return_pct == pytest.approx(5.0, rel=1e-12)
+    assert res.raw_exposure_pct == pytest.approx(100.0, rel=1e-12)
+    assert res.n_trades == 1
+    assert res.n_bars == 3
+    # The new field is present and correct, independent of the above.
+    assert res.raw_mean_net_position_pct == pytest.approx(100.0, rel=1e-12)
+    # And it is exported by to_dict (CSV/JSON contract).
+    assert "mean_net_position_pct" in res.to_dict()
+
+
 def test_force_close_at_last_bar_books_the_open_trade():
     """If we are still long at the end, the open position must be force-closed
     and counted as a trade (no unbooked return)."""

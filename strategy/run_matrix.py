@@ -45,6 +45,7 @@ if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
 import strategy.registry as registry_mod  # noqa: E402  (shared gate parsing, §1.6)
+import strategy.schema as schema         # noqa: E402  (shared CSV contract + OOS pass/fail, §2.4/§3.2)
 
 CONFIG_PATH = _REPO_ROOT / "config" / "strategies.yml"
 TRIAL_LOG = _REPO_ROOT / "strategy" / "trial_log.md"
@@ -317,6 +318,25 @@ OOS_LEDGER_VERSION = 1
 #: The retired pre-2026-10-29 ledger path. If it still exists we refuse to run
 #: rather than guess which ledger is authoritative (repo_review_20261029 §1.3).
 _RETIRED_LEDGER = Path(__file__).resolve().parent / "results" / "oos_consumption.json"
+
+
+def _oos_criteria(cfg: dict) -> tuple[int, float]:
+    """Resolve the OOS pass bar from config (single source of truth, §2.1).
+
+    Returns ``(min_instruments, max_trades_per_year)`` from
+    ``oos.pass_criteria``, falling back to the review's defaults.
+    """
+    crit = (cfg.get("oos") or {}).get("pass_criteria") or {}
+    min_instr = crit.get("min_instruments_beating_bh_at_2bps", 2)
+    max_tpy = crit.get("max_trades_per_year", 54)
+    try:
+        min_instr = int(min_instr)
+        max_tpy = float(max_tpy)
+    except (TypeError, ValueError):
+        raise SystemExit(
+            "config/strategies.yml `oos.pass_criteria` has a non-numeric "
+            "`min_instruments_beating_bh_at_2bps` or `max_trades_per_year`")
+    return min_instr, max_tpy
 
 
 def _oos_ledger_path() -> Path:
@@ -603,6 +623,19 @@ def run_matrix(
     if not cells:
         raise SystemExit("No cells completed; nothing to summarise.")
 
+    # OOS: compute the machine pass/fail into the committed cells (Phase 2.4).
+    # This is the SAME logic the data-free checker re-runs (X13), from one
+    # shared module (strategy/schema.py) so the two cannot drift apart.
+    if is_oos:
+        min_instr, max_tpy = _oos_criteria(cfg)
+        verdict = schema.compute_oos_fields(cells, min_instruments=min_instr,
+                                            max_trades_per_year=max_tpy)
+        print(f"\nOOS pass/fail: {verdict['pass']} — "
+              f"beats buy-hold at 2 bps on {verdict['instruments_beating']} instrument(s) "
+              f"(need >= {min_instr}); max trades/yr {verdict['max_trades_per_year_seen']} "
+              f"(ceiling {max_tpy:g}); mean net position "
+              f"{verdict['mean_net_position_pct']:+.1f}%")
+
     # Book the holdout consumption as `completed` only when the run produced a
     # full matrix with no failed cells. A failed cell raises (unless
     # --allow-partial) *before* this, leaving the record `reserved` — which
@@ -635,8 +668,8 @@ def write_markdown(cells: list[dict], path: Path) -> None:
             "",
             f"### Window: `{window}`",
             "",
-            "| Instrument | Cost (bps) | Ret % | Buy-hold % | Trades | Win % | MaxDD % | Sharpe | Sharpe (weekly) | Trades/yr | Exposure % |",
-            "|---|---|---|---|---|---|---|---|---|---|---|",
+            "| Instrument | Cost (bps) | Ret % | Buy-hold % | Trades | Win % | MaxDD % | Sharpe | Sharpe (weekly) | Trades/yr | Exposure % | Mean pos % |",
+            "|---|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         for c in cells:
             if c["window"] != window:
@@ -646,19 +679,18 @@ def write_markdown(cells: list[dict], path: Path) -> None:
                 f"| {_fmt(c['buyhold_return_pct'])} | {c['n_trades']} "
                 f"| {c['win_rate_pct']:.1f} | {c['max_drawdown_pct']:.1f} "
                 f"| {c['sharpe']:+.2f} | {c.get('sharpe_weekly', 0.0):+.2f} "
-                f"| {c.get('trades_per_year', 0.0):.1f} | {c['exposure_pct']:.0f} |"
+                f"| {c.get('trades_per_year', 0.0):.1f} | {c['exposure_pct']:.0f} "
+                f"| {c.get('mean_net_position_pct', 0.0):+.0f} |"
             )
     lines.append("")
     path.write_text("\n".join(lines), encoding="utf-8")
 
 
 def write_csv(cells: list[dict], path: Path) -> None:
-    fieldnames = [
-        "strategy", "instrument", "window", "timeframe", "cost_bps", "entry_guard",
-        "start", "end", "n_bars", "n_trades", "total_return_pct", "buyhold_return_pct",
-        "max_drawdown_pct", "win_rate_pct", "avg_trade_return_pct", "sharpe",
-        "sharpe_weekly", "trades_per_year", "exposure_pct", "span_years",
-    ]
+    # The header is the shared contract (strategy/schema.py): the base fields
+    # for an in-sample run, or the base + OOS pass/fail block for an OOS run
+    # (Phase 2.4 / 3.2 / 3.3).
+    fieldnames = schema.csv_fieldnames(schema.is_oos_cells(cells))
     with open(path, "w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
         w.writeheader()

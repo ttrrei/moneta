@@ -77,6 +77,17 @@ from datetime import date, datetime
 from pathlib import Path
 
 # ---------------------------------------------------------------------------
+# Shared contract (strategy/schema.py) — the summary.csv field list and the
+# OOS pass/fail formula, so the checker and the runner cannot drift apart
+# (repo_review_20261029 §2.4 X13 / §3.2 / §3.3). schema.py is stdlib-only, so
+# importing it keeps this script data-free.
+# ---------------------------------------------------------------------------
+_REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+import strategy.schema as schema  # noqa: E402
+
+# ---------------------------------------------------------------------------
 # Minimal YAML reader
 # ---------------------------------------------------------------------------
 # The checker must run where PyYAML is not installed (bare CI containers, a
@@ -509,6 +520,7 @@ class StrategyResults:
     windows_beating_bh: set[str]      # S3
     csv_mtime: float
     csv_path: Path
+    is_oos: bool = False            # a distinct `<ID>_oos` holdout directory
 
 
 def collect_results(results_dir: Path, cfg: dict, rep: Report, root: Path) -> StrategyResults | None:
@@ -526,6 +538,11 @@ def collect_results(results_dir: Path, cfg: dict, rep: Report, root: Path) -> St
         rep.fail("F1", rel, "summary.csv has no data rows")
         return None
 
+    # Whether this directory is an OOS holdout matrix (a distinct `<ID>_oos`
+    # dir, see the X1 identity check) — the X13 check re-computes pass/fail for
+    # it. (The §3.3 *header-must-match* check is a Phase-3 addition.)
+    is_oos = results_dir.name.lower().endswith("_oos")
+
     windows = cfg.get("windows") or {}
     oos = cfg.get("oos") or {}
     holdout_start = as_date(oos.get("holdout_start") or "")
@@ -535,13 +552,20 @@ def collect_results(results_dir: Path, cfg: dict, rep: Report, root: Path) -> St
     raw_ids = {r.get("strategy", "").strip() for r in rows if (r.get("strategy") or "").strip()}
     norm_ids = {norm_id(i) for i in raw_ids}
     dir_id = results_dir.name
+    # An OOS holdout matrix is written to a distinct ``<ID>_oos`` directory so
+    # it can never overwrite the in-sample results (run_matrix). A valid OOS
+    # dir must still pass X1 (its name == the strategy id, modulo the suffix);
+    # a mislabelled one must fail.
+    is_oos_dir = dir_id.lower().endswith("_oos")
+    dir_base = dir_id[:-4] if is_oos_dir else dir_id
     if len(norm_ids) != 1:
         rep.fail("X1", rel,
                  f"summary.csv mixes strategy ids {sorted(raw_ids)} — one directory, one strategy")
         return None
-    if norm_id(dir_id) != next(iter(norm_ids)):
+    if norm_id(dir_base) != next(iter(norm_ids)):
         rep.fail("X1", rel,
-                 f"results dir {dir_id!r} does not match strategy id {sorted(raw_ids)[0]!r}")
+                 f"results dir {dir_id!r} does not match strategy id {sorted(raw_ids)[0]!r}"
+                 + ("" if not is_oos_dir else " (an OOS dir must be `<ID>_oos` for that id)"))
 
     # ---- X2: registered in config/strategies.yml -------------------------
     reg_key = None
@@ -656,6 +680,7 @@ def collect_results(results_dir: Path, cfg: dict, rep: Report, root: Path) -> St
         dir_name=dir_name_of(results_dir), ids=raw_ids, rows=rows, cells=cells,
         max_trades=max_trades, loses_everywhere=loses_everywhere,
         instruments_beating_bh=inst_beating, windows_beating_bh=win_beating,
+        is_oos=is_oos,
         csv_mtime=csv_path.stat().st_mtime, csv_path=csv_path,
     )
 
@@ -705,8 +730,105 @@ def check_cross_artifacts(root: Path, cfg: dict, registry: dict, trials: list[di
             rep.fail("X4", f"trial_log {sid}",
                      f"{sid} has results but no row in strategy/trial_log.md")
 
-        # ---- X5: status vs outcome --------------------------------------
+        # The registry status is needed by several checks below (X13, X5, ...).
         status = (reg.get("status") or "").strip().lower().replace("*", "")
+
+        # ---- X13: the OOS pass/fail must be present and self-consistent ---
+        # (repo_review_20261029 §2.4). An OOS directory (a distinct `<ID>_oos`)
+        # carries a machine pass/fail block. The checker re-computes that
+        # verdict from the committed OOS cells using the SAME shared logic as
+        # the runner (strategy/schema.py, driven by
+        # `config/strategies.yml → oos.pass_criteria`) and requires it to match
+        # the committed `pass`/`instruments_beating` columns.
+        if res.is_oos:
+            crit = ((cfg.get("oos") or {}).get("pass_criteria") or {})
+            min_instr = crit.get("min_instruments_beating_bh_at_2bps", 2)
+            max_tpy = crit.get("max_trades_per_year", 54)
+            try:
+                min_instr = int(min_instr); max_tpy = float(max_tpy)
+            except (TypeError, ValueError):
+                rep.fail("X13", f"registry {canon_id}",
+                         "config `oos.pass_criteria` is missing a numeric "
+                         "min_instruments_beating_bh_at_2bps / max_trades_per_year")
+            computed = schema.oos_pass_fields(
+                res.rows, min_instruments=min_instr, max_trades_per_year=max_tpy)
+
+            def _bool(v):
+                s = str(v).strip().lower()
+                if s in ("true", "1", "yes"): return True
+                if s in ("false", "0", "no"): return False
+                return None
+
+            def _num(v):
+                try: return float(v)
+                except (TypeError, ValueError): return None
+
+            # (a) the OOS pass/fail columns must actually be present.
+            need = schema.OOS_FIELDS_REQUIRED_FOR_PASS
+            oos_rows = [r for r in res.rows if (r.get("window") or "").strip().lower() == "oos"]
+            if oos_rows:
+                for f in need:
+                    if all((r.get(f) in (None, "")) for r in oos_rows):
+                        rep.fail("X13", f"registry {canon_id}",
+                                 f"the OOS `summary.csv` is missing the required "
+                                 f"pass/fail column {f!r} (Phase 2.4)")
+                # (b) the committed `pass` must equal the recomputed verdict.
+                committed_passes = {_bool(r.get("pass")) for r in oos_rows}
+                if len(committed_passes) > 1:
+                    rep.fail("X13", f"registry {canon_id}",
+                             f"the committed OOS `pass` is not consistent across rows "
+                             f"({sorted(committed_passes)})")
+                else:
+                    cp = next(iter(committed_passes))
+                    if cp is None:
+                        rep.fail("X13", f"registry {canon_id}",
+                                 "the committed OOS `pass` is blank — a machine verdict "
+                                 "is required (Phase 2.4)")
+                    elif cp != computed["pass"]:
+                        rep.fail("X13", f"registry {canon_id}",
+                                 f"the committed OOS `pass`={cp} disagrees with the "
+                                 f"recomputed verdict {computed['pass']} "
+                                 f"(beats on {computed['instruments_beating']} instrument(s), "
+                                 f"need >= {min_instr}; trades/yr "
+                                 f"{computed['max_trades_per_year_seen']} vs ceiling {max_tpy:g})")
+                # (c) the committed `instruments_beating` must equal the
+                #     recomputed count.
+                committed_ib = {_num(r.get("instruments_beating")) for r in oos_rows}
+                if len(committed_ib) > 1 or (committed_ib and
+                                             next(iter(committed_ib)) != computed["instruments_beating"]):
+                    rep.fail("X13", f"registry {canon_id}",
+                             f"the committed OOS `instruments_beating` {sorted(committed_ib)} "
+                             f"disagrees with the recomputed count "
+                             f"{computed['instruments_beating']}")
+                # (d) a trade-ceiling breach must not be hidden behind `pass=True`.
+                if computed["trade_ceiling_breached"]:
+                    rep.fail("X13", f"registry {canon_id}",
+                             f"an OOS cell exceeds the trade ceiling "
+                             f"({computed['max_trades_per_year_seen']} > {max_tpy:g} trades/yr) "
+                             f"but the holdout must stay inside the ceiling")
+            else:
+                rep.fail("X13", f"registry {canon_id}",
+                         "an OOS directory was declared but its `summary.csv` has no "
+                         "window == 'oos' rows")
+            # (e) the registry status must agree with the verdict: a passing
+            #     holdout => `tested`; a failing one => `rejected`.
+            if status == "tested" and computed["pass"] is False:
+                rep.fail("X13", f"registry {canon_id}",
+                         f"registry status is `tested` but the OOS verdict is FAIL "
+                         f"(beats {computed['instruments_beating']}/{min_instr}, "
+                         f"trade-ceiling breached={computed['trade_ceiling_breached']}) — "
+                         f"only a passing holdout may be `tested`")
+            if status == "rejected" and computed["pass"] is True:
+                rep.warn("X13", f"registry {canon_id}",
+                         f"the OOS verdict is PASS but the status is `rejected` — "
+                         f"review whether it should be `tested`")
+            # An OOS directory is only checked for identity (X1/X2/X3/X10) and
+            # the holdout pass/fail (X13) above. The in-sample matrix value
+            # checks (X5/X11/S1-S3/G5) apply to the strategy's in-sample `<ID>`
+            # directory, not to the holdout result — stop here.
+            continue
+
+        # ---- X5: status vs outcome --------------------------------------
         if status and trows:
             norm_out = {t["outcome"].lower().replace(" ", "").replace("-", "")
                         for t in trows}

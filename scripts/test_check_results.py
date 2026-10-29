@@ -123,6 +123,83 @@ def replace_in(path: Path, old: str, new: str) -> None:
 S05_ROW = ("| S-05 | SuperTrend-24 direction follower | 5m | `st_dir_24_2` | "
            "st_dir_24_2 up | st_dir_24_2 down | long | **rejected** |")
 
+#: A synthetic OOS strategy used by the X13 mutation cases. It is registered
+#: (config + registry + trial log) but has NO in-sample results directory, so
+#: only its `<ID>_oos` directory is present — exactly what Phase 2.4 commits.
+OOS_SID = "S-09"
+
+
+def write_oos_dir(work: Path, status: str = "tested",
+                  beats: int = 2, tpy: float = 40,
+                  committed_pass: bool = True, committed_ib: int = 2) -> None:
+    """Write a self-consistent OOS holdout matrix for the synthetic S-09.
+
+    `beats` is how many instruments actually beat buy-hold at 2 bps (0..3);
+    the rest lose. All cells use a trade-rate of `tpy`/year. The committed
+    `pass`/`instruments_beating` columns are `committed_pass`/`committed_ib`,
+    so a caller can set them to disagree with the recompute to trigger X13.
+    """
+    if str(REPO) not in sys.path:
+        sys.path.insert(0, str(REPO))
+    import strategy.schema as _s
+    insts = ["EUR_USD", "BTC_USD", "XAU_USD"]
+    dir_ = work / "strategy" / "results" / f"{OOS_SID}_oos"
+    dir_.mkdir(parents=True, exist_ok=True)
+    # register the synthetic strategy in config + registry + trial log
+    cfgp = work / "config" / "strategies.yml"
+    cfg = cfgp.read_text(encoding="utf-8")
+    if f"  {OOS_SID}:" not in cfg:
+        cfg = cfg.replace("  S-05:\n", f"  {OOS_SID}:\n    timeframe: \"5m\"\n  S-05:\n", 1)
+        cfgp.write_text(cfg, encoding="utf-8")
+    regp = work / "strategy" / "STRATEGY_REGISTRY.md"
+    reg = regp.read_text(encoding="utf-8")
+    if f"| {OOS_SID} |" not in reg:
+        row = (f"| {OOS_SID} | synthetic OOS | 5m | `x` | a | b | long | **{status}** "
+               f"| [code/strategy_syn.py](code/strategy_syn.py) "
+               f"| [docs/strategy_syn_report.md](docs/strategy_syn_report.md) "
+               f"| 2026-10-26 | n/a |")
+        reg = reg.replace("## Indicator usage map", row + "\n\n## Indicator usage map", 1)
+        regp.write_text(reg, encoding="utf-8")
+    tlp = work / "strategy" / "trial_log.md"
+    tl = tlp.read_text(encoding="utf-8")
+    if f"| {OOS_SID} |" not in tl:
+        tl += (f"\n| 1 | 2026-10-26 | {OOS_SID} | synthetic | oos | **{status}** "
+               f"| n/a | 0 |\n")
+        tlp.write_text(tl, encoding="utf-8")
+    # thin CLI + report so X6/X7/X8 (in-sample) are satisfied if ever hit
+    (work / "strategy" / "code" / "strategy_syn.py").write_text("stub\n", encoding="utf-8")
+    (work / "strategy" / "docs" / "strategy_syn_report.md").write_text("# stub\n", encoding="utf-8")
+
+    fields = _s.OOS_HEADER
+    with open(dir_ / "summary.csv", "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
+        w.writeheader()
+        for idx, inst in enumerate(insts):
+            beat_this = idx < beats
+            for cost in (0.0, 2.0, 5.0):
+                # ret > buyhold only at the 2 bps tier for the `beats` insts
+                if cost == 2.0:
+                    tr, bh = (10.0, 5.0) if beat_this else (-5.0, 10.0)
+                else:
+                    tr, bh = (0.0, 5.0) if beat_this else (0.0, 5.0)
+                w.writerow({
+                    "strategy": OOS_SID.lower().replace("-", ""),
+                    "instrument": inst, "window": "oos", "timeframe": "5m",
+                    "cost_bps": cost, "entry_guard": "off",
+                    "start": "2025-08-01 00:00:00+00:00",
+                    "end": "2026-10-22 00:00:00+00:00",
+                    "n_bars": 100, "n_trades": 10,
+                    "total_return_pct": tr, "buyhold_return_pct": bh,
+                    "max_drawdown_pct": 10, "win_rate_pct": 50,
+                    "avg_trade_return_pct": 0, "sharpe": 1, "sharpe_weekly": 1,
+                    "trades_per_year": tpy, "exposure_pct": 50,
+                    "mean_net_position_pct": 50, "span_years": 1.224,
+                    "beat_bh_at_2bps": beat_this and cost == 2.0,
+                    "instruments_beating": committed_ib,
+                    "pass": committed_pass,
+                })
+
+
 CASES = [
     ("baseline: a legal repo must PASS", set(), 0, None, lambda w: None),
 
@@ -202,6 +279,30 @@ CASES = [
     ("registry Report link points nowhere -> X6", {"X6"}, 1, None,
      lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md",
                           "(docs/strategy_supertrend_report.md)", "(docs/nope_report.md)")),
+
+    # ---- X13: machine pass/fail for an OOS holdout matrix (Phase 2.4) ----
+    # A VALID OOS directory (a distinct `<ID>_oos`) must pass the checker.
+    ("OOS dir passes with a consistent pass verdict -> ok", set(), 0, None,
+     lambda w: write_oos_dir(w, status="tested", beats=2, tpy=40,
+                             committed_pass=True, committed_ib=2)),
+    # committed pass=True but only 1 instrument actually beats -> inconsistent
+    ("OOS pass inconsistent with the matrix -> X13", {"X13"}, 1, None,
+     lambda w: write_oos_dir(w, status="tested", beats=1, tpy=40,
+                             committed_pass=True, committed_ib=1)),
+    # trade ceiling breached (60/yr > 54/yr) -> must fail
+    ("OOS trade-ceiling breach -> X13", {"X13"}, 1, None,
+     lambda w: write_oos_dir(w, status="rejected", beats=2, tpy=60,
+                             committed_pass=False, committed_ib=2)),
+    # status `tested` but the OOS verdict fails (only 1 beats) -> must fail
+    ("OOS `tested` status on a failing holdout -> X13", {"X13"}, 1, None,
+     lambda w: write_oos_dir(w, status="tested", beats=1, tpy=40,
+                             committed_pass=False, committed_ib=1)),
+    # a mislabelled OOS dir (name != the strategy id) -> X1
+    ("OOS dir name != strategy id -> X1", {"X1"}, 1, None,
+     lambda w: (write_oos_dir(w, status="tested", beats=2, tpy=40,
+                              committed_pass=True, committed_ib=2),
+                (w / "strategy" / "results" / f"{OOS_SID}_oos")
+                .rename(w / "strategy" / "results" / "S77_oos"))),
 ]
 
 
