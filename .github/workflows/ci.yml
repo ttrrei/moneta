@@ -34,11 +34,9 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: install TA-Lib (C library)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ta-lib libta-dev
-
+      # TA-Lib 0.8.2 ships self-contained binary wheels that bundle libta-lib,
+      # so no system-level apt package is needed (review 2026-10-29: the apt
+      # step failed on Ubuntu 26 where the package name changed).
       - name: install dependencies (pinned)
         # requirements.lock pins every version (review 2026-10-28 §B2), so this
         # job is now deterministic and blocks the merge on a real test failure.
