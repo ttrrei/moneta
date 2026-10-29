@@ -89,7 +89,13 @@ def load_bars(
             where.append("time >= ?")
             params.append(since)
         if until:
-            where.append("time <= ?")
+            if _oos.is_holdout_until(until):
+                # OOS/holdout read: exclusive end (first day after the
+                # holdout) → ``time < until`` excludes that day's first bar.
+                where.append("time < ?")
+            else:
+                # In-sample read: ``until`` is the *inclusive* last bar's date.
+                where.append("time <= ?")
             params.append(until)
         sql = (
             "SELECT time, open, close, is_gap_bar, is_near_market_close, " + RSI_COL +

@@ -38,11 +38,11 @@ def build_rule(df) -> "RsiState":
 
 
 def load_rsi_1h_bars(parquet: str, instrument: str, since: str | None = None,
-                     until: str | None = None):
+                     until: str | None = None, oos_token: object | None = None):
     """Load the RSI column (plus base pricing) for one window."""
     return strategy_lib.load_bars(
         parquet, instrument, feature_cols=[RSI_COL], not_null_cols=[RSI_COL],
-        since=since, until=until)
+        since=since, until=until, oos_token=oos_token)
 
 
 class RsiState:

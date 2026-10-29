@@ -19,28 +19,75 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: checker self-test (28 mutation cases)
+      - name: checker self-test (32 mutation cases)
         run: python scripts/test_check_results.py
 
+      # L1 (append-only) is the load-bearing check: the committed oos_ledger.json
+      # must be a *superset* of the base ledger — a holdout consumption can never
+      # be removed. It MUST run on both PRs and direct pushes to main.
+      #
+      # The base ledger is resolved per event type (review follow-up §1.4 / §3.4):
+      #   * pull_request → the PR's base branch ref, read via `origin/<ref>`
+      #     (the PR checkout has no local `main` branch, so `git show main:...`
+      #     — the old approach — fails and was silently swallowed by `|| true`).
+      #   * push → the commit *before* this one, `github.event.before`.
+      # If no baseline ledger can be obtained the job FAILS (fail closed) rather
+      # than skipping the check — the only documented exception is a base branch
+      # that predates the ledger file entirely (a genuine bootstrap).
       - name: check the committed results (append-only ledger enforced vs base)
-        # L1: the committed oos_ledger.json must be a *superset* of the base
-        # branch's ledger — a holdout consumption can never be removed. We
-        # fetch the base ref's ledger and pass it via --base-ledger. On push
-        # to main (no PR) there is no separate base, so the check is a no-op.
         env:
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
         run: |
           set -euo pipefail
-          if [ -n "${BASE_BRANCH:-}" ]; then
-            git fetch --depth=1 origin "$BASE_BRANCH" >/dev/null 2>&1 || true
-            if git show "$BASE_BRANCH:strategy/oos_ledger.json" 2>/dev/null > base_oos_ledger.json && [ -s base_oos_ledger.json ]; then
-              python scripts/check_results.py --base-ledger base_oos_ledger.json
-              exit 0
+          LEDGER_REL="strategy/oos_ledger.json"
+
+          resolve_base() {
+            # Echoes a git object (branch/commit) that contains the base ledger.
+            if [ "${EVENT_NAME}" = "pull_request" ] && [ -n "${BASE_BRANCH:-}" ]; then
+              git fetch --no-tags --depth=1 origin "${BASE_BRANCH}" >/dev/null 2>&1
+              git rev-parse -q --verify "origin/${BASE_BRANCH}" >/dev/null \
+                || { echo "ERROR: could not fetch origin/${BASE_BRANCH}" >&2; return 1; }
+              echo "origin/${BASE_BRANCH}"
+            elif [ "${EVENT_NAME}" = "push" ] && [ -n "${BEFORE_SHA:-}" ]; then
+              git fetch --no-tags --depth=1 origin "${BEFORE_SHA}" >/dev/null 2>&1 \
+                || git fetch --no-tags origin "${BEFORE_SHA}" >/dev/null 2>&1
+              git rev-parse -q --verify "${BEFORE_SHA}" >/dev/null \
+                || { echo "ERROR: could not fetch base commit ${BEFORE_SHA}" >&2; return 1; }
+              echo "${BEFORE_SHA}"
+            else
+              # No base to diff against for this event (e.g. a brand-new repo).
+              return 0
             fi
+          }
+
+          # resolve_base: 0 = base resolved (or genuinely none, e.g. first push
+          # ever), 1 = a base was expected but could not be fetched. A failure
+          # to obtain an *expected* baseline is a hard error (fail closed);
+          # only a genuine bootstrap (no baseline on base) may skip L1.
+          BASE_OBJ="" ; BASE_RC=0
+          BASE_OBJ="$(resolve_base)" || BASE_RC=$?
+          if [ "${BASE_RC}" -ne 0 ]; then
+            echo "FATAL: the base ledger was expected but could not be obtained." >&2
+            echo "Refusing to skip the append-only (L1) check (fail closed)." >&2
+            exit 1
           fi
-          # No base ledger to diff against (fresh repo / push to main / base
-          # predates the ledger) -> run without the append-only baseline.
-          python scripts/check_results.py
+          if [ -n "${BASE_OBJ}" ]; then
+            # The base branch may predate the ledger (bootstrap) — that is the
+            # only case where an empty baseline is legal.
+            if git show "${BASE_OBJ}:${LEDGER_REL}" > base_oos_ledger.json 2>/dev/null \
+               && [ -s base_oos_ledger.json ]; then
+              echo "Using base ledger from ${BASE_OBJ}"
+              python scripts/check_results.py --base-ledger base_oos_ledger.json
+            else
+              echo "Base ${BASE_OBJ} has no ${LEDGER_REL} (bootstrap — no baseline)"
+              python scripts/check_results.py
+            fi
+          else
+            echo "No base ledger available for this event (bootstrap); full check"
+            python scripts/check_results.py
+          fi
 
   pytest:
     name: unit tests

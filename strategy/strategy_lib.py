@@ -119,7 +119,16 @@ def load_bars(
             where.append("time >= ?")
             params.append(since)
         if until:
-            where.append("time <= ?")
+            if _oos.is_holdout_until(until):
+                # OOS/holdout read: ``until`` is the *exclusive* end (the first
+                # day after the holdout), so use ``time < until`` — this
+                # excludes the first bar of that day (review follow-up2 §1.2:
+                # ``time <= until`` would include one bar at the holdout's end
+                # boundary, which the engine acts on at the next bar's open).
+                where.append("time < ?")
+            else:
+                # In-sample read: ``until`` is the *inclusive* last bar's date.
+                where.append("time <= ?")
             params.append(until)
         sql = (
             "SELECT " + ", ".join(cols) +

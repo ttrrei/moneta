@@ -237,6 +237,41 @@ def _drop_column(path: Path, col: str) -> None:
             w.writerow(r)
 
 
+def _ledger_json(records: list[dict]) -> str:
+    """A one-record ledger file body."""
+    return '{"version": 1, "consumptions": ' + json.dumps(records) + "}\n"
+
+
+def _one_rec(strategy: str, status: str, reason: str | None = None) -> dict:
+    rec = {"strategy": strategy, "holdout_id": "oos1",
+           "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+           "status": status}
+    if reason is not None:
+        rec["reason"] = reason
+    return rec
+
+
+def _set_ledgers(w: Path, cur_status: str, cur_reason: str | None,
+                 base_status: str, base_reason: str | None = None) -> None:
+    """Write the committed ledger (cur_status) and the base ledger
+    (base_status) for the S-05/oos1 record — used by the L1 void-flow cases."""
+    (w / "strategy/oos_ledger.json").write_text(
+        _ledger_json([_one_rec("S05", cur_status, cur_reason)]), encoding="utf-8")
+    (w / "base_oos_ledger.json").write_text(
+        _ledger_json([_one_rec("S05", base_status, base_reason)]), encoding="utf-8")
+
+
+def _void_with_output(w: Path) -> None:
+    """A voided S-05 reservation (with a reason) AND an OOS output file —
+    the "void a result that was read" backdoor (must be L1)."""
+    (w / "strategy/oos_ledger.json").write_text(
+        _ledger_json([_one_rec("S05", "voided", "crash after reserve")]),
+        encoding="utf-8")
+    out = w / "strategy" / "results" / "S05_oos"
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "EUR_USD__oos__c2.json").write_text("{}\n", encoding="utf-8")
+
+
 CASES = [
     ("baseline: a legal repo must PASS", set(), 0, None, lambda w: None),
 
@@ -385,6 +420,23 @@ CASES = [
              '{"strategy": "S05", "holdout_id": "oos1", '
              '"holdout_start": "2025-08-01", "holdout_end": "2026-10-22", '
              '"status": "reserved"}]}\n', encoding="utf-8")),
+     lambda w: w / "base_oos_ledger.json"),
+    # ---- L1 void-flow (follow-up review §1.3 / §3.4) -----------------------
+    # reserved -> voided keeps the same identity; the status change is NOT a
+    # record removal (status is not in the identity key).
+    ("reserved -> voided with a reason is append-only-safe -> ok", set(), 0, None,
+     lambda w: _set_ledgers(w, "voided", "crash after reserve, no result read", "reserved"),
+     lambda w: w / "base_oos_ledger.json"),
+    # A voided record must carry a written reason (L1b).
+    ("voided record without a reason -> L1", {"L1"}, 1, None,
+     lambda w: (w / "strategy/oos_ledger.json").write_text(
+         _ledger_json([_one_rec("S05", "voided")]), encoding="utf-8")),
+    # A void is only valid when no OOS output exists for the strategy (L1c).
+    ("voided record with OOS output files -> L1", {"L1"}, 1, None,
+     lambda w: _void_with_output(w)),
+    # A completed record must stay completed (terminal — no re-open to reserved).
+    ("completed record re-opened to reserved -> L1", {"L1"}, 1, None,
+     lambda w: _set_ledgers(w, "reserved", None, "completed"),
      lambda w: w / "base_oos_ledger.json"),
 
     # ---- L2: ledger <-> trial_log cross-consistency -----------------------

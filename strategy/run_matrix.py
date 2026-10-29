@@ -37,8 +37,15 @@ import csv
 import json
 import re
 import sys
+import threading
 from datetime import date
 from pathlib import Path
+
+try:
+    import fcntl
+    _HAS_FCNTL = True
+except ImportError:  # pragma: no cover — non-POSIX platforms
+    _HAS_FCNTL = False
 
 _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
@@ -256,7 +263,10 @@ def _data_fingerprint(parquet: str) -> dict:
     where = ["time >= ?"]
     params: list = [str(p), holdout_start]
     if holdout_until:
-        where.append("time <= ?")
+        # Exclusive end: the OOS ``until`` is the first day *after* the
+        # holdout; ``time < until`` counts exactly the bars the holdout read
+        # serves (consistent with the loader's half-open holdout bound).
+        where.append("time < ?")
         params.append(holdout_until)
     where_sql = " AND ".join(where)
 
@@ -405,47 +415,132 @@ def _save_oos_ledger(ledger: dict) -> None:
     tmp.replace(p)  # atomic-ish: readers never see a torn file
 
 
+class _LedgerLock:
+    """A cross-process lock serialising the *check → validate → append → save*
+    transaction on the OOS ledger (follow-up review P0: two concurrent
+    processes must not both pass the once-per / D1-cap checks and both reserve
+    the same holdout).
+
+    Uses ``fcntl.flock`` on a side file (``oos_ledger.json.lock``) on
+    POSIX; falls back to a process-local ``threading.Lock`` when ``fcntl`` is
+    unavailable (still correct within a single process; cross-process races on
+    such platforms are out of scope — this repo's CI and runners are POSIX).
+    """
+
+    _local = threading.Lock()  # per-process fallback + re-entrancy guard
+
+    def __init__(self, ledger_path: Path):
+        self._ledger_path = ledger_path
+        self._lock_path = ledger_path.with_suffix(".json.lock")
+
+    def __enter__(self):
+        if _HAS_FCNTL:
+            self._fh = open(self._lock_path, "a")
+            fcntl.flock(self._fh.fileno(), fcntl.LOCK_EX)
+        else:  # pragma: no cover — non-POSIX
+            self._local.acquire()
+        return self
+
+    def __exit__(self, *exc):
+        if _HAS_FCNTL:
+            try:
+                fcntl.flock(self._fh.fileno(), fcntl.LOCK_UN)
+            finally:
+                self._fh.close()
+        else:  # pragma: no cover
+            self._local.release()
+
+
+def _oos_ledger_lock() -> _LedgerLock:
+    return _LedgerLock(_oos_ledger_path())
+
+
 def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> dict:
     """Append a consumption record **before** the holdout is loaded.
+
+    The *check → validate → append → save* transaction is performed under a
+    cross-process lock (follow-up review P0: reserve is no longer an atomic
+    no-op). Inside the lock the gate is **re-validated** against the ledger
+    as it currently stands (a concurrent reservation that landed between the
+    caller's earlier check and this lock acquisition is seen here and refuses),
+    so two concurrent processes cannot both reserve the one holdout and both
+    pass the ``max_strategies_per_holdout`` cap.
 
     Bound to ``(strategy, holdout_id)`` — rebuilt data, a new path, appended
     rows or a restart cannot re-open the holdout. The data ``fingerprint`` is
     recorded as an audit field only (not part of the lock key). Returns the
     appended record.
     """
-    ledger = _load_oos_ledger()
     cfg = _load_config()
-    holdout_id, _max, h_start, h_end = _oos_holdout_spec(cfg)
-    rec = {
-        "strategy": registry_mod.norm_id(strategy),
-        "holdout_id": holdout_id,
-        "holdout_start": h_start,
-        "holdout_end": h_end,
-        "reserved_at": date.today().isoformat(),
-        "status": "reserved",
-        "fingerprint": fingerprint,
-        "manifest": manifest,
-    }
-    ledger["consumptions"].append(rec)
-    _save_oos_ledger(ledger)
-    return rec
+    holdout_id, max_per, h_start, h_end = _oos_holdout_spec(cfg)
+    sid = registry_mod.norm_id(strategy)
+
+    with _oos_ledger_lock():
+        # Re-load and re-validate under the lock — a concurrent process may
+        # have appended a record after the caller's pre-check.
+        ledger = _load_oos_ledger()
+        consumptions = ledger["consumptions"]
+
+        # (a) Once-per-(strategy, holdout): an active (non-voided) record for
+        #     this strategy on this holdout is already in flight / consumed.
+        for rec in consumptions:
+            if rec.get("status") == "voided":
+                continue
+            if (registry_mod.norm_id(rec.get("strategy", "")) == sid
+                    and rec.get("holdout_id") == holdout_id):
+                raise SystemExit(
+                    f"Strategy {sid} already has a live record for holdout "
+                    f"{holdout_id!r} (reserved {rec.get('reserved_at')}, status "
+                    f"{rec.get('status')!r}). Re-reserving is prohibited.")
+
+        # (b) D1 cap: the holdout is spent once `max_per` distinct strategies
+        #     have a live (non-voided) reservation on it.
+        distinct = {registry_mod.norm_id(r.get("strategy", ""))
+                    for r in consumptions
+                    if r.get("holdout_id") == holdout_id
+                    and r.get("status") != "voided"}
+        if sid not in distinct and len(distinct) >= max_per:
+            plural = "y" if len(distinct) == 1 else "ies"
+            raise SystemExit(
+                f"Holdout {holdout_id} was already reserved by {len(distinct)} "
+                f"distinct strateg{plural} (cap `oos.max_strategies_per_holdout` "
+                f"= {max_per}); it is spent — a concurrent reservation landed "
+                f"first. Further research needs a new, unseen holdout window.")
+
+        rec = {
+            "strategy": sid,
+            "holdout_id": holdout_id,
+            "holdout_start": h_start,
+            "holdout_end": h_end,
+            "reserved_at": date.today().isoformat(),
+            "status": "reserved",
+            "fingerprint": fingerprint,
+            "manifest": manifest,
+        }
+        ledger["consumptions"].append(rec)
+        _save_oos_ledger(ledger)
+        return rec
 
 
 def _complete_oos(strategy: str) -> None:
     """Mark this strategy's most recent `reserved` record for the holdout as
     `completed`. Pure bookkeeping — a `reserved` record already blocks re-runs,
-    so a crash that never reaches here still counts as consumed."""
-    ledger = _load_oos_ledger()
-    cfg = _load_config()
-    holdout_id, _max, _hs, _he = _oos_holdout_spec(cfg)
-    sid = registry_mod.norm_id(strategy)
-    for rec in reversed(ledger["consumptions"]):
-        if (registry_mod.norm_id(rec.get("strategy", "")) == sid
-                and rec.get("holdout_id") == holdout_id
-                and rec.get("status") == "reserved"):
-            rec["status"] = "completed"
-            break
-    _save_oos_ledger(ledger)
+    so a crash that never reaches here still counts as consumed.
+
+    Performed under the ledger lock so it cannot race a concurrent reservation
+    (the status change is a mutation of an existing record, not an append)."""
+    with _oos_ledger_lock():
+        ledger = _load_oos_ledger()
+        cfg = _load_config()
+        holdout_id, _max, _hs, _he = _oos_holdout_spec(cfg)
+        sid = registry_mod.norm_id(strategy)
+        for rec in reversed(ledger["consumptions"]):
+            if (registry_mod.norm_id(rec.get("strategy", "")) == sid
+                    and rec.get("holdout_id") == holdout_id
+                    and rec.get("status") == "reserved"):
+                rec["status"] = "completed"
+                break
+        _save_oos_ledger(ledger)
 
 
 def _check_holdout_window(cfg: dict, ledger: dict | None = None) -> None:
@@ -649,7 +744,7 @@ def run_matrix(
     entry_guard: bool,
     out_dir: Path,
     allow_partial: bool = False,
-    preflight: bool = False,
+    skip_preflight: bool = False,
 ) -> list[dict]:
     """Run every cell, persist per-cell JSON, and return the result list.
 
@@ -657,9 +752,11 @@ def run_matrix(
     ``allow_partial`` is set (repo_review_20261027 §1.10: a 1-of-18 success
     must not be summarised as a full matrix).
 
-    ``preflight`` (follow-up review): for an OOS run, first prove the strategy
-    runs cleanly on a small in-sample window before the holdout is reserved,
-    so a plain bug does not consume the only holdout.
+    ``skip_preflight`` (follow-up review): preflight is **mandatory by default**
+    for an OOS run — it proves the strategy runs cleanly on a small in-sample
+    window before the holdout is reserved, so a plain bug does not consume the
+    only holdout. Pass ``--skip-preflight`` to opt out (the holder is then
+    responsible for having verified the pipeline independently).
     """
     if strategy not in _STRATEGIES:
         raise SystemExit(f"Unknown strategy {strategy!r}; registered: {sorted(_STRATEGIES)}")
@@ -698,14 +795,13 @@ def run_matrix(
         # (1b) Preflight (follow-up review, "一次普通崩溃会永久烧掉唯一的
         #     holdout"): with D1=1 + reserve-before-load, a plain bug in the
         #     strategy's run() (missing column, OOM, ...) would consume the
-        #     *only* holdout and produce no result. So, when --preflight is set,
-        #     prove the same code path works on a small IN-SAMPLE window (a
-        #     cheap EUR_USD full-window cell at 2 bps) BEFORE reserving. If the
-        #     pipeline is broken it fails here and the holdout stays unspent.
-        #     A genuine crash is still invalidated by the human "voided" ledger
-        #     flow (WORKFLOW Step 7.5) — a voided reservation does not block a
-        #     later, corrected re-run.
-        if preflight:
+        #     *only* holdout and produce no result. So — by default, and unless
+        #     --skip-preflight is passed — prove the same code path works on a
+        #     small IN-SAMPLE window (a cheap EUR_USD full-window cell at 2 bps)
+        #     BEFORE reserving. If the pipeline is broken it fails here and the
+        #     holdout stays unspent. A genuine crash is still invalidated by the
+        #     human "voided" ledger flow (WORKFLOW Step 7.5).
+        if not skip_preflight:
             _preflight(strategy, run, parquet, timeframe, entry_guard, cfg)
         # (2) Reserve the attempt BEFORE the holdout is loaded, so a crash
         #     mid-run still counts as consumed (a `reserved` record blocks re-runs).
@@ -954,11 +1050,13 @@ def main() -> None:
     ap.add_argument("--allow-partial", action="store_true",
                     help="summarise even when some cells fail (default: any failure "
                          "aborts with a non-zero exit code)")
-    ap.add_argument("--preflight", action="store_true",
-                    help="OOS runs only: before reserving the holdout, run one "
-                         "small in-sample cell first so a plain bug (missing "
+    ap.add_argument("--skip-preflight", action="store_true",
+                    help="OOS runs only: skip the default preflight (one small "
+                         "in-sample cell before reserving the holdout). Preflight "
+                         "is mandatory by default so a plain bug (missing "
                          "column, OOM, broken rule) does NOT consume the only "
-                         "holdout (follow-up review)")
+                         "holdout (follow-up review); use this only when you "
+                         "have verified the pipeline independently.")
     args = ap.parse_args()
 
     out_dir = Path(args.out) if args.out else (
@@ -972,7 +1070,7 @@ def main() -> None:
         entry_guard=args.entry_guard,
         out_dir=out_dir,
         allow_partial=args.allow_partial,
-        preflight=args.preflight,
+        skip_preflight=args.skip_preflight,
     )
     md_path = out_dir / "matrix.md"
     csv_path = out_dir / "summary.csv"

@@ -1,206 +1,273 @@
-"""Data-layer OOS holdout gate (the capability ``run_matrix`` mints after a
-successful reservation).
+"""Data-layer holdout gate: a token is required to read bars that reach the
+holdout, and the token is only valid while a matching *reserved* record exists
+in the OOS ledger.
 
-Why this exists (follow-up review of repo_review_20261029)
------------------------------------------------------------
-The one-time OOS gate used to live *only* in ``run_matrix.py``. That left the
-data layer wide open: ``strategy_lib.load_bars(until=None)`` (the default) reads
-**all** history, so a new script or an AI session could call it directly, tune
-on the holdout, and never touch the ledger.
+Layered design (see docs/repo_review_20261029.md §1.1 / §1.7 and
+docs/repo_review_20261029_followup.md §1.1):
 
-This module closes that hole at the point where the bars are actually read:
+* ``strategy_lib.load_bars`` (and the S-01 copy in ``strategy_rsi_lib``) calls
+  :func:`assert_access` before querying, so the gate lives in the data layer,
+  not in ``run_matrix``: *any* caller that reads bars reaching the holdout
+  needs a token.
+* A token is NOT freely mintable: :func:`create_token` requires a
+  ``reserved`` ledger record for ``(strategy, holdout_id)`` and refuses when
+  the latest status for that pair is ``completed`` or an active ``reserved``
+  for a different strategy already holds the holdout.
+* Only the ``reserved`` status grants read access (``run_matrix`` flips it to
+  ``completed`` after the run).  A ``completed`` or ``voided`` latest status
+  grants NO read access — a borrowed name cannot be used to re-read the
+  holdout after the first consumption.
+* The config must declare ``oos.holdout_start``; a missing or unparseable
+  value is a *config error* (SystemExit), never a pass-through (fail-closed).
+* The read window must be in the holdout region (``until >= holdout_start``);
+  an in-sample ``until`` does not need (and cannot use) a token.
 
-* :func:`assert_access` — called by :func:`strategy.strategy_lib.load_bars`
-  before any parquet is read. It refuses a window that reaches the holdout
-  (``until`` is unset, i.e. "read everything", **or** ``until`` is on/after
-  ``oos.holdout_start``) unless the caller holds a valid :class:`OOSToken`.
-* :class:`OOSToken` — a small capability object. :func:`create_token` is only
-  called by ``run_matrix`` *after* the ledger reservation has been appended, so
-  the token is always backed by a real, committed ``reserved``/``completed``
-  record.
-
-Verification is deliberately tied to the ledger, so **fabricating a token object
-does not open the holdout**: the token must reference the current ``holdout_id``
-and there must be a matching ledger consumption record for the strategy. Every
-check here *fails closed* — an unreadable config, a wrong-version ledger, or a
-token with no backing reservation all raise :class:`SystemExit`.
-
-This module is stdlib-only (json, datetime, pathlib) so it imports cleanly in a
-bare CI container; ``yaml`` is imported lazily only when the config is read.
+The token carries no secrets and is not persisted.  It is a handle checked
+against the append-only ledger at every read.
 """
 
 from __future__ import annotations
 
 import json
-from datetime import date
 from pathlib import Path
+
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+CONFIG_PATH = _REPO_ROOT / "config" / "strategies.yml"
+_LEDGER_PATH = _REPO_ROOT / "strategy" / "oos_ledger.json"
 
 
 class OOSToken:
-    """A capability proving the caller is an authorized holdout run.
+    """A handle authorising a read that reaches the holdout.
 
-    Only :func:`create_token` should construct one (``run_matrix`` does so after
-    ``_reserve_oos``). It carries the ``strategy`` and ``holdout_id`` it is
-    valid for; :func:`assert_access` re-checks both against the config and the
-    ledger before it lets holdout data be read.
+    Constructed by :func:`create_token` after a ledger reservation check.
+    Carries only the identity: no secrets, nothing persisted.
     """
 
     __slots__ = ("strategy", "holdout_id")
 
-    def __init__(self, strategy: str, holdout_id: str) -> None:
+    def __init__(self, strategy: str, holdout_id: str):
         self.strategy = strategy
         self.holdout_id = holdout_id
 
-    def __repr__(self) -> str:  # pragma: no cover - debugging aid
+    def __repr__(self) -> str:
         return f"OOSToken(strategy={self.strategy!r}, holdout_id={self.holdout_id!r})"
 
 
-def _repo_root() -> Path:
-    return Path(__file__).resolve().parents[1]
-
-
 def _config_path() -> Path:
-    return _repo_root() / "config" / "strategies.yml"
+    return CONFIG_PATH
 
 
 def _ledger_path() -> Path:
-    return Path(__file__).resolve().parent / "oos_ledger.json"
-
-
-def _norm_id(s: str) -> str:
-    return (s or "").strip().upper().replace("-", "").replace("_", "")
+    return _LEDGER_PATH
 
 
 def _load_config() -> dict:
-    import yaml  # lazy: keep the module importable without PyYAML in CI
-    with open(_config_path(), encoding="utf-8") as fh:
-        return yaml.safe_load(fh) or {}
-
-
-def _holdout_id() -> str | None:
-    oos = _load_config().get("oos") or {}
-    hid = oos.get("holdout_id")
-    return str(hid) if hid else None
-
-
-def holdout_start_date() -> date | None:
-    """The holdout start (single source: config ``oos.holdout_start``) as a date.
-
-    ``None`` when it is absent / unparseable — in which case there is no
-    holdout to protect and :func:`assert_access` is a no-op.
-    """
-    oos = _load_config().get("oos") or {}
-    hs = oos.get("holdout_start")
-    if not hs:
-        return None
+    """Load the config; missing file is a config error (fail-closed)."""
+    path = _config_path()
+    if not path.exists():
+        raise SystemExit(
+            "[oos] FAIL CLOSED: config file is missing "
+            f"({path}); refusing any data read (the holdout boundary "
+            "cannot be established). Restore the config."
+        )
     try:
-        return date.fromisoformat(str(hs)[:10])
-    except (ValueError, TypeError):
-        return None
+        import yaml
+    except ImportError:
+        raise SystemExit(
+            "[oos] FAIL CLOSED: PyYAML is not available; the holdout "
+            "boundary cannot be established. Install PyYAML."
+        )
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f) or {}
+
+
+def _oos_config() -> dict:
+    """The ``oos:`` block; its absence is a config error (fail-closed)."""
+    cfg = _load_config()
+    oos = cfg.get("oos")
+    if not isinstance(oos, dict):
+        raise SystemExit(
+            "[oos] FAIL CLOSED: config has no ``oos:`` block; the holdout "
+            "boundary cannot be established. Restore the config."
+        )
+    return oos
+
+
+def holdout_start_date() -> str:
+    """The holdout start date as an ISO string.
+
+    Missing or unparseable is a **config error** (SystemExit) — the gate
+    must not pass reads through when the boundary is unknown (fail-closed;
+    review §1.2: a deleted/mis-typed field must not disable the gate).
+    """
+    import datetime as _dt
+
+    oos = _oos_config()
+    raw = oos.get("holdout_start")
+    if raw is None:
+        raise SystemExit(
+            "[oos] FAIL CLOSED: config ``oos.holdout_start`` is missing; the "
+            "holdout boundary cannot be established, so no data read is "
+            "permitted. Restore the config."
+        )
+    try:
+        return _dt.date.fromisoformat(str(raw)[:10]).isoformat()
+    except ValueError:
+        raise SystemExit(
+            f"[oos] FAIL CLOSED: config ``oos.holdout_start`` is not a "
+            f"valid ISO date ({raw!r}); no data read is permitted."
+        )
+
+
+def holdout_id() -> str:
+    """The declared holdout identifier (``oos.holdout_id``).
+
+    Missing is a config error (fail-closed): a token cannot be validated
+    against an unknown holdout, so no holdout read is permitted.
+    """
+    oos = _oos_config()
+    hid = oos.get("holdout_id")
+    if not hid:
+        raise SystemExit(
+            "[oos] FAIL CLOSED: config ``oos.holdout_id`` is missing; a "
+            "token cannot be validated, so no holdout read is permitted."
+        )
+    return str(hid)
 
 
 def _window_reaches_holdout(until: str | None) -> bool:
-    """True when a ``load_bars`` window would include holdout bars.
-
-    A window reaches the holdout when ``until`` is unset (reads to the latest
-    bar) or its date is on/after the holdout start.
-    """
-    hs = holdout_start_date()
-    if hs is None:
-        return False
+    """True when an ``until`` read reaches the holdout (None = all data, or
+    until >= holdout_start).  Config errors propagate (fail-closed)."""
     if until is None:
         return True
-    try:
-        d = date.fromisoformat(str(until)[:10])
-    except (ValueError, TypeError):
-        # An unparseable `until` that is *claiming* to bound the window must not
-        # silently be treated as "before the holdout".
-        return True
-    return d >= hs
+    import datetime as _dt
+    hs = holdout_start_date()  # raises on missing/invalid config
+    return _dt.date.fromisoformat(str(until)[:10]) >= _dt.date.fromisoformat(hs)
 
 
-def ledger_has_consumption(strategy: str, holdout_id: str) -> bool:
-    """True when the committed ledger has a reservation for (strategy, holdout_id).
+def is_holdout_until(until: str | None) -> bool:
+    """Public helper for the loader: True when ``until`` is in the holdout
+    region, so the query should use the **exclusive** bound ``time < until``
+    (the OOS window ``until`` = ``holdout_end + 1 day`` is the first day
+    *after* the holdout; ``<`` excludes its bars entirely).  In-sample
+    ``until`` (< holdout_start) keeps the inclusive ``time <= until``.
+    Config errors propagate (fail-closed)."""
+    if not until:
+        return False
+    return _window_reaches_holdout(until)
 
-    Fail closed on a missing / wrong-version / corrupt ledger: a token with no
-    backing reservation must not open the holdout.
+
+def _load_ledger() -> dict:
+    path = _ledger_path()
+    if not path.exists():
+        return {"consumptions": []}
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _latest_status(strategy: str, holdout_id: str, records: list) -> str | None:
+    """The status of the most recent ledger record for (strategy, holdout).
+
+    Append-only semantics: a later ``voided`` record voids an earlier
+    ``reserved``; a later ``completed`` finalises it.  The last record wins.
+    Returns None when the pair has no records.
     """
-    p = _ledger_path()
-    if not p.exists():
-        return False
-    try:
-        data = json.loads(p.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return False
-    if not isinstance(data, dict) or data.get("version") != _LEDGER_VERSION:
-        return False
-    cons = data.get("consumptions")
-    if not isinstance(cons, list):
-        return False
-    want_s = _norm_id(strategy)
-    for rec in cons:
-        if not isinstance(rec, dict):
-            continue
-        if (_norm_id(rec.get("strategy", "")) == want_s
+    import strategy.registry as _reg
+    sid = _reg.norm_id(strategy)
+    latest = None
+    for rec in records:
+        if (_reg.norm_id(rec.get("strategy", "")) == sid
                 and rec.get("holdout_id") == holdout_id
                 and rec.get("status") in ("reserved", "completed", "voided")):
-            return True
-    return False
+            latest = rec["status"]
+    return latest
 
 
-#: Schema version of strategy/oos_ledger.json (kept in lockstep with
-#: ``run_matrix.OOS_LEDGER_VERSION`` so the two agree on what a valid ledger is).
-_LEDGER_VERSION = 1
+def ledger_has_active_reservation(strategy: str, holdout_id: str) -> bool:
+    """True when the *latest* status for (strategy, holdout) is ``reserved``
+    — i.e. an active reservation that grants a read.  ``completed`` and
+    ``voided`` grant NO read access (review §1.1: only ``reserved`` is
+    accepted; a borrowed name cannot re-read the holdout)."""
+    records = _load_ledger().get("consumptions", [])
+    return _latest_status(strategy, holdout_id, records) == "reserved"
 
 
-def create_token(strategy: str, holdout_id: str) -> OOSToken:
-    """Mint an :class:`OOSToken`. ``run_matrix`` calls this only *after*
-    ``_reserve_oos`` has appended a committed record, so every real token is
-    backed by the ledger."""
-    return OOSToken(strategy=strategy, holdout_id=holdout_id)
+def assert_access(until: str | None, token: "OOSToken | None" = None) -> None:
+    """Enforce the holdout gate for a data read ending at ``until``.
 
+    * In-sample read (``until`` strictly before ``holdout_start``) → allowed,
+      token neither needed nor accepted.
+    * Read reaching the holdout (``until`` None or >= ``holdout_start``):
+      a token is required and valid only when
+      (a) ``token.holdout_id`` equals the declared holdout id, and
+      (b) the *latest* ledger status for (token.strategy, holdout) is
+          ``reserved`` (an active reservation).
 
-def assert_access(until: str | None, token: OOSToken | None) -> None:
-    """Fail closed if a ``load_bars`` window reaches the holdout without a
-    valid token (the data-layer gate, see module docstring).
-
-    An in-sample window (``until`` strictly before the holdout) is always
-    allowed and needs no token. A window that reaches the holdout requires a
-    token that (a) references the current ``holdout_id`` and (b) has a matching
-    ledger reservation for the strategy — otherwise :class:`SystemExit`.
+    A missing or invalid holdout boundary in the config raises (fail-closed)
+    rather than allowing the read through.
     """
     if not _window_reaches_holdout(until):
         return
-
+    # A holdout read is being requested: the boundary MUST be well-formed
+    # (fail closed). For a concrete `until` the comparison above already did
+    # this; for `until=None` (read all) it did not — so force the check here
+    # too. A missing/invalid holdout_start raises rather than passing the read
+    # through (review §1.2).
+    holdout_start_date()
     if token is None:
-        hs = holdout_start_date()
         raise SystemExit(
-            "Refusing to load a window that reaches the OOS holdout "
-            f"(holdout_start={hs}): the request (until={until!r}) would include "
-            "holdout data, but no OOS token was supplied. Only a reserved "
-            "run_matrix OOS holdout run may read the holdout. (The gate now "
-            "lives in the data layer, not just run_matrix.)")
+            "[oos] HOLDOUT GATE: this read reaches the declared holdout "
+            f"(holdout_id={holdout_id()!r}); a data-layer OOS token is "
+            "required. Tokens are minted by run_matrix only after the "
+            "one-time holdout is reserved in the ledger."
+        )
+    try:
+        declared = holdout_id()
+    except SystemExit:
+        raise
+    if token.holdout_id != declared:
+        raise SystemExit(
+            f"[oos] HOLDOUT GATE: token is for a different holdout "
+            f"({token.holdout_id!r} vs declared {declared!r}); refusing the "
+            f"read."
+        )
+    if not ledger_has_active_reservation(token.strategy, token.holdout_id):
+        raise SystemExit(
+            f"[oos] HOLDOUT GATE: no *active* (status=reserved) ledger record "
+            f"for strategy={token.strategy!r} holdout={token.holdout_id!r}. "
+            "A token is only valid while a reservation is active (reserved); "
+            "completed or voided records grant no read access."
+        )
 
-    hid = _holdout_id()
-    if not hid or not getattr(token, "holdout_id", None):
-        raise SystemExit("OOS token present but no holdout id resolvable; "
-                         "refusing to load the holdout (fail closed).")
-    if token.holdout_id != hid:
+
+def create_token(strategy: str, holdout_id: str) -> OOSToken:
+    """Mint a token for ``strategy`` on ``holdout_id`` if the ledger allows it.
+
+    Requires an **active ``reserved`` ledger record** for
+    ``(strategy, holdout_id)`` — i.e. the one-time holdout must be reserved
+    (by :func:`run_matrix._reserve_oos`) *before* the data-layer token can be
+    minted.  This is the anti-fabrication check: a freely-constructed
+    ``OOSToken`` is useless without the backing reservation.
+
+    Config errors (missing oos block / holdout_start) propagate fail-closed.
+    """
+    records = _load_ledger().get("consumptions", [])
+    if _latest_status(strategy, holdout_id, records) != "reserved":
         raise SystemExit(
-            f"OOS token references holdout {token.holdout_id!r} but the current "
-            f"holdout is {hid!r}; refusing to load (fail closed).")
-    strat = getattr(token, "strategy", "")
-    if not ledger_has_consumption(strat, hid):
-        raise SystemExit(
-            "OOS token does not correspond to a ledger reservation for "
-            f"({strat!r}, {hid!r}); refusing to load the holdout (fail closed). "
-            "A fabricated token cannot open the holdout.")
+            f"[oos] token refused: no *active* (status=reserved) ledger record "
+            f"for strategy={strategy!r} holdout={holdout_id!r}. A token is "
+            "minted only after the one-time holdout is reserved in the ledger "
+            "by run_matrix (a completed or voided record grants no read access)."
+        )
+    return OOSToken(strategy, holdout_id)
 
 
 __all__ = [
     "OOSToken",
-    "create_token",
     "assert_access",
+    "create_token",
+    "holdout_id",
     "holdout_start_date",
-    "ledger_has_consumption",
+    "is_holdout_until",
+    "ledger_has_active_reservation",
 ]

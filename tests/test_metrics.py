@@ -508,15 +508,27 @@ def test_oos_gate_refuses_after_any_consumption_walk_all_records(tmp_path, monke
     """Walking the WHOLE ledger: once s01 consumed the holdout, s01 is refused
     — even with 3+ records (no chain-walk 'check the wrong record' bug)."""
     import strategy.run_matrix as rm
-    _finalize_fixture(tmp_path, monkeypatch)
+    paths = _finalize_fixture(tmp_path, monkeypatch)
+    ledger_p = paths["ledger"]
     rm._check_oos_once("s01")          # first run: allowed
     rm._reserve_oos("s01", {"content_hash": 1}, {"n": 1})
     with pytest.raises(SystemExit, match="already consumed holdout oos1"):
         rm._check_oos_once("s01")
-    # Append more records (e.g. a new-holdout reservation) and s01 is STILL
-    # refused for oos1 — every record is checked, not just the latest.
-    rm._reserve_oos("s02", {"content_hash": 2}, {"n": 2})
-    rm._reserve_oos("s02", {"content_hash": 3}, {"n": 3})
+    # Append more records (e.g. a completed record plus a different strategy's
+    # reservation on a *later* holdout) and s01 is STILL refused for oos1 —
+    # every record is walked, not just the latest. (Records are appended
+    # directly to the ledger: a second strategy cannot reserve the same
+    # D1=1 holdout, so `_reserve_oos` is not a realistic way to grow the list.)
+    data = json.loads(ledger_p.read_text(encoding="utf-8"))
+    data["consumptions"] += [
+        {"strategy": "S01", "holdout_id": "oos1", "holdout_start": "2025-08-01",
+         "holdout_end": "2026-10-22", "reserved_at": "2026-10-29",
+         "status": "completed"},
+        {"strategy": "S02", "holdout_id": "oos2", "holdout_start": "2027-01-01",
+         "holdout_end": "2027-12-31", "reserved_at": "2027-01-02",
+         "status": "reserved"},
+    ]
+    ledger_p.write_text(json.dumps(data), encoding="utf-8")
     with pytest.raises(SystemExit, match="already consumed holdout oos1"):
         rm._check_oos_once("s01")
 
@@ -903,21 +915,222 @@ def test_oos_token_backed_by_ledger_allows_holdout(tmp_path, monkeypatch):
 
 
 def test_fabricated_token_without_ledger_record_refuses(tmp_path, monkeypatch):
-    """A token object with no backing ledger record cannot open the holdout."""
+    """A token object with no backing ledger record cannot open the holdout
+    (only an active `reserved` reservation grants read access)."""
     import strategy.oos_token as ot
     _oos_env(tmp_path, monkeypatch)  # empty ledger
-    tok = ot.create_token("s01", "oos1")
-    with pytest.raises(SystemExit, match="ledger"):
+    tok = ot.OOSToken("s01", "oos1")  # public construction, no ledger backing
+    with pytest.raises(SystemExit, match="active"):
         ot.assert_access("2026-10-23", tok)
+    # create_token itself also refuses to mint without a reserved record.
+    with pytest.raises(SystemExit, match="reserved"):
+        ot.create_token("s01", "oos1")
 
 
 def test_oos_token_wrong_holdout_id_refuses(tmp_path, monkeypatch):
     """A token for a different holdout id does not match the current one."""
     import strategy.oos_token as ot
     _oos_env(tmp_path, monkeypatch, holdout_id="oos1")
-    tok = ot.create_token("s01", "oos2")
+    tok = ot.OOSToken("s01", "oos2")  # deliberately not backed by any ledger record
     with pytest.raises(SystemExit, match="holdout"):
         ot.assert_access("2026-10-23", tok)
+
+
+def test_completed_token_refuses_read(tmp_path, monkeypatch):
+    """A token whose record is `completed` grants NO read access (only an
+    active `reserved` reservation opens the holdout; review §1.1: a borrowed
+    name must not be able to re-read the holdout after the first
+    consumption)."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch, ledger_consumptions=[
+        {"strategy": "s01", "holdout_id": "oos1",
+         "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+         "reserved_at": "2026-10-29", "status": "completed"}])
+    tok = ot.OOSToken("s01", "oos1")  # public construction, no ledger backing
+    with pytest.raises(SystemExit, match="active"):
+        ot.assert_access("2026-10-23", tok)
+
+
+def test_voided_token_refuses_read(tmp_path, monkeypatch):
+    """A token whose record is `voided` also grants NO read access (a void
+    means the holdout is not yet reserved for anyone)."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch, ledger_consumptions=[
+        {"strategy": "s01", "holdout_id": "oos1",
+         "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+         "reserved_at": "2026-10-29", "status": "voided",
+         "reason": "crash after reserve, no result read"}])
+    tok = ot.OOSToken("s01", "oos1")
+    with pytest.raises(SystemExit, match="active"):
+        ot.assert_access("2026-10-23", tok)
+
+
+def test_missing_holdout_start_is_config_error(tmp_path, monkeypatch):
+    """A config that omits `oos.holdout_start` is a *config error* — the
+    gate must fail closed (raise) rather than passing the read through
+    (review §1.2: deleting/mis-typing this field must not disable the gate)."""
+    import strategy.oos_token as ot
+    cfg = tmp_path / "strategies.yml"
+    cfg.write_text(
+        "oos:\n"
+        "  holdout_id: 'oos1'\n"
+        "  holdout_end: '2026-10-22'\n"
+        "windows:\n  oos: {since: '2025-08-01', until: '2026-10-23'}\n")
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text(
+        json.dumps({"version": 1, "consumptions": [
+            {"strategy": "s01", "holdout_id": "oos1",
+             "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+             "status": "reserved"}]}), encoding="utf-8")
+    monkeypatch.setattr(ot, "_config_path", lambda: cfg)
+    monkeypatch.setattr(ot, "_ledger_path", lambda: ledger)
+    with pytest.raises(SystemExit, match="FAIL CLOSED"):
+        ot.assert_access(None, ot.OOSToken("s01", "oos1"))
+
+
+def test_missing_config_file_is_config_error(tmp_path, monkeypatch):
+    """A missing config file is a *config error* — the gate must fail
+    closed (raise), not pass through."""
+    import strategy.oos_token as ot
+    cfg = tmp_path / "absent.yml"
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text(json.dumps({"version": 1, "consumptions": []}),
+                      encoding="utf-8")
+    monkeypatch.setattr(ot, "_config_path", lambda: cfg)
+    monkeypatch.setattr(ot, "_ledger_path", lambda: ledger)
+    with pytest.raises(SystemExit, match="FAIL CLOSED"):
+        ot.assert_access(None, ot.OOSToken("s01", "oos1"))
+
+
+def test_holdout_read_window_at_boundary_needs_token(tmp_path, monkeypatch):
+    """A read ending exactly at holdout_start is a holdout read (token
+    required); a read ending just before holdout_start is in-sample (no
+    token needed) — the boundary is `until >= holdout_start`."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch)  # holdout_start=2025-08-01, empty ledger
+    with pytest.raises(SystemExit):
+        ot.assert_access("2025-08-01", None)          # == holdout_start
+    with pytest.raises(SystemExit):
+        ot.assert_access("2025-08-02", None)          # > holdout_start
+    ot.assert_access("2025-07-31", None)              # < holdout_start (ok)
+
+
+def test_load_bars_half_open_excludes_until_day(tmp_path, monkeypatch):
+    """A holdout read uses `time < until` (half-open), so the first bar of
+    the `until` day is excluded (review §3.2: `time <= until` would include
+    one boundary bar the engine acts on at the next open). In-sample reads
+    keep the inclusive `time <= until`."""
+    import pandas as pd
+    import strategy.oos_token as ot
+    import strategy.strategy_lib as sl
+    _oos_env(tmp_path, monkeypatch, ledger_consumptions=[
+        {"strategy": "s01", "holdout_id": "oos1",
+         "holdout_start": "2025-08-01", "holdout_end": "2026-10-22",
+         "status": "reserved"}])
+    tok = ot.OOSToken("s01", "oos1")
+    p = tmp_path / "mini.parquet"
+    times = [
+        "2025-07-30 00:00:00",   # in-sample (before holdout_start)
+        "2025-08-01 00:00:00",   # holdout_start (first holdout bar)
+        "2025-08-02 00:00:00",   # inside the holdout
+    ]
+    df = pd.DataFrame({
+        "instrument": ["EUR_USD"] * 3,
+        "time": pd.to_datetime(times),
+        "open": [1.0, 2.0, 3.0],
+        "close": [1.05, 2.05, 3.05],
+        "is_gap_bar": [0, 0, 0],
+        "is_near_market_close": [0, 0, 0],
+        "rsi_24": [50.0, 50.0, 50.0],
+    })
+    df.to_parquet(p)
+
+    # Holdout read: until=2025-08-02 (exclusive) -> only bars before 08-02 00:00.
+    res = sl.load_bars(str(p), "EUR_USD", feature_cols=["rsi_24"],
+                       since="2025-08-01", until="2025-08-02", oos_token=tok)
+    assert list(res["time"].dt.strftime("%Y-%m-%d")) == [
+        "2025-08-01"], (
+        f"half-open holdout read should include only 2025-08-01; got "
+        f"{list(res['time'].dt.strftime('%Y-%m-%d'))}")
+
+    # In-sample read: until=2025-07-30 (inclusive) -> bars up to 07-30.
+    res2 = sl.load_bars(str(p), "EUR_USD", feature_cols=["rsi_24"],
+                        since="2025-07-01", until="2025-07-30")
+    assert list(res2["time"].dt.strftime("%Y-%m-%d")) == ["2025-07-30"]
+
+
+def test_reserve_oos_concurrent_only_one_wins(tmp_path, monkeypatch):
+    """P0: two concurrent reservations must not both win — the ledger lock
+    serialises the check→validate→append→save transaction, so exactly one of
+    the two reservations succeeds and the other sees the D1 cap / once-per
+    lock (review §3.1: the old code had no lock and both could pass)."""
+    import threading
+    import strategy.run_matrix as rm
+    import strategy.registry as reg
+    cfg = tmp_path / "strategies.yml"
+    cfg.write_text(
+        "oos:\n  holdout_id: 'oos1'\n  holdout_start: '2025-08-01'\n"
+        "  holdout_end: '2026-10-22'\n  max_strategies_per_holdout: 1\n"
+        "windows:\n  oos: {since: '2025-08-01', until: '2026-10-23'}\n"
+        "strategies:\n  S-01: {timeframe: '5m'}\n  S-02: {timeframe: '1h'}\n")
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text(json.dumps(
+        {"version": 1, "consumptions": []}), encoding="utf-8")
+    monkeypatch.setattr(rm, "CONFIG_PATH", cfg)
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: ledger)
+
+    results: list[dict] = {"ok": 0, "err": 0}
+    barrier = threading.Barrier(2)
+
+    def _reserve(sid):
+        barrier.wait()
+        try:
+            rm._reserve_oos(sid, {"n": 1}, {"x": 1})
+            results["ok"] += 1
+        except SystemExit:
+            results["err"] += 1
+
+    threads = [threading.Thread(target=_reserve, args=(sid,))
+               for sid in ("s01", "s02")]
+    for t in threads: t.start()
+    for t in threads: t.join()
+
+    assert results["ok"] == 1 and results["err"] == 1, results
+    final = json.loads(ledger.read_text(encoding="utf-8"))
+    assert len(final["consumptions"]) == 1
+
+
+def test_rsi_1h_accepts_oos_token_kwarg(tmp_path, monkeypatch):
+    """S-02 regression (review §2, "the one lib that was missed"): the old
+    `load_rsi_1h_bars()` had **no** `oos_token` parameter but the caller
+    passed one, so `run_matrix --strategy s02` and the S-02 CLI raised
+    `TypeError: unexpected keyword argument 'oos_token'` *before* any data was
+    read (in-sample included). This test calls the loader with the `oos_token`
+    kwarg — the exact call that used to raise — so it fails if the parameter
+    is ever dropped again."""
+    import pandas as pd
+    import strategy.oos_token as ot
+    import strategy.strategy_rsi_1h_lib as s02
+    _oos_env(tmp_path, monkeypatch)  # holdout_start=2025-08-01, empty ledger
+    p = tmp_path / "mini.parquet"
+    df = pd.DataFrame({
+        "instrument": ["EUR_USD"] * 3,
+        "time": pd.to_datetime([f"2025-07-{d:02d} 00:00:00" for d in (1, 2, 3)]),
+        "open": [1.0, 1.1, 1.2],
+        "close": [1.05, 1.15, 1.25],
+        "is_gap_bar": [0, 0, 0],
+        "is_near_market_close": [0, 0, 0],
+        "rsi_24": [50.0, 40.0, 30.0],
+    })
+    df.to_parquet(p)
+    # In-sample read, no token — must NOT raise the old TypeError.
+    res = s02.load_rsi_1h_bars(str(p), "EUR_USD", since="2025-07-01",
+                               until="2025-07-31", oos_token=None)
+    assert len(res) == 3
+    # Holdout read, no token — the gate must refuse (not a TypeError).
+    with pytest.raises(SystemExit, match="HOLDOUT GATE|token"):
+        s02.load_rsi_1h_bars(str(p), "EUR_USD", since=None, until=None,
+                             oos_token=None)
 
 
 # ---------------------------------------------------------------------------

@@ -1083,14 +1083,21 @@ def _ledger_records(p: Path) -> list[dict] | None:
 
 
 def _rec_key(rec: dict) -> tuple | None:
-    """A comparable identity for a ledger consumption record."""
+    """A comparable identity for a ledger consumption record.
+
+    ``status`` is deliberately **not** part of the identity (follow-up review
+    §1.3 / §3.4): a legal ``reserved → voided`` transition keeps the same
+    (strategy, holdout_id, window) identity, so the append-only diff must not
+    treat the status change as a "record removal". The permitted status
+    transitions are enforced separately in L1 (a terminal ``completed`` or
+    ``voided`` record can never be re-opened).
+    """
     if not isinstance(rec, dict):
         return None
     return (norm_id(rec.get("strategy", "")),
             str(rec.get("holdout_id", "")),
             str(rec.get("holdout_start", "")),
-            str(rec.get("holdout_end", "")),
-            rec.get("status"))
+            str(rec.get("holdout_end", "")))
 
 
 def _norm_id_of(s: str) -> str:
@@ -1101,9 +1108,12 @@ def check_oos_end_field(cfg: dict, rep: Report, where: str) -> None:
     """L0 — the holdout end has a single source of truth.
 
     ``windows.oos.until`` must equal ``oos.holdout_end`` + 1 day. The loader
-    is inclusive of ``until`` (a date-only bound is read at UTC midnight), so
-    the last fully-closed holdout day is ``holdout_end`` and ``until`` is the
-    day after it. Two hand-edited fields previously diverged (and the config
+    (``strategy/strategy_lib.py::load_bars``) applies the holdout bound as a
+    **half-open** interval ``time < until`` (a date-only bound is read at UTC
+    midnight), so ``until = holdout_end + 1 day`` means "include every bar of
+    ``holdout_end`` and exclude the 00:00 bar of ``until``" — the last
+    fully-closed holdout day is ``holdout_end`` and ``until`` is the first day
+    after it. Two hand-edited fields previously diverged (and the config
     comment was wrong about which bars were included); this check makes them
     agree or fails.
     """
@@ -1173,17 +1183,80 @@ def check_oos_ledger(root: Path, trials: list[dict], rep: Report,
                      f"base ledger {base_ledger} is not valid JSON with a "
                      f"`consumptions` list — cannot verify append-only (fail closed)")
             return
-        cur_keys = {_rec_key(r) for r in recs if _rec_key(r) is not None}
+        # Index current records by identity (status NOT in the key, so a
+        # reserved -> voided status change is not a "removal").
+        cur_by_key: dict[tuple, list[dict]] = {}
+        for r in recs:
+            k = _rec_key(r)
+            if k is not None:
+                cur_by_key.setdefault(k, []).append(r)
         for br in base_recs:
             k = _rec_key(br)
             if k is None:
                 continue
-            if k not in cur_keys:
+            matches = cur_by_key.get(k, [])
+            if not matches:
                 rep.fail("L1", "strategy/oos_ledger.json",
                          f"append-only violation: the base ledger's record "
-                         f"({k[0]!r}, {k[1]!r}, {k[2]}..{k[3]}, {k[4]!r}) is "
-                         f"missing from the committed ledger. A holdout "
-                         f"consumption may not be removed.")
+                         f"({k[0]!r}, {k[1]!r}, {k[2]}..{k[3]}) is missing "
+                         f"from the committed ledger. A holdout consumption may "
+                         f"not be removed.")
+                continue
+            base_status = br.get("status")
+            cur_statuses = {m.get("status") for m in matches}
+            if base_status == "completed":
+                # Terminal: once completed it stays completed (no re-open).
+                if "completed" not in cur_statuses:
+                    rep.fail("L1", "strategy/oos_ledger.json",
+                             f"append-only violation: record "
+                             f"({k[0]!r}, {k[1]!r}) was `completed` in the base "
+                             f"ledger but no `completed` record remains "
+                             f"(current statuses {sorted(str(s) for s in cur_statuses)}). "
+                             f"A completed holdout is terminal.")
+            elif base_status == "voided":
+                # Terminal void: stays voided. Re-opening to reserved/completed
+                # (re-running a holdout that was voided) is prohibited.
+                if "voided" not in cur_statuses:
+                    rep.fail("L1", "strategy/oos_ledger.json",
+                             f"append-only violation: record "
+                             f"({k[0]!r}, {k[1]!r}) was `voided` in the base "
+                             f"ledger but no `voided` record remains "
+                             f"(current statuses {sorted(str(s) for s in cur_statuses)}). "
+                             f"A voided reservation is terminal — re-running a "
+                             f"voided holdout is prohibited.")
+            # reserved -> reserved | completed | voided are all legal (the
+            # record was consumed or later invalidated by the human flow).
+
+    # ---- L1b: a `voided` record must carry a written reason ---------------
+    # (follow-up review §1.3: "看到结果再 void 重跑" is a backdoor — a void is
+    #  only valid with a written, auditable reason AND no OOS output for the
+    #  strategy; enforced whether or not a baseline ledger was supplied.)
+    for r in recs:
+        if isinstance(r, dict) and r.get("status") == "voided":
+            reason = str(r.get("reason") or "").strip()
+            if not reason:
+                rep.fail("L1", "strategy/oos_ledger.json",
+                         f"voided ledger record ({r.get('strategy')!r}, "
+                         f"{r.get('holdout_id')!r}) has no `reason`. A void "
+                         f"is only valid with a written reason documenting "
+                         f"the infrastructure failure and that no holdout "
+                         f"result was read.")
+            # L1c: a void is only valid when NO OOS output exists for the
+            # strategy — voiding a reservation that produced a result and
+            # re-running is a backdoor.
+            sid = norm_id(r.get("strategy", ""))
+            out_dir = root / "strategy" / "results" / f"{sid}_oos"
+            if out_dir.exists():
+                n_out = sum(1 for f in out_dir.iterdir()
+                            if f.is_file() and f.suffix == ".json")
+                if n_out > 0:
+                    rep.fail("L1", "strategy/oos_ledger.json",
+                             f"voided ledger record ({r.get('strategy')!r}, "
+                             f"{r.get('holdout_id')!r}) has OOS output under "
+                             f"{out_dir.relative_to(root)}/ ({n_out} result "
+                             f"file(s)). A void is only valid when the "
+                             f"reservation produced NO result — voiding a "
+                             f"result that was already read is a backdoor.")
 
     # ---- L2: ledger <-> trial_log agree -----------------------------------
     def _oos_trials_for(sid_norm: str) -> list[dict]:

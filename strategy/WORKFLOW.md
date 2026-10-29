@@ -229,39 +229,41 @@ strategy, and the gate reserves it *before* loading — so a plain bug in the
 run (a missing column, an OOM, a broken rule) would burn the only holdout and
 produce no result. Follow this protocol:**
 
-1. **Preflight — prove the pipeline is healthy first.** Run the strategy once
-   on a small in-sample window so any infrastructure failure surfaces *before*
-   the holdout is touched:
+1. **Preflight — mandatory by default.** `run_matrix` for an OOS window runs
+   one cheap in-sample cell (EUR_USD/full@2bps) through the *same* code path
+   **before** reserving the holdout, so a plain bug (missing column, OOM,
+   broken rule) fails here and the holdout is **not** consumed:
 
    ```bash
-   python strategy/run_matrix.py --strategy <id> --windows full --timeframe <tf>
-   # OR, for the full OOS run, let run_matrix do it for you (recommended):
+   python strategy/run_matrix.py --strategy <id> --windows oos --timeframe <tf>
+   # Preflight is automatic for OOS runs. To opt out (only if you have already
+   # verified the pipeline independently, e.g. by running the full window):
    python strategy/run_matrix.py --strategy <id> --windows oos --timeframe <tf> \
-       --preflight
+       --skip-preflight
    ```
-
-   `--preflight` runs one cheap in-sample cell (EUR_USD/full@2bps) through the
-   *same* code path before reserving. If it fails, the holdout is **not**
-   consumed and you can fix and re-run freely.
 
 2. **Only then run the holdout** (the reservation is appended to
    `strategy/oos_ledger.json` *before* the bars are read, and the data layer
-   only releases holdout rows to a token backed by that reservation — see
-   `strategy/oos_token.py`). A `reserved` record blocks every re-run until it is
-   `completed` or `voided`.
+   only releases holdout rows to a token backed by that **active `reserved`**
+   reservation — see `strategy/oos_token.py`). A `reserved` record blocks every
+   re-run until it is `completed` or `voided`; a `completed` or `voided` record
+   grants **no** read access (the token is only valid while a reservation is
+   active).
 
 3. **Invalidating a crashed reservation (the "void" flow).** If the run crashed
    *after* the reservation — the ledger shows a `reserved` record and **no
-   holdout number was ever seen** — a human may mark it `voided` so the holdout
-   is not permanently burned. This is a **human, reviewed** ledger edit:
+   holdout number was ever seen** — a human may void it so the holdout is not
+   permanently burned. This is a **human, reviewed** ledger edit:
 
-   - Change only the record's `"status": "reserved"` → `"voided"` (keep the
-     `fingerprint`/`manifest` as the audit trail of what was attempted).
-   - Commit with a message explaining the infrastructure failure and that no
-     holdout number was observed.
-   - The gate skips `voided` records (they never consumed the holdout), so the
-     strategy — or, for D1=1, *any* strategy — may now legitimately re-run the
-     holdout.
+   - Set the record's `"status"` from `"reserved"` to `"voided"` and add a
+     non-empty `"reason"` field documenting the infrastructure failure and that
+     **no** holdout result was read (check L1b fails a void without a reason).
+   - Keep the `fingerprint`/`manifest` as the audit trail of what was attempted.
+   - The `reserved → voided` change is append-only-safe: the ledger's record
+     identity is `(strategy, holdout_id, window)`, **not** the status, so this
+     transition does not count as a record removal (check L1's status
+     state-machine permits `reserved → voided`, and forbids re-opening a
+     `completed`/`voided` record).
    - **Never** void a reservation that produced a result (that would re-open
      data you already saw — that is re-tuning and must open a new S-NN), and
      **never** delete records from the ledger (append-only; CI enforces the
