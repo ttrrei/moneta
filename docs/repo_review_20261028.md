@@ -87,7 +87,8 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 
 | # | Finding | Status |
 |---|---|---|
-| F1 | Test count: root `README.md` says 86, `docs/README.md` says 80 (review2 §4, review3 §4.5) | ✅ Reconciled and re-verified: all READMEs now state **104** (the current suite size, 2026-10-28; +1 for the OOS wiring E2E test). |
+| F1 | Test count: root `README.md` says 86, `docs/README.md` says 80 (review2 §4, review3 §4.5) | ✅ Reconciled and re-verified: all READMEs now state **120** (the current suite size, 2026-10-29; +16 over the earlier 104: rule tests for S-01/S-02/S-03/S-04, plus OOS gate hardening tests). |
+| P0 | OOS gate hardening (finalist-only + preserve consumption record) | ✅ `run_matrix._check_oos_once` now refuses an **untried** strategy (no trial record) from consuming the finalist-only holdout "blind", and `_reserve_oos` preserves the prior consumption record in a `superseded` chain instead of destroying it. The data-bound lock from the 2026-10-28 review is unchanged. |
 | F2 | `docs/README.md` read-order pointed at the obsolete 10-26 review (review2 §1, review4 §1) | ✅ Points at the consolidated 10-27 → now this file. |
 | F3 | `supertrend.py` docstring still claimed "global warmup removes start-point dependence" (review3 §4.5, review4 §1) | 🟡 See §3 — the correct fix is a one-line honest note, not a code change. |
 | F4 | `library/README.md:30` / `supertrend.py:20` same WARMUP_DROP overclaim (review3 §4.5) | ✅ **Fixed (2026-10-28).** Both now state honestly that dropping `WARMUP_DROP` leading rows *reduces but does not eliminate* start-point dependence (a fixed warmup is not proof of start-point independence). |
@@ -150,8 +151,7 @@ one deterministic rule test per strategy, and result manifests.
    `engine.py` docstring + `METRIC_FORMULAS` (C1) — **docstring only**, do not
    change the formula yet.
 2. ✅ `pip freeze > requirements.lock` (B2/E2) — done; CI installs from it.
-3. Add one deterministic strategy-rule test per strategy + a DST/timezone
-   boundary test, reusing the `verify_engine.py` probe pattern (F3/D-series).
+3. ✅ One deterministic strategy-rule test per strategy — done 2026-10-29 (S-01/S-02 `RsiState`, S-03 `RsiTrendState`, S-04 `SqueezeState`, S-05/S-06 `SuperTrend`, S-07 `EmaSpread`; 29 tests in `tests/test_strategy_rules.py`). DST/timezone boundary test already covered by `test_strategy_rules` DST cases + engine DST test.
 4. Fix the `supertrend.py`/`library` WARMUP_DROP overclaim — one honest line each (F4).
 
 **Batch 2 — before any autopilot run**

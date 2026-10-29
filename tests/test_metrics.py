@@ -319,6 +319,33 @@ def test_run_matrix_oos_once_lock(tmp_path, monkeypatch):
     rm._check_oos_once("s01")  # must not raise
 
 
+def test_run_matrix_oos_refuses_untried_strategy(tmp_path, monkeypatch):
+    """A strategy with no trial record at all is not a finalist and must not
+    consume the (finalist-only) OOS holdout "blind" (review P0). A strategy
+    that has ANY trial record (in-sample or prior) is in the pipeline and may
+    proceed — a rejected in-sample verdict in particular may be confirmed or
+    overridden by the OOS."""
+    import strategy.run_matrix as rm
+
+    log = tmp_path / "trial_log.md"
+    # S-09: no trial rows for it at all -> not a finalist -> refused.
+    log.write_text(
+        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
+        "|---|------|-------------|------------|--------|---------|-----|---|\n"
+        "| 1 | 2026-10-26 | S-10 | hyp | full | accepted | y | 3 |\n")
+    monkeypatch.setattr(rm, "TRIAL_LOG", log)
+    with pytest.raises(SystemExit, match="not a finalist"):
+        rm._check_oos_once("s09")
+
+    # S-09: has an in-sample row (even a rejected one) -> in the pipeline ->
+    # allowed to proceed to the OOS decision.
+    log.write_text(
+        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
+        "|---|------|-------------|------------|--------|---------|-----|---|\n"
+        "| 1 | 2026-10-26 | S-09 | hyp | full | rejected | x | 0 |\n")
+    rm._check_oos_once("s09")  # must not raise
+
+
 def test_oos_data_bound_lock(tmp_path, monkeypatch):
     """Data-bound OOS lock (review 2026-10-28 item 6): once a strategy has
     consumed a specific dataset, it cannot be re-consumed on that same data —
@@ -365,8 +392,30 @@ def test_oos_data_bound_lock(tmp_path, monkeypatch):
         rm._check_oos_once("S-01", fp_a, {})
 
 
+def test_oos_reserve_preserves_prior_consumption_record(tmp_path, monkeypatch):
+    """Reserving a new dataset keeps the prior consumption record (audit chain)."""
+    import strategy.run_matrix as rm
+
+    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
+
+    base = {"path": "x.parquet", "holdout_start": "2025-08-01", "rows": 5,
+            "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2025-08-02 00:00:00+00:00"}
+    rm._reserve_oos("s02", {**base, "content_hash": 777}, {"k": 1})
+    # A genuinely new dataset (different content) is allowed — but the old
+    # consumption record must survive, not be destroyed.
+    rm._reserve_oos("s02", {**base, "content_hash": 999}, {"k": 2})
+    ledger = rm._load_oos_ledger()
+    assert list(ledger.keys()) == ["S02"]
+    assert ledger["S02"]["manifest"] == {"k": 2}          # latest is current
+    assert ledger["S02"]["fingerprint"]["content_hash"] == 999
+    prev = ledger["S02"]["superseded"]
+    assert prev is not None and prev["manifest"] == {"k": 1}
+    assert prev["fingerprint"]["content_hash"] == 777       # prior preserved
+
+
 def test_oos_reserve_is_idempotent_for_same_data(tmp_path, monkeypatch):
-    """Reserving twice on the same data keeps a single ledger entry (no growth)."""
+    """Reserving the *same* data twice keeps a single ledger entry (no growth)."""
     import strategy.run_matrix as rm
 
     monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")
@@ -376,7 +425,7 @@ def test_oos_reserve_is_idempotent_for_same_data(tmp_path, monkeypatch):
           "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2025-08-02 00:00:00+00:00",
           "content_hash": 777}
     rm._reserve_oos("s02", fp, {"k": 1})
-    rm._reserve_oos("s02", fp, {"k": 2})  # supersede, not append
+    rm._reserve_oos("s02", fp, {"k": 2})  # same data, re-reserved
     ledger = rm._load_oos_ledger()
     assert list(ledger.keys()) == ["S02"]
     assert ledger["S02"]["manifest"] == {"k": 2}

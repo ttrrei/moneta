@@ -264,8 +264,12 @@ def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> None:
         "manifest": manifest,
         "reserved_at": date.today().isoformat(),
         "status": "reserved",
+        # Preserve the prior consumption record instead of destroying it
+        # (review 2026-10-29 P0: 保留每次 OOS 数据集的消费记录). The top-level
+        # key still points at the latest record; the full chain lives in
+        # `superseded`, so every dataset this strategy has consumed is auditable.
+        "superseded": ledger.get(sid),
     }
-    # Keep one record per (strategy, data). A new dataset supersedes the old.
     ledger[sid] = entry
     _save_oos_ledger(ledger)
 
@@ -299,7 +303,27 @@ def _check_oos_once(strategy: str, fingerprint: dict | None = None,
                     f"in strategy/trial_log.md ({line.strip()}). Re-running the holdout "
                     f"is prohibited — open a new strategy ID instead.")
 
-    # (2) data-bound lock — refuses a re-consumption of the same dataset.
+        # (2) finalist-only guard (review 2026-10-29 P0): the holdout is a
+        #     finalist-only resource (`oos.usage = finalist_only_once`). A
+        #     strategy with NO trial record at all has never been evaluated
+        #     and must not consume the one-shot holdout "blind" (data
+        #     snooping). Any in-sample or prior record counts as being in the
+        #     pipeline; a rejected in-sample verdict may still be
+        #     confirmed/overridden by the OOS. Skipped when trial_log is absent.
+        has_any_trial_row = False
+        for line in body.splitlines():
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            if len(cells) >= 6 and cells[0].isdigit() and cells[2].replace("-", "") == wanted:
+                has_any_trial_row = True
+                break
+        if not has_any_trial_row:
+            raise SystemExit(
+                f"Strategy {strategy.upper()} has no trial record — it is not a "
+                f"finalist. The OOS holdout is finalist-only "
+                f"(`oos.usage = finalist_only_once`) and may not be consumed by "
+                f"an untried strategy. Run the in-sample matrix first.")
+
+    # (3) data-bound lock — refuses a re-consumption of the same dataset.
     if fingerprint is None:
         return
     ledger = _load_oos_ledger()

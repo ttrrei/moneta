@@ -22,6 +22,9 @@ from pipeline.indicators import SessionAnchor, _utc_offset_for
 from strategy.strategy_supertrend_lib import SupertrendState
 from strategy.strategy_ema_spread_lib import EmaSpreadState
 from strategy.strategy_regime_trend_lib import RegimeTrendState
+from strategy.strategy_rsi_lib import RsiState
+from strategy.strategy_rsi_trend_lib import RsiTrendState
+from strategy.strategy_squeeze_lib import SqueezeState
 
 
 # ---------------------------------------------------------------------------
@@ -136,6 +139,143 @@ def test_regime_trend_is_nan_safe():
     assert rt.desired_position(3) == -1  # bar2 hold -> short
     assert rt.desired_position(4) == -1  # bar3 NaN -> keep short
     assert rt.desired_position(5) == -1  # bar4 no flip -> keep short
+
+
+# ---------------------------------------------------------------------------
+# RsiState (S-01/S-02): long when the *previous* closed bar's RSI-24 < 30,
+# exit when RSI > 55. Long-only, NaN-safe, no lookahead.
+# ---------------------------------------------------------------------------
+
+def test_rsi_is_flat_on_bar_zero():
+    r = RsiState(np.array([25.0, 25.0]))
+    assert r.desired_position(0) == 0  # no previous bar -> flat
+
+
+def test_rsi_enters_below_30_and_exits_above_55():
+    # position at bar i decided from RSI on bar i-1
+    r = RsiState(np.array([50.0, 25.0, 40.0, 60.0]))
+    assert r.desired_position(1) == 0   # bar0 50  -> flat
+    assert r.desired_position(2) == 1   # bar1 25 (<30) -> long
+    assert r.desired_position(3) == 1   # bar2 40 (30-55) -> hold long
+    assert r.desired_position(4) == 0   # bar3 60 (>55) -> exit flat
+
+
+def test_rsi_boundary_is_strict():
+    # 30.0 is not < 30.0 (no entry); 55.0 is not > 55.0 (no exit)
+    r = RsiState(np.array([50.0, 30.0, 29.0, 55.0, 56.0]))
+    assert r.desired_position(1) == 0   # bar0 50
+    assert r.desired_position(2) == 0   # bar1 30.0 -> not <30 -> flat
+    assert r.desired_position(3) == 1   # bar2 29.0 -> <30 -> long
+    assert r.desired_position(4) == 1   # bar3 55.0 -> not >55 -> hold
+    assert r.desired_position(5) == 0   # bar4 56.0 -> >55 -> exit
+
+
+def test_rsi_is_nan_safe():
+    r = RsiState(np.array([np.nan, 25.0, np.nan, 60.0]))
+    assert r.desired_position(1) == 0    # bar0 NaN -> flat
+    assert r.desired_position(2) == 1    # bar1 25 -> long
+    assert r.desired_position(3) == 1    # bar2 NaN -> hold long
+    assert r.desired_position(4) == 0    # bar3 60 -> exit
+
+
+def test_rsi_is_long_only():
+    r = RsiState(np.array([50.0, 25.0, 25.0]))
+    assert all(p in (0, 1) for p in [r.desired_position(i) for i in range(3)])
+
+
+# ---------------------------------------------------------------------------
+# RsiTrendState (S-03): long when prev bar RSI-24 < 30 AND close > EMA-24;
+# exit when prev bar RSI > 55. The trend filter must gate the entry.
+# ---------------------------------------------------------------------------
+
+def test_rsi_trend_is_flat_on_bar_zero():
+    s = RsiTrendState(np.array([40.0]), np.array([100.0]), np.array([101.0]))
+    assert s.desired_position(0) == 0
+
+
+def test_rsi_trend_requires_oversold_and_uptrend():
+    # entry needs BOTH rsi<30 AND close>ema; either alone must not enter
+    rsi = np.array([50.0, 25.0, 25.0, 60.0])
+    ema = np.array([100.0, 100.0, 100.0, 100.0])
+    close = np.array([101.0, 99.0, 101.0, 101.0])  # bar1 below ema, bar2 above
+    s = RsiTrendState(rsi, ema, close)
+    assert s.desired_position(1) == 0   # bar0 50 -> flat
+    assert s.desired_position(2) == 0   # bar1 rsi25<30 BUT close99<ema100 -> no entry
+    assert s.desired_position(3) == 1   # bar2 rsi25<30 AND close101>ema100 -> long
+    assert s.desired_position(4) == 0   # bar3 rsi60>55 -> exit
+
+
+def test_rsi_trend_is_nan_safe():
+    s = RsiTrendState(
+        np.array([np.nan, 25.0, np.nan, 60.0]),
+        np.array([100.0, 100.0, 100.0, 100.0]),
+        np.array([101.0, 101.0, 101.0, 101.0]))
+    assert s.desired_position(1) == 0   # bar0 NaN -> flat
+    assert s.desired_position(2) == 1   # bar1 rsi25<30, close>ema -> long
+    assert s.desired_position(3) == 1   # bar2 NaN -> hold
+    assert s.desired_position(4) == 0   # bar3 rsi60>55 -> exit
+
+
+def test_rsi_trend_is_long_only():
+    s = RsiTrendState(np.array([50.0, 25.0, 25.0]),
+                      np.array([100.0, 100.0, 100.0]),
+                      np.array([101.0, 101.0, 101.0]))
+    assert all(p in (0, 1) for p in [s.desired_position(i) for i in range(3)])
+
+
+# ---------------------------------------------------------------------------
+# SqueezeState (S-04): two-sided squeeze-onset follower. Enter on the 0->1
+# onset taking direction by close-vs-bb_mid at onset; hold for the episode;
+# flat once the squeeze turns off. This is the only long/short rule.
+# ---------------------------------------------------------------------------
+
+def test_squeeze_is_flat_on_bar_zero():
+    q = SqueezeState(np.array([0.0]), np.array([100.0]), np.array([101.0]))
+    assert q.desired_position(0) == 0
+
+
+def test_squeeze_enters_direction_by_close_vs_mid():
+    # onset (0->1) decides direction by close vs bb_mid at that bar
+    sqz = np.array([0.0, 1.0, 1.0, 0.0, 1.0, 1.0])
+    bbmid = np.array([100.0, 100.0, 100.0, 100.0, 100.0, 100.0])
+    close = np.array([101.0, 99.0, 101.0, 101.0, 101.0, 101.0])
+    q = SqueezeState(sqz, bbmid, close)
+    assert q.desired_position(1) == 0     # bar0 squeeze off -> flat
+    assert q.desired_position(2) == -1    # bar1 onset, close99<mid100 -> short
+    assert q.desired_position(3) == -1    # bar2 squeeze on, hold short (no flip)
+    assert q.desired_position(4) == 0     # bar3 squeeze off -> flat
+    assert q.desired_position(5) == 1     # bar4 onset, close101>mid100 -> long
+    assert q.desired_position(6) == 1     # bar5 squeeze on, hold long
+
+
+def test_squeeze_holds_onset_direction_no_mid_episode_flip():
+    # direction is set at onset only; a close crossing mid mid-episode must NOT flip
+    sqz = np.array([0.0, 1.0, 1.0])
+    bbmid = np.array([100.0, 100.0, 100.0])
+    close = np.array([101.0, 99.0, 101.0])  # onset bar1 short (close<mid), bar2 close>mid
+    q = SqueezeState(sqz, bbmid, close)
+    assert q.desired_position(2) == -1    # onset short
+    assert q.desired_position(3) == -1    # bar2 close>mid but already short -> hold (no churn)
+
+
+def test_squeeze_is_nan_safe():
+    q = SqueezeState(
+        np.array([np.nan, 1.0, np.nan, 1.0]),
+        np.array([100.0, 100.0, 100.0, 100.0]),
+        np.array([101.0, 99.0, 101.0, 101.0]))
+    assert q.desired_position(1) == 0     # bar0 NaN -> flat
+    assert q.desired_position(2) == -1    # bar1 onset close<mid -> short
+    assert q.desired_position(3) == -1    # bar2 NaN -> hold short
+    assert q.desired_position(4) == -1    # bar3 squeeze on, already short -> hold
+
+
+def test_squeeze_is_two_sided():
+    # unlike the long-only rules, this one may be short (-1)
+    q = SqueezeState(np.array([0.0, 1.0, 1.0]),
+                     np.array([100.0, 100.0, 100.0]),
+                     np.array([101.0, 99.0, 99.0]))
+    assert q.desired_position(2) == -1    # onset short is legal
+    assert q.desired_position(3) == -1    # and stays short
 
 
 # ---------------------------------------------------------------------------
