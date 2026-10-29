@@ -31,8 +31,10 @@ __all__ = [
 SUMMARY_FIELDS: list[str] = [
     "strategy", "instrument", "window", "timeframe", "cost_bps", "entry_guard",
     "start", "end", "n_bars", "n_trades", "total_return_pct", "buyhold_return_pct",
+    "buyhold_max_drawdown_pct",
     "max_drawdown_pct", "win_rate_pct", "avg_trade_return_pct", "sharpe",
-    "sharpe_weekly", "trades_per_year", "exposure_pct", "mean_net_position_pct",
+    "sharpe_weekly", "buyhold_sharpe_weekly",
+    "trades_per_year", "exposure_pct", "mean_net_position_pct",
     "span_years",
 ]
 

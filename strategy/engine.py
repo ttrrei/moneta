@@ -102,6 +102,12 @@ class BacktestResult:
     exposure_pct: float
     mean_net_position_pct: float  # time-weighted SIGNED mean position (report-only sanity check)
     span_years: float             # observed window length in (fractional) years
+    # Report-only buy-hold comparators (review follow-up #3 §C2): the SAME
+    # formulas as sharpe_weekly / max_drawdown_pct applied to the buy-hold
+    # equity curve (1.0 -> close/open over the window), so "edge vs buy-hold"
+    # can be judged on risk-adjusted terms, not just raw return.
+    buyhold_sharpe_weekly: float = 0.0
+    buyhold_max_drawdown_pct: float = 0.0
     trades: Sequence[Trade] = field(default_factory=list, repr=False)
     # Unrounded (test-internal) values:
     raw_total_return_pct: float = 0.0
@@ -111,6 +117,8 @@ class BacktestResult:
     raw_avg_trade_return_pct: float = 0.0
     raw_sharpe: float = 0.0
     raw_sharpe_weekly: float = 0.0
+    raw_buyhold_sharpe_weekly: float = 0.0
+    raw_buyhold_max_drawdown_pct: float = 0.0
     raw_trades_per_year: float = 0.0
     raw_exposure_pct: float = 0.0
     raw_mean_net_position_pct: float = 0.0
@@ -127,6 +135,8 @@ class BacktestResult:
             "avg_trade_return_pct": self.avg_trade_return_pct,
             "sharpe": self.sharpe,
             "sharpe_weekly": self.sharpe_weekly,
+            "buyhold_sharpe_weekly": self.buyhold_sharpe_weekly,
+            "buyhold_max_drawdown_pct": self.buyhold_max_drawdown_pct,
             "trades_per_year": self.trades_per_year,
             "exposure_pct": self.exposure_pct,
             "mean_net_position_pct": self.mean_net_position_pct,
@@ -381,6 +391,15 @@ def run_backtest(
     sw = _sw(equity, getattr(bars, "time", None))
     tpy = _tpy(n_trades_int, span_years)
 
+    # Buy-hold comparators (review follow-up #3 §C2, report-only): the exact
+    # same two formulas as the strategy's own, applied to the buy-hold equity
+    # curve (unit cost basis -> c/o[0]). A flat market gives sharpe 0.0 / dd 0.0
+    # (the metrics module's conventions), a monotonic rise gives positive
+    # sharpe / zero drawdown.
+    bh_equity = c / o[0]
+    bh_sw = _sw(bh_equity, getattr(bars, "time", None))
+    bh_dd = _max_drawdown(bh_equity)
+
     return BacktestResult(
         n_bars=int(n),
         n_trades=n_trades_int,
@@ -391,6 +410,8 @@ def run_backtest(
         avg_trade_return_pct=round(avg_trade_ret, 4),
         sharpe=round(sharpe, 2),
         sharpe_weekly=round(sw, 2),
+        buyhold_sharpe_weekly=round(bh_sw, 2),
+        buyhold_max_drawdown_pct=round(bh_dd * 100, 2),
         trades_per_year=round(tpy, 2),
         exposure_pct=round(exposure_raw, 2),
         mean_net_position_pct=round(mean_net_position_raw, 2),
@@ -403,6 +424,8 @@ def run_backtest(
         raw_avg_trade_return_pct=avg_trade_ret,
         raw_sharpe=sharpe,
         raw_sharpe_weekly=sw,
+        raw_buyhold_sharpe_weekly=bh_sw,
+        raw_buyhold_max_drawdown_pct=bh_dd * 100,
         raw_trades_per_year=tpy,
         raw_exposure_pct=exposure_raw,
         raw_mean_net_position_pct=mean_net_position_raw,
@@ -437,6 +460,17 @@ METRIC_FORMULAS: dict[str, str] = {
               "how many trades produced it, so it IS comparable across "
               "strategies. Weekly (not daily) because a sparse strategy yields "
               "too few daily samples for a stable estimate.",
+    "buyhold_sharpe_weekly": "The SAME weekly-close Sharpe formula as "
+              "sharpe_weekly applied to the BUY-HOLD equity curve "
+              "(close/open, unit cost basis). Report-only risk-adjusted "
+              "comparator: sharpe_weekly - buyhold_sharpe_weekly is the "
+              "risk-adjusted edge (review follow-up #3 §C2). Not a "
+              "pass/fail input.",
+    "buyhold_max_drawdown_pct": "The SAME max-drawdown formula as "
+              "max_drawdown_pct applied to the BUY-HOLD equity curve, in %. "
+              "Report-only comparator: strategy drawdown / buy-hold drawdown "
+              "shows whether a win is bought with extra drawdown (review "
+              "follow-up #3 §C2). Not a pass/fail input.",
     "trades_per_year": "Opportunity frequency: n_trades / span_years. Surfaced "
               "explicitly so a strategy that barely trades over the window (few "
               "opportunities) is visible next to its total return — a high "

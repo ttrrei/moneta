@@ -283,6 +283,76 @@ def test_force_close_at_last_bar_books_the_open_trade():
     assert res.raw_exposure_pct == pytest.approx(100.0, rel=1e-12)
 
 
+def test_buyhold_comparators_use_the_same_formula_on_the_bh_curve():
+    """§C2: the buy-hold comparators must be the SAME formulas as
+    ``sharpe_weekly`` / ``max_drawdown_pct`` applied to the buy-hold
+    equity curve (close/open[0]), and both must be exported."""
+    import numpy as np
+    from strategy.engine import _max_drawdown as _mdd
+    from strategy.metrics import sharpe_weekly as _sw
+    # 30 bars, a mixed path so neither formula degenerates to 0.
+    open_ = [100.0] + [100.0, 120.0] * 15
+    close = [100.0] + [120.0] * 10 + [90.0] * 10 + [120.0] * 10
+    res = run_backtest(_bars(open_, close), _always_long(), cost_bps=0.0)
+    bh = np.asarray(close) / open_[0]
+    assert res.raw_buyhold_sharpe_weekly == pytest.approx(_sw(bh, None), rel=1e-12)
+    assert res.raw_buyhold_max_drawdown_pct == pytest.approx(_mdd(bh) * 100, rel=1e-12)
+    # And the fields are part of the JSON/CSV contract.
+    d = res.to_dict()
+    assert "buyhold_sharpe_weekly" in d and "buyhold_max_drawdown_pct" in d
+
+
+def test_buyhold_comparators_known_drawdown():
+    """§C2: a market that rises, falls 25%, and recovers must produce a
+    buy-hold max drawdown of exactly 25% on the buy-hold curve, computed
+    with the SAME formula as the strategy's own max_drawdown_pct."""
+    import numpy as np
+    from strategy.engine import run_backtest
+    # Monotonic up to 200, then down to 150 (25% off the peak), then back to 200.
+    n_up = 1000
+    n_dn = 1000
+    n_rec = 1000
+    o = list(np.linspace(100.0, 200.0, n_up)) + \
+        list(np.linspace(200.0, 150.0, n_dn)) + \
+        list(np.linspace(150.0, 200.0, n_rec))
+    c = [x * 1.001 for x in o]  # same shape, tiny per-bar drift
+    res = run_backtest(_bars(o, c), _always_long(), cost_bps=0.0)
+    # Buy-hold curve = close/open[0]; peak = 200.0*1.001, trough = 150.0*1.001.
+    # max_dd = (200.1 - 150.1)/200.1 = 0.25
+    assert res.raw_buyhold_max_drawdown_pct == pytest.approx(25.0, rel=1e-9)
+    assert res.buyhold_max_drawdown_pct == pytest.approx(25.0, rel=1e-9)
+
+
+def test_buyhold_comparators_flat_market_zero():
+    """§C2: a flat market gives zero Sharpe and zero drawdown on the
+    buy-hold curve (the metrics module's zero-variance convention)."""
+    import numpy as np
+    from strategy.engine import run_backtest
+    n = 2000
+    o = [100.0] * n
+    c = [100.0] * n
+    res = run_backtest(_bars(o, c), _always_long(), cost_bps=0.0)
+    assert res.buyhold_sharpe_weekly == pytest.approx(0.0)
+    assert res.buyhold_max_drawdown_pct == pytest.approx(0.0)
+    assert "buyhold_sharpe_weekly" in res.to_dict()
+    assert "buyhold_max_drawdown_pct" in res.to_dict()
+
+
+def test_buyhold_comparators_do_not_perturb_existing_metrics():
+    """§C2 additive-only: the new fields must not change any existing metric.
+    A fixed known case pins the legacy values (mirrors §2.2 discipline)."""
+    open_ = [100.0, 101.0, 102.0]
+    close = [101.0, 102.0, 105.0]
+    res = run_backtest(_bars(open_, close), _always_long(), cost_bps=0.0)
+    # entry@100 (bar0 open), force-closed at close[2]=105 → +5%
+    assert res.raw_total_return_pct == pytest.approx(5.0, rel=1e-12)
+    assert res.raw_max_drawdown_pct == pytest.approx(0.0, rel=1e-12)
+    assert res.raw_buyhold_return_pct == pytest.approx(5.0, rel=1e-12)
+    # New fields present and independently sensible (monotonic rise → no dd).
+    assert res.raw_buyhold_max_drawdown_pct == pytest.approx(0.0)
+    assert res.raw_buyhold_sharpe_weekly == pytest.approx(0.0)  # < 2 weekly samples → 0.0
+
+
 def test_signal_on_closed_bar_fills_at_next_open():
     """A rule that decides from bar ``i-1``'s close is filled at bar ``i``'s
     open. The rule is long at the open of bar 1 (entry at open[1]=101) and
