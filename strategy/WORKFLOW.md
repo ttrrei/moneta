@@ -229,17 +229,16 @@ strategy, and the gate reserves it *before* loading — so a plain bug in the
 run (a missing column, an OOM, a broken rule) would burn the only holdout and
 produce no result. Follow this protocol:**
 
-1. **Preflight — mandatory by default.** `run_matrix` for an OOS window runs
+1. **Preflight — mandatory, no opt-out.** `run_matrix` for an OOS window runs
    one cheap in-sample cell (EUR_USD/full@2bps) through the *same* code path
    **before** reserving the holdout, so a plain bug (missing column, OOM,
    broken rule) fails here and the holdout is **not** consumed:
 
    ```bash
    python strategy/run_matrix.py --strategy <id> --windows oos --timeframe <tf>
-   # Preflight is automatic for OOS runs. To opt out (only if you have already
-   # verified the pipeline independently, e.g. by running the full window):
-   python strategy/run_matrix.py --strategy <id> --windows oos --timeframe <tf> \
-       --skip-preflight
+   # Preflight is automatic and cannot be skipped (the former --skip-preflight
+   # flag was removed — a plain bug must never be able to burn the only
+   # holdout).
    ```
 
 2. **Only then run the holdout** (the reservation is appended to

@@ -1243,20 +1243,34 @@ def check_oos_ledger(root: Path, trials: list[dict], rep: Report,
                          f"result was read.")
             # L1c: a void is only valid when NO OOS output exists for the
             # strategy — voiding a reservation that produced a result and
-            # re-running is a backdoor.
+            # re-running is a backdoor. Review follow-up #3 §B2: count ANY
+            # committed file in the OOS directory (``strategy/results/**/
+            # *.json`` is git-ignored, so a clean CI checkout may hold only a
+            # ``summary.csv`` / ``matrix.md`` — those are the committed
+            # evidence), and treat an adjudicated `oos` trial-log row as OOS
+            # output (the result was adjudicated, i.e. read).
             sid = norm_id(r.get("strategy", ""))
             out_dir = root / "strategy" / "results" / f"{sid}_oos"
+            n_out = 0
             if out_dir.exists():
-                n_out = sum(1 for f in out_dir.iterdir()
-                            if f.is_file() and f.suffix == ".json")
+                n_out = sum(1 for f in out_dir.rglob("*") if f.is_file())
+            has_oos_row = any(
+                _norm_id_of(t["strategy_id"]) == sid
+                and (t["window"] or "").strip().lower() == "oos"
+                and (t["outcome"] or "").strip().lower() not in ("<tbd>", "", "tbd")
+                for t in trials)
+            if n_out > 0 or has_oos_row:
+                detail = []
                 if n_out > 0:
-                    rep.fail("L1", "strategy/oos_ledger.json",
-                             f"voided ledger record ({r.get('strategy')!r}, "
-                             f"{r.get('holdout_id')!r}) has OOS output under "
-                             f"{out_dir.relative_to(root)}/ ({n_out} result "
-                             f"file(s)). A void is only valid when the "
-                             f"reservation produced NO result — voiding a "
-                             f"result that was already read is a backdoor.")
+                    detail.append(f"{n_out} file(s) under {out_dir.relative_to(root)}/")
+                if has_oos_row:
+                    detail.append("an adjudicated `oos` trial-log row")
+                rep.fail("L1", "strategy/oos_ledger.json",
+                         f"voided ledger record ({r.get('strategy')!r}, "
+                         f"{r.get('holdout_id')!r}) has OOS output ({' + '.join(detail)}). "
+                         "A void is only valid when the reservation produced NO "
+                         "result — voiding a result that was already read is a "
+                         "backdoor.")
 
     # ---- L2: ledger <-> trial_log agree -----------------------------------
     def _oos_trials_for(sid_norm: str) -> list[dict]:

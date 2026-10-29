@@ -903,6 +903,75 @@ def test_load_bars_until_at_or_after_holdout_needs_token(tmp_path, monkeypatch):
         ot.assert_access("2026-10-23", None)      # inside the holdout
 
 
+# -- review follow-up #3 §B1: timezone-offset bypass of the data-layer gate --
+# The gate and the SQL must both use the SAME normalised UTC instant. An
+# offset-aware `until` whose UTC value lands on/after holdout_start must be
+# refused even though its LOCAL date is 2025-07-31 (the old
+# `str(until)[:10]` comparison read the local date and let it through).
+
+@pytest.mark.parametrize("until", [
+    "2025-07-31 23:00:00-0500",     # = 2025-08-01 04:00 UTC -> holdout
+    "2025-07-31T23:00:00-05:00",    # same instant, ISO-8601 spelling
+    "2025-07-31 20:00:00-0500",     # = 2025-08-01 01:00 UTC -> holdout
+])
+def test_offset_aware_until_reaching_holdout_is_refused(tmp_path, monkeypatch, until):
+    """An `until` that is 2025-07-31 locally but on/after 2025-08-01 UTC is a
+    holdout read and must require a token (fail closed)."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch)
+    with pytest.raises(SystemExit):
+        ot.assert_access(until, None)
+    # and is_holdout_until must classify it as a holdout bound (exclusive SQL)
+    assert ot.is_holdout_until(until) is True
+
+
+@pytest.mark.parametrize("until", [
+    "2025-07-31 18:00:00-0500",     # = 2025-07-31 23:00 UTC -> in-sample
+    "2025-07-31",                   # date-only -> 2025-07-31 00:00 UTC
+    "2025-07-31 23:59:59",          # naive -> UTC, still 2025-07-31
+])
+def test_offset_aware_until_before_holdout_is_allowed(tmp_path, monkeypatch, until):
+    """An `until` whose UTC instant is strictly before holdout_start is an
+    in-sample read and must be allowed without a token."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch)
+    ot.assert_access(until, None)  # must not raise
+    assert ot.is_holdout_until(until) is False
+
+
+def test_normalize_bound_is_utc_canonical(tmp_path, monkeypatch):
+    """normalize_bound converts to a canonical UTC instant; unparseable input
+    fails closed."""
+    import strategy.oos_token as ot
+    _oos_env(tmp_path, monkeypatch)
+    assert ot.normalize_bound("2025-07-31") == "2025-07-31T00:00:00+00:00"
+    assert ot.normalize_bound("2025-07-31 23:00:00-0500") == "2025-08-01T04:00:00+00:00"
+    assert ot.normalize_bound("2025-07-31T18:00:00-05:00") == "2025-07-31T23:00:00+00:00"
+    with pytest.raises(SystemExit):
+        ot.normalize_bound("garbage")
+    with pytest.raises(SystemExit):
+        ot.normalize_bound(None)
+
+
+def test_normalize_bound_used_in_sql(tmp_path, monkeypatch):
+    """The gate and the SQL use ONE normalised value: an offset-aware in-sample
+    `until` must read exactly the bars up to its UTC instant (the normalised
+    bound is what DuckDB sees) — the local-date truncation the old code did
+    (`str(until)[:10]` → "2025-07-02") would have read one more day."""
+    import datetime as _dt
+    import strategy.oos_token as ot
+    import strategy.strategy_lib as sl
+    _oos_env(tmp_path, monkeypatch)
+    pq = _tiny_parquet(tmp_path)  # bars 2025-07-01..2025-07-04, naive UTC
+    # 2025-07-02 05:00:00+0500 == 2025-07-02 00:00:00 UTC. In-sample read is
+    # inclusive (time <= until), so the last bar is 2025-07-02 00:00 and the
+    # 07-03 / 07-04 bars are excluded.
+    df = sl.load_bars(pq, "EUR_USD", feature_cols=["rsi_24"],
+                      not_null_cols=["rsi_24"],
+                      until="2025-07-02 05:00:00+0500")
+    assert list(df["time"].dt.date) == [_dt.date(2025, 7, 1), _dt.date(2025, 7, 2)]
+
+
 def test_oos_token_backed_by_ledger_allows_holdout(tmp_path, monkeypatch):
     """A token minted after a real ledger reservation opens the holdout."""
     import strategy.oos_token as ot

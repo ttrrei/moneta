@@ -135,14 +135,73 @@ def holdout_id() -> str:
     return str(hid)
 
 
+def normalize_bound(value: "str | None") -> str:
+    """Normalise a time bound to a canonical UTC ISO-8601 instant.
+
+    Accepts (review follow-up #3 §B1 — the gate and the SQL must use ONE
+    normalised value so a timezone-offset trick cannot sneak past the gate
+    while DuckDB reads holdout bars):
+
+    * date-only strings, e.g. ``"2025-07-31"`` → that day's 00:00 UTC;
+    * naive datetimes (no offset), e.g. ``"2025-07-31 23:00:00"`` → treated
+      as UTC;
+    * offset-aware datetimes, e.g. ``"2025-07-31 23:00:00-0500"`` or
+      ``"2025-07-31T23:00:00-05:00"`` → converted to UTC via
+      ``astimezone(timezone.utc)``.
+
+    ``None`` or unparseable input is a **config error** (``SystemExit``) —
+    fail closed, never pass a read through.
+    """
+    import datetime as _dt
+
+    if value is None:
+        raise SystemExit(
+            "[oos] FAIL CLOSED: a time bound is required but was None; no "
+            "data read is permitted."
+        )
+    s = str(value).strip()
+    if not s:
+        raise SystemExit(
+            "[oos] FAIL CLOSED: a time bound is required but was blank; no "
+            "data read is permitted."
+        )
+    dt = None
+    for fmt in ("%Y-%m-%d %H:%M:%S%z", "%Y-%m-%dT%H:%M:%S%z",
+                "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d"):
+        try:
+            dt = _dt.datetime.strptime(s, fmt)
+            break
+        except ValueError:
+            continue
+    if dt is None:
+        try:
+            dt = _dt.datetime.fromisoformat(s)
+        except ValueError:
+            raise SystemExit(
+                f"[oos] FAIL CLOSED: time bound {value!r} is not a valid "
+                "date/datetime; no data read is permitted."
+            )
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=_dt.timezone.utc)
+    else:
+        dt = dt.astimezone(_dt.timezone.utc)
+    return dt.isoformat()
+
+
 def _window_reaches_holdout(until: str | None) -> bool:
     """True when an ``until`` read reaches the holdout (None = all data, or
-    until >= holdout_start).  Config errors propagate (fail-closed)."""
+    until >= holdout_start).  Config errors propagate (fail-closed).
+
+    The ``until`` instant is normalised to UTC with :func:`normalize_bound`
+    and compared against ``holdout_start`` 00:00 UTC — the SAME value the
+    loaders feed to DuckDB (review follow-up #3 §B1: a timezone offset such as
+    ``"2025-07-31 23:00:00-0500"`` = 2025-08-01 04:00 UTC must reach the
+    holdout, not be read as the date 2025-07-31)."""
     if until is None:
         return True
-    import datetime as _dt
+    inst = normalize_bound(until)
     hs = holdout_start_date()  # raises on missing/invalid config
-    return _dt.date.fromisoformat(str(until)[:10]) >= _dt.date.fromisoformat(hs)
+    return inst >= f"{hs}T00:00:00+00:00"
 
 
 def is_holdout_until(until: str | None) -> bool:

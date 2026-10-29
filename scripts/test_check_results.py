@@ -431,6 +431,16 @@ CASES = [
     ("reserved -> voided with a reason is append-only-safe -> ok", set(), 0, None,
      lambda w: _set_ledgers(w, "voided", "crash after reserve, no result read", "reserved"),
      lambda w: w / "base_oos_ledger.json"),
+    # §B2: the OOS dir's committed evidence is summary.csv / matrix.md (the
+    # per-cell JSON files are git-ignored). A voided record with a committed
+    # summary.csv in the OOS dir must still be caught.
+    ("voided record with committed summary.csv OOS output -> L1", {"L1"}, 1, None,
+     lambda w: (write_oos_dir(w, status="rejected", beats=0, tpy=40,
+                              committed_pass=False, committed_ib=0),
+                (w / "strategy/oos_ledger.json").write_text(
+                    _ledger_json([_one_rec(OOS_SID, "voided",
+                                           "crash after reserve, no result read")]),
+                    encoding="utf-8"))),
     # A voided record must carry a written reason (L1b).
     ("voided record without a reason -> L1", {"L1"}, 1, None,
      lambda w: (w / "strategy/oos_ledger.json").write_text(

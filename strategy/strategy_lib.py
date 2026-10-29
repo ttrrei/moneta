@@ -102,6 +102,12 @@ def load_bars(
 
     from strategy import oos_token as _oos
     _oos.assert_access(until, oos_token)
+    # Normalise ONCE and use that exact value in the SQL (review follow-up #3
+    # §B1): what the gate checked is what DuckDB reads. An offset-aware bound
+    # is converted to a UTC instant, so the gate and the query can never
+    # disagree about the window.
+    _since = _oos.normalize_bound(since) if since else None
+    _until = _oos.normalize_bound(until) if until else None
 
     cols = list(BASE_COLS) + [c for c in feature_cols if c not in BASE_COLS]
     conn = duckdb.connect()
@@ -115,10 +121,10 @@ def load_bars(
         params: list = [parquet, instrument]
         for col in (not_null_cols or ()):
             where.append(f"{col} IS NOT NULL")
-        if since:
+        if _since:
             where.append("time >= ?")
-            params.append(since)
-        if until:
+            params.append(_since)
+        if _until:
             if _oos.is_holdout_until(until):
                 # OOS/holdout read: ``until`` is the *exclusive* end (the first
                 # day after the holdout), so use ``time < until`` — this
@@ -129,7 +135,7 @@ def load_bars(
             else:
                 # In-sample read: ``until`` is the *inclusive* last bar's date.
                 where.append("time <= ?")
-            params.append(until)
+            params.append(_until)
         sql = (
             "SELECT " + ", ".join(cols) +
             " FROM read_parquet(?) WHERE " + " AND ".join(where) +

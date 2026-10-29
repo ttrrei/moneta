@@ -884,7 +884,6 @@ def run_matrix(
     entry_guard: bool,
     out_dir: Path,
     allow_partial: bool = False,
-    skip_preflight: bool = False,
 ) -> list[dict]:
     """Run every cell, persist per-cell JSON, and return the result list.
 
@@ -892,11 +891,10 @@ def run_matrix(
     ``allow_partial`` is set (repo_review_20261027 §1.10: a 1-of-18 success
     must not be summarised as a full matrix).
 
-    ``skip_preflight`` (follow-up review): preflight is **mandatory by default**
-    for an OOS run — it proves the strategy runs cleanly on a small in-sample
-    window before the holdout is reserved, so a plain bug does not consume the
-    only holdout. Pass ``--skip-preflight`` to opt out (the holder is then
-    responsible for having verified the pipeline independently).
+    Preflight is **mandatory** for an OOS run (review follow-up #3 §B3, D8):
+    it proves the strategy runs cleanly on a small in-sample window before the
+    holdout is reserved, so a plain bug does not consume the only holdout.
+    There is no opt-out — the flag was removed.
     """
     if strategy not in _STRATEGIES:
         raise SystemExit(f"Unknown strategy {strategy!r}; registered: {sorted(_STRATEGIES)}")
@@ -935,14 +933,13 @@ def run_matrix(
         # (1b) Preflight (follow-up review, "一次普通崩溃会永久烧掉唯一的
         #     holdout"): with D1=1 + reserve-before-load, a plain bug in the
         #     strategy's run() (missing column, OOM, ...) would consume the
-        #     *only* holdout and produce no result. So — by default, and unless
-        #     --skip-preflight is passed — prove the same code path works on a
-        #     small IN-SAMPLE window (a cheap EUR_USD full-window cell at 2 bps)
-        #     BEFORE reserving. If the pipeline is broken it fails here and the
-        #     holdout stays unspent. A genuine crash is still invalidated by the
-        #     human "voided" ledger flow (WORKFLOW Step 7.5).
-        if not skip_preflight:
-            _preflight(strategy, run, parquet, timeframe, entry_guard, cfg)
+        #     *only* holdout and produce no result. Preflight is MANDATORY
+        #     (review follow-up #3 §B3, D8): prove the same code path works on
+        #     a small IN-SAMPLE window (a cheap EUR_USD full-window cell at
+        #     2 bps) BEFORE reserving. If the pipeline is broken it fails here
+        #     and the holdout stays unspent. A genuine crash is still
+        #     invalidated by the human "voided" ledger flow (WORKFLOW Step 7.5).
+        _preflight(strategy, run, parquet, timeframe, entry_guard, cfg)
         # (2) Reserve the attempt BEFORE the holdout is loaded, so a crash
         #     mid-run still counts as consumed (a `reserved` record blocks re-runs).
         _reserve_oos(strategy, fingerprint, manifest)
@@ -1190,13 +1187,6 @@ def main() -> None:
     ap.add_argument("--allow-partial", action="store_true",
                     help="summarise even when some cells fail (default: any failure "
                          "aborts with a non-zero exit code)")
-    ap.add_argument("--skip-preflight", action="store_true",
-                    help="OOS runs only: skip the default preflight (one small "
-                         "in-sample cell before reserving the holdout). Preflight "
-                         "is mandatory by default so a plain bug (missing "
-                         "column, OOM, broken rule) does NOT consume the only "
-                         "holdout (follow-up review); use this only when you "
-                         "have verified the pipeline independently.")
     args = ap.parse_args()
 
     out_dir = Path(args.out) if args.out else (
@@ -1210,7 +1200,6 @@ def main() -> None:
         entry_guard=args.entry_guard,
         out_dir=out_dir,
         allow_partial=args.allow_partial,
-        skip_preflight=args.skip_preflight,
     )
     md_path = out_dir / "matrix.md"
     csv_path = out_dir / "summary.csv"
