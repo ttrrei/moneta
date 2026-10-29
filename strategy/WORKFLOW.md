@@ -189,6 +189,22 @@ count ≤ 300) — do not restate it here, reference it.
   snooping and is prohibited — that is a new hypothesis, not a re-run. This is
   the single most important guard against the overfitting risk the BRD names as #1.
 
+- **Record the finalist's tally and the nominated variant BEFORE promotion
+  (review follow-up #3 §C3).** The in-sample bar is checked per *configuration*,
+  not per *strategy*: a sweep evaluates many `(strategy, variant)` pairs and
+  picks the best one in-sample, so the multiple-testing burden is carried by the
+  **configuration count**, not the strategy count. Before a human promotes a
+  `finalist`, add to `strategy/trial_log.md` (the *Configuration tally* section,
+  outside the X4-parsed table):
+    1. the running configuration tally (strategies tried + distinct
+       `(strategy, variant)` pairs tried, so far), and
+    2. the **specific variant** being nominated for OOS (timeframe + parameters
+       + entry_guard), so the OOS run is pinned to exactly the in-sample
+       configuration that was adjudicated (see `run_matrix.py` `config_hash`,
+       §B4/C4).
+
+  Do not nominate a variant that was not in the adjudicated in-sample set.
+
 - **Cross-strategy ranking (Sharpe):** the `Sharpe` column is a *trade-rate*
   Sharpe (annualised from per-trade returns) — it is **not comparable across
   strategies** and must not be used to rank them. Rank strategies on

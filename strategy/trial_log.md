@@ -49,6 +49,31 @@
 | 26 | 2026-11-01 | S-26 | EMA-12/60-spread follower: spread up-cross > th, hysteresis exit (6-variant incl. hysteresis) | full | **rejected** | best `1h` mean edge −170%; 5m variants 49–685 tpy; same cost×frequency signature as S-06 (EMA-spread family) | 25 |
 | 27 | 2026-11-01 | S-27 | Volume-confirmed momentum: mom_24 > 0 and vol_rel_24 ≥ vmin (6-variant vol 0.8–2.0) | full | **rejected** | best `1h` mean edge −230%; 5m variants 195–2,976 tpy (cost × frequency); volume gate reduces trades without a cross-market edge | 26 |
 
+## Configuration tally (multiple-testing burden)
+
+> `n_tried_before` above counts **strategies**, but the sweeps evaluated each of
+> S-08…S-27 with **6 variants**, and each strategy's *best variant* was picked
+> in-sample. The honest denominator for "best of N" is the number of
+> **configurations** tried, not strategies. This section is outside the X4
+> parser (which reads only the table above) so it can state the burden
+> explicitly (review follow-up #3 §C3).
+
+| Quantity | Count | Basis |
+|---|---:|---|
+| **Strategies tried** (S-01 … S-27) | **27** | rows 1–27 above |
+| **Configurations tried** (distinct `(strategy, variant)` pairs) | **127** | 7 hand-run configs (S-01…S-07, one rule each — S-02 is S-01's rule on 1h) + **120** distinct `(strategy, variant)` pairs in `strategy/results/iterations_2026-10-30.csv` and `iterations_2026-11-01.csv` (S-08…S-27 × 6 variants each) |
+| **Cells per configuration** | 18 | 3 instruments × 2 windows × 3 cost tiers |
+| **Total cells evaluated** | **≥ 2,286** | 127 × 18 |
+
+**The finalist bar is *not* corrected for multiple testing.** A configuration
+that "beats" the in-sample bar may have done so by chance among ~127
+independent tries (the bar itself, `oos.pass_criteria`, is a single unadjusted
+threshold). The single OOS holdout (`oos.usage = finalist_only_once`) is the
+one unadjusted check that survives, which is exactly why it is reserved for a
+*human-nominated* finalist and consumed at most once. When a finalist is
+nominated, its tally (which row / which variant) **must** be written into this
+log before promotion (WORKFLOW Step 6).
+
 <!--
 Append a new row for every attempt. Keep `n_tried_before` = (previous max #) so
 the running count is always the true number of strategies tried so far.

@@ -72,6 +72,14 @@ def build_fixture(dest: Path) -> None:
         if src.exists():
             shutil.copytree(src, s / "results" / d)
 
+    # The sweep CSVs are the committed evidence for the strategies that have no
+    # results directory (S-08 … S-27); C5 validates them and evaluates S1–S3
+    # from the `full`-window rows, so the fixture must carry them too.
+    for name in ("iterations_2026-10-30.csv", "iterations_2026-11-01.csv"):
+        src = REPO / "strategy" / "results" / name
+        if src.exists():
+            shutil.copy(src, s / "results" / name)
+
     for f in ("strategy_supertrend_lib.py", "strategy_ema_spread_lib.py",
               "oos_ledger.json"):
         p = REPO / "strategy" / f
@@ -264,6 +272,20 @@ def _set_ledgers(w: Path, cur_status: str, cur_reason: str | None,
         _ledger_json([_one_rec("S05", base_status, base_reason)]), encoding="utf-8")
 
 
+def _c5_flip_candidate(w: Path) -> None:
+    """C5 S2 mutation: S-10 has NO results directory, so its S1–S3 evidence
+    comes from the sweep CSVs. It loses to buy-hold in every `full`-window
+    cell, so flipping its registry status to a non-terminal one (candidate)
+    must be flagged by S2 — proving the checker reaches a dir-less strategy
+    through the CSV."""
+    reg = w / "strategy/STRATEGY_REGISTRY.md"
+    t = reg.read_text(encoding="utf-8")
+    line = next((l for l in t.splitlines() if l.startswith("| S-10 |")), None)
+    if line is not None:
+        t = t.replace(line, line.replace("**rejected**", "**candidate**"), 1)
+        reg.write_text(t, encoding="utf-8")
+
+
 def _void_with_output(w: Path) -> None:
     """A voided S-05 reservation (with a reason) AND an OOS output file —
     the "void a result that was read" backdoor (must be L1)."""
@@ -431,6 +453,19 @@ CASES = [
     ("reserved -> voided with a reason is append-only-safe -> ok", set(), 0, None,
      lambda w: _set_ledgers(w, "voided", "crash after reserve, no result read", "reserved"),
      lambda w: w / "base_oos_ledger.json"),
+    # ---- C5: the sweep CSVs are evidence for strategies with no results dir --
+    # S-09 has no results directory, so S1–S3 are evaluated from its sweep-CSV
+    # `full`-window rows. It loses to buy-hold in every `full` cell, so flipping
+    # its status to a non-terminal one (candidate) must be flagged by S2 —
+    # proving the checker can reach a dir-less strategy through the CSV.
+    ("sweep strategy loses everywhere but status is not rejected -> S2", {"S2"}, 1, None,
+     _c5_flip_candidate),
+    # Registered (config) but has NO committed evidence: no results dir and no
+    # sweep-CSV row -> X14 (new code, §C5).
+    ("registered strategy with no committed evidence -> X14", {"X14"}, 1, None,
+     lambda w: replace_in(w / "config/strategies.yml",
+                          '  S-05:\n    timeframe: "5m"',
+                          '  S-05:\n    timeframe: "5m"\n  S-98:\n    timeframe: "5m"')),
     # §B2: the OOS dir's committed evidence is summary.csv / matrix.md (the
     # per-cell JSON files are git-ignored). A voided record with a committed
     # summary.csv in the OOS dir must still be caught.

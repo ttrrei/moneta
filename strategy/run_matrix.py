@@ -490,6 +490,53 @@ def _oos_criteria(cfg: dict) -> tuple[int, float]:
     return min_instr, max_tpy
 
 
+def config_hash(timeframe: str, entry_guard: bool = False,
+                rule_params: "dict | None" = None) -> str:
+    """sha256 of the *canonical* JSON of an OOS run's config (review follow-up
+    #3 §C4). The canonical form pins exactly what the finalist will run in OOS
+    — the timeframe, the entry guard, and the rule parameters — so a finalist
+    cannot be adjudicated on one in-sample configuration and then evaluated on
+    the holdout under a different one (the sweeps use named variants with
+    kwargs, but the OOS path is ``run_matrix``; the hash is the single
+    definition both must agree on).
+
+    The payload is ``sort_keys`` + compact separators so the digest is stable
+    across machines and call order. ``cost_bps`` is deliberately *not* part of
+    the config: the OOS run evaluates several cost tiers and the pass/fail is
+    defined at 2 bps, so the cost tier is not an identity of the run.
+    """
+    import hashlib
+    import json
+
+    payload = {
+        "timeframe": str(timeframe),
+        "entry_guard": bool(entry_guard),
+        "rule_params": dict(sorted((rule_params or {}).items())),
+    }
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def _pinned_config_hash(cfg: dict, strategy: str) -> "str | None":
+    """The finalist's pinned OOS ``config_hash`` from ``config/strategies.yml``
+    (``strategies.<id>.oos_config_hash``), or ``None`` when not pinned.
+
+    A pin is written by a human at promotion time (WORKFLOW Step 6, review
+    follow-up #3 §C3/C4) so the OOS run is bound to the exact in-sample
+    configuration that was adjudicated. When absent, the hash is still *recorded*
+    in the ledger (audit) but nothing is refused.
+    """
+    import strategy.registry as _reg
+
+    want = _reg.norm_id(strategy)
+    registered = cfg.get("strategies") or {}
+    for k, v in registered.items():
+        if _reg.norm_id(k) == want:
+            pinned = (v or {}).get("oos_config_hash")
+            return str(pinned) if pinned else None
+    return None
+
+
 def _oos_ledger_path() -> Path:
     return Path(__file__).resolve().parent / "oos_ledger.json"
 
@@ -621,6 +668,28 @@ def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> dict:
         ledger = _load_oos_ledger()
         consumptions = ledger["consumptions"]
 
+        # (a0) config_hash: pin the exact config the finalist runs in OOS
+        #     (review follow-up #3 §C4). The manifest carries the hash of
+        #     (timeframe, entry_guard, rule_params); when a human has pinned a
+        #     hash in config (oos_config_hash), the run is refused unless they
+        #     match — a finalist may not be evaluated on a configuration
+        #     different from the one adjudicated in-sample.
+        manifest_cfg_hash = manifest.get("config_hash")
+        pinned = _pinned_config_hash(cfg, strategy)
+        if pinned is not None:
+            if manifest_cfg_hash is None:
+                raise SystemExit(
+                    f"Strategy {sid} is pinned to OOS config_hash {pinned} "
+                    f"(config/strategies.yml) but the run carries no config_hash "
+                    f"— refusing to start (the OOS config must be pinned).")
+            if manifest_cfg_hash != pinned:
+                raise SystemExit(
+                    f"Strategy {sid} is pinned to OOS config_hash {pinned} "
+                    f"(config/strategies.yml) but the run's config hashes to "
+                    f"{manifest_cfg_hash} — refusing to evaluate a "
+                    f"configuration different from the one adjudicated "
+                    f"in-sample (review follow-up #3 §C4).")
+
         # (a) Once-per-(strategy, holdout): an active (non-voided) record for
         #     this strategy on this holdout is already in flight / consumed.
         for rec in consumptions:
@@ -657,6 +726,12 @@ def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> dict:
             "fingerprint": fingerprint,
             "manifest": manifest,
         }
+        # config_hash (review follow-up #3 §C4): the canonical hash of the
+        # config the holdout is being evaluated under — recorded at reserve
+        # time so the ledger is the audit of *exactly which configuration*
+        # the (one-time) holdout verdict was earned on.
+        if manifest.get("config_hash"):
+            rec["config_hash"] = manifest["config_hash"]
         ledger["consumptions"].append(rec)
         _save_oos_ledger(ledger)
         return rec
@@ -925,6 +1000,13 @@ def run_matrix(
             "cost_tiers": cost_tiers,
             "timeframe": timeframe,
             "entry_guard": entry_guard,
+            # config_hash (review follow-up #3 §C4): the canonical hash of the
+            # config this OOS run will use (timeframe + entry_guard + the
+            # strategy's rule parameters). ``run_matrix`` exposes the base
+            # rule parameters only (variants live in strategy_variants.py), so
+            # rule_params is the empty dict here — the hash is still the single
+            # definition a human pin must match.
+            "config_hash": config_hash(timeframe, entry_guard, {}),
         }
         # (1) Finalist gate + once-per-(strategy,holdout) lock + D1 cap +
         #     holdout-window identity: refuse unless a clean finalist, the

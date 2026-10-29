@@ -821,6 +821,91 @@ def test_span_years_fallback_uses_bar_seconds():
 # parquet — the holdout must stay unconsumed.
 # ---------------------------------------------------------------------------
 
+# -- review follow-up #3 §C4: pin the exact config a finalist runs in OOS ----
+
+def test_config_hash_is_canonical_and_stable(tmp_path):
+    """config_hash is deterministic, key-order independent, and distinguishes
+    different configs (timeframe / entry_guard / rule params)."""
+    import strategy.run_matrix as rm
+    a = rm.config_hash("5m", False, {})
+    b = rm.config_hash("5m", False, {})
+    assert a == b
+    # key order in rule_params must not matter
+    assert rm.config_hash("5m", False, {"k": 0.3, "ema_gate": True}) == \
+           rm.config_hash("5m", False, {"ema_gate": True, "k": 0.3})
+    # different inputs -> different hashes
+    assert rm.config_hash("1h", False, {}) != a
+    assert rm.config_hash("5m", True, {}) != a
+    assert rm.config_hash("5m", False, {"k": 0.3}) != a
+    import hashlib, json
+    expected = hashlib.sha256(json.dumps(
+        {"timeframe": "5m", "entry_guard": False, "rule_params": {}},
+        sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+    assert a == expected
+
+
+def _reserve_env(tmp_path, monkeypatch, pinned=None):
+    """Point run_matrix's OOS-reserve path at a scratch config + empty ledger.
+    `pinned` sets strategies.S-99.oos_config_hash when given."""
+    import strategy.run_matrix as rm
+    cfg = {
+        "oos": {"holdout_id": "oos1", "holdout_start": "2025-08-01",
+                "holdout_end": "2026-10-22", "max_strategies_per_holdout": 1},
+        "strategies": {"S-99": {"timeframe": "5m"}}
+                       if pinned is None
+                       else {"S-99": {"timeframe": "5m",
+                                      "oos_config_hash": pinned}},
+    }
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text('{"version": 1, "consumptions": []}')
+    monkeypatch.setattr(rm, "_load_config", lambda: cfg)
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: ledger)
+    return ledger
+
+
+def test_reserve_records_config_hash(tmp_path, monkeypatch):
+    """An un-pinned reserve records the manifest's config_hash on the ledger
+    record (additive — existing ledger semantics unchanged)."""
+    import strategy.run_matrix as rm
+    ledger = _reserve_env(tmp_path, monkeypatch)
+    h = rm.config_hash("5m", False, {})
+    rec = rm._reserve_oos("s99", {"fingerprint": "x"},
+                          {"strategy": "s99", "config_hash": h})
+    assert rec["config_hash"] == h
+    import json
+    saved = json.loads(ledger.read_text())
+    assert saved["consumptions"][-1]["config_hash"] == h
+    # existing identity fields are unchanged
+    assert saved["consumptions"][-1]["status"] == "reserved"
+    assert saved["consumptions"][-1]["holdout_id"] == "oos1"
+
+
+def test_reserve_refuses_when_pin_mismatches(tmp_path, monkeypatch):
+    """A pinned finalist whose run's config does NOT hash to the pin is
+    refused (it would be evaluated on a different configuration)."""
+    import strategy.run_matrix as rm
+    pinned = rm.config_hash("1h", True, {"k": 0.3})
+    _reserve_env(tmp_path, monkeypatch, pinned=pinned)
+    wrong = rm.config_hash("5m", False, {})  # different config
+    with pytest.raises(SystemExit, match="pinned to OOS config_hash"):
+        rm._reserve_oos("s99", {"fingerprint": "x"},
+                        {"strategy": "s99", "config_hash": wrong})
+    # and a manifest with no hash at all is refused too
+    with pytest.raises(SystemExit, match="carries no config_hash"):
+        rm._reserve_oos("s99", {"fingerprint": "x"}, {"strategy": "s99"})
+
+
+def test_reserve_allows_when_pin_matches(tmp_path, monkeypatch):
+    """A pinned finalist whose run's config hashes exactly to the pin is
+    allowed (the adjudicated configuration is the one being evaluated)."""
+    import strategy.run_matrix as rm
+    pinned = rm.config_hash("5m", True, {"k": 0.3})
+    ledger = _reserve_env(tmp_path, monkeypatch, pinned=pinned)
+    rec = rm._reserve_oos("s99", {"fingerprint": "x"},
+                          {"strategy": "s99", "config_hash": pinned})
+    assert rec["config_hash"] == pinned
+
+
 def _oos_env(tmp_path, monkeypatch, holdout_start="2025-08-01",
              holdout_id="oos1", ledger_consumptions=None):
     """Point strategy.oos_token at a scratch config + ledger. Returns the paths

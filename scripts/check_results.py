@@ -45,6 +45,9 @@ What it checks
   X10 the CSV timeframe matches the config registry
   X11 the registry's buy-hold claim agrees with the matrix (no false "beats BH")
   X12 the trial-log row's stated timeframe matches the config registry
+  X14 a registered strategy has no committed evidence (no results dir and no
+      sweep-CSV row), or a sweep CSV has no rows / is missing columns / has
+      failed cells (review follow-up #3 §C5)
 
 **Stop conditions (generated_strategy.md §5), machine-enforced**
   S1  trade count > 300  -> the status must be rejected / parked
@@ -722,6 +725,165 @@ def dir_name_of(p: Path) -> str:
     return p.name
 
 
+# ---------------------------------------------------------------------------
+# Sweep-CSV evidence (review follow-up #3 §C5)
+# ---------------------------------------------------------------------------
+# S-08 … S-27 (except the one with a committed results directory) have their
+# evidence only in the sweep CSVs (`strategy/results/iterations_*.csv`), so the
+# per-strategy results-directory checks (S1–S3 / X1 …) never evaluate them.
+# This reads those CSVs and (a) verifies their schema and that no cell failed,
+# (b) verifies every registered strategy that has NO results directory has at
+# least one committed row, and (c) evaluates S1–S3 from the `full`-window rows.
+#
+#: Required columns in a sweep CSV (the columns this checker needs to verify).
+SWEEP_REQUIRED = [
+    "strategy", "variant", "instrument", "window", "cost_bps",
+    "n_trades", "total_return_pct", "buyhold_return_pct", "error",
+]
+
+
+def load_sweep_csvs(results_root: Path) -> list[tuple[Path, list[dict]]]:
+    """The committed `iterations_*.csv` sweep files as (path, rows) pairs."""
+    out: list[tuple[Path, list[dict]]] = []
+    if not results_root.exists():
+        return out
+    for p in sorted(results_root.glob("iterations_*.csv")):
+        with open(p, newline="", encoding="utf-8") as fh:
+            out.append((p, list(csv.DictReader(fh))))
+    return out
+
+
+def check_sweep_evidence(root: Path, cfg: dict, registry: dict,
+                         results: list[StrategyResults], rep: Report) -> None:
+    """C5 — validate the sweep CSVs and evaluate S1–S3 for strategies that have
+    no results directory (see module docstring above).
+
+    New check codes:
+      X14 a registered strategy has NO committed evidence at all (no
+          `strategy/results/<ID>/` and no row in any sweep CSV) — a sweep-era
+          strategy cannot be `rejected`/`finalist` without committed evidence.
+    """
+    results_root = root / "strategy" / "results"
+    sweeps = load_sweep_csvs(results_root)
+
+    # Which strategies have a committed results directory (they are covered by
+    # collect_results / the X checks); the rest must be covered by the sweeps.
+    with_dir = {norm_id(next(iter(r.ids))) for r in results if r.ids}
+
+    # ---- (a) schema + no failures + (b) every dir-less registered strategy
+    #         has committed rows ---------------------------------------------
+    by_sid: dict[str, list[dict]] = {}
+    for path, rows in sweeps:
+        if not rows:
+            rep.fail("X14", str(path.relative_to(root)),
+                     "sweep CSV has no data rows — a sweep that produced no "
+                     "committed cells is not evidence")
+            continue
+        missing = [c for c in SWEEP_REQUIRED if c not in rows[0]]
+        if missing:
+            rep.fail("X14", str(path.relative_to(root)),
+                     f"sweep CSV is missing required column(s) {missing}")
+            continue
+        errs = [r for r in rows if (r.get("error") or "").strip()]
+        if errs:
+            ex = errs[0]
+            rep.fail("X14", str(path.relative_to(root)),
+                     f"{len(errs)} sweep cell(s) recorded an error "
+                     f"(e.g. {ex.get('strategy')}/{ex.get('variant')}: "
+                     f"{(ex.get('error') or '')[:60]!r}) — the sweep did not "
+                     f"complete cleanly and is not valid evidence")
+        for r in rows:
+            sid = norm_id(r.get("strategy", ""))
+            if sid:
+                by_sid.setdefault(sid, []).append(r)
+
+    def _num(sid: str) -> int:
+        m = re.search(r"(\d+)$", (sid or ""))
+        return int(m.group(1)) if m else 0
+
+    registered = list((cfg.get("strategies") or {}).keys())
+    reg_by_norm = {norm_id(k): k for k in registered}
+    for k in registered:
+        key = norm_id(k)
+        if key in with_dir:
+            continue  # covered by its results directory
+        # The sweep CSVs are evidence for the *sweep era* (S-08 and up). The
+        # earlier hand-run strategies (S-01 … S-07) have their own results
+        # directories and are covered by the per-directory checks above.
+        if _num(key) < 8:
+            continue
+        if key not in by_sid:
+            rep.fail("X14", f"registry {k}",
+                     f"{k} is registered (sweep era, S-08+) but has no committed "
+                     f"evidence: no strategy/results/{k.upper()}/ directory and no "
+                     f"row in any strategy/results/iterations_*.csv sweep — a "
+                     f"status (rejected/finalist) requires committed evidence")
+
+    # ---- (c) S1–S3 from the `full`-window rows of each dir-less strategy ----
+    status_of = {norm_id(k): ((v.get("status") or "").strip().lower().replace("*", ""))
+                 for k, v in registry.items()}
+    for key, k in sorted(reg_by_norm.items()):
+        if key in with_dir or key not in by_sid:
+            continue
+        status = status_of.get(key, "")
+        terminal = status in {"rejected", "parked"}
+        # `full`-window rows only (the primary window; the plan's evidence basis)
+        full_rows = [r for r in by_sid[key]
+                     if (r.get("window") or "").strip().lower() == "full"]
+        if not full_rows:
+            rep.fail("X14", f"registry {k}",
+                     f"{k} has sweep rows but none in the `full` window — "
+                     f"S1–S3 cannot be evaluated from the committed evidence")
+            continue
+        try:
+            max_trades = max(int(float(r.get("n_trades") or 0)) for r in full_rows)
+        except ValueError:
+            continue
+        rets = [(float(r.get("total_return_pct")) if r.get("total_return_pct") not in (None, "") else None,
+                 float(r.get("buyhold_return_pct")) if r.get("buyhold_return_pct") not in (None, "") else None)
+                for r in full_rows]
+        loses_everywhere = all(
+            tr is not None and bh is not None and tr <= bh for tr, bh in rets)
+        beating = set()
+        for r in full_rows:
+            if abs(float(r.get("cost_bps") or 0) - 2.0) < 1e-9:
+                tr = r.get("total_return_pct")
+                bh = r.get("buyhold_return_pct")
+                if tr not in (None, "") and bh not in (None, "") and float(tr) > float(bh):
+                    beating.add(r.get("instrument"))
+        canon = reg_by_norm[key]
+
+        def _emit(code: str, ok: bool, msg_ok: str, msg_fail: str) -> None:
+            if ok:
+                if terminal:
+                    rep.note(code, f"registry {canon}", msg_ok)
+                else:
+                    rep.fail(code, f"registry {canon}", msg_fail)
+
+        if max_trades > 300:
+            _emit("S1", True,
+                  f"max trade count {max_trades} > 300 (sweep full window) and the "
+                  f"status is {status!r} — the §5 stop condition is correctly reflected",
+                  f"max trade count {max_trades} exceeds the 300-trade budget (sweep "
+                  f"`full` window) but the status is {status!r} — it must be rejected "
+                  "or parked")
+        if loses_everywhere:
+            _emit("S2", True,
+                  "loses to buy-hold in every `full`-window sweep cell and the status "
+                  f"is {status!r} — the §5 stop condition is correctly reflected",
+                  "loses to buy-hold in every `full`-window sweep cell (every cost "
+                  f"tier, every instrument) but the status is {status!r} — it must "
+                  "be rejected or parked")
+        if not beating:
+            _emit("S3", True,
+                  "no instrument beats buy-hold at 2 bps in the `full`-window sweep "
+                  f"and the status is {status!r} — the §5 stop condition is "
+                  "correctly reflected",
+                  "no instrument beats buy-hold at 2 bps in the `full`-window sweep "
+                  f"(generated_strategy.md §5) but the status is {status!r} — it "
+                  "must be rejected or parked")
+
+
 def check_freshness(res: StrategyResults, root: Path, rep: Report) -> None:
     """F1 — the committed results must not predate the current data build."""
     rel = str(res.csv_path.relative_to(root))
@@ -1337,6 +1499,11 @@ def run(root: Path, base_ledger: Path | None = None) -> Report:
         rep.warn("F1", "strategy/results", "no results directory — nothing to check")
 
     check_cross_artifacts(root, cfg, registry, trials, results, rep)
+
+    # C5: the sweep CSVs are the committed evidence for the strategies that
+    # have no results directory (S-08 … S-27 except the one with results/).
+    check_sweep_evidence(root, cfg, registry, results, rep)
+
     return rep
 
 
