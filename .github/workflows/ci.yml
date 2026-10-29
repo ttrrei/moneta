@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: checker self-test (15 mutation cases)
+      - name: checker self-test (16 mutation cases)
         run: python scripts/test_check_results.py
 
       - name: check the committed results

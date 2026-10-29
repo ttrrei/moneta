@@ -39,10 +39,11 @@ Implemented and tracked in Git:
   and `README.md` (the AI-first index — **read that one first**).
 
 Still **not** implemented (see Roadmap / BRD §5.3): automated strategy
-*generation*, a vectorized/DuckDB-only engine, a formal dedup engine, a full
-walk-forward harness, and CI (there is local `pytest`, no CI). A lightweight
-out-of-sample discipline (holdout + trial log, `config/strategies.yml`) **has**
-been added; a full walk-forward harness is still future work.
+*generation*, a vectorized/DuckDB-only engine, a formal dedup engine, and a
+full walk-forward harness. **CI is now in place** (`.github/workflows/ci.yml`:
+the data-free `check_results.py` gate + the `pytest` suite), and the
+out-of-sample discipline (holdout + trial log, `config/strategies.yml`) is
+enforced by that CI. A full walk-forward harness is still future work.
 
 Note on `legacy/` and `data/`: their *contents* are git-ignored
 (`legacy/` holds earlier review notes and reference code; `data/` holds the
@@ -229,7 +230,7 @@ Not yet done (future, see BRD §5.3 / §11):
 - [ ] Vectorized / DuckDB-only backtest engine for large-scale sweeps
 - [ ] Formal deduplication engine (fingerprinting, signal correlation)
 - [ ] Self-describing YAML strategy schema
-- [ ] CI (lint + `pytest` + doc-vs-code drift check) — local `pytest` only today
+- [x] CI (`pytest` + the data-free doc-vs-code drift check, `scripts/check_results.py`) — live in `.github/workflows/ci.yml`; a linter is the remaining piece
 
 ## License
 

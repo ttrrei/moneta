@@ -90,7 +90,7 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 | F1 | Test count: root `README.md` says 86, `docs/README.md` says 80 (review2 §4, review3 §4.5) | ✅ Reconciled and re-verified: all READMEs now state **104** (the current suite size, 2026-10-28; +1 for the OOS wiring E2E test). |
 | F2 | `docs/README.md` read-order pointed at the obsolete 10-26 review (review2 §1, review4 §1) | ✅ Points at the consolidated 10-27 → now this file. |
 | F3 | `supertrend.py` docstring still claimed "global warmup removes start-point dependence" (review3 §4.5, review4 §1) | 🟡 See §3 — the correct fix is a one-line honest note, not a code change. |
-| F4 | `library/README.md:30` / `supertrend.py:20` same WARMUP_DROP overclaim (review3 §4.5) | ⬜ Queued (one-line doc fix). |
+| F4 | `library/README.md:30` / `supertrend.py:20` same WARMUP_DROP overclaim (review3 §4.5) | ✅ **Fixed (2026-10-28).** Both now state honestly that dropping `WARMUP_DROP` leading rows *reduces but does not eliminate* start-point dependence (a fixed warmup is not proof of start-point independence). |
 
 ---
 
