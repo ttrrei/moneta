@@ -130,7 +130,10 @@ S05_ROW = ("| S-05 | SuperTrend-24 direction follower | 5m | `st_dir_24_2` | "
 #: A synthetic OOS strategy used by the X13 mutation cases. It is registered
 #: (config + registry + trial log) but has NO in-sample results directory, so
 #: only its `<ID>_oos` directory is present — exactly what Phase 2.4 commits.
-OOS_SID = "S-09"
+#: The id must NOT collide with a real registry row (S-01 … S-27): the real
+#: registry row would shadow the synthetic one and the X13 verdict check would
+#: be skipped.
+OOS_SID = "S-99"
 
 
 def write_oos_dir(work: Path, status: str = "tested",
@@ -337,10 +340,11 @@ CASES = [
                           'until: "2025-07-31"        # day before oos.holdout_start',
                           "until: null")),
 
+    # S-99 cannot exist in the registry (real ids are S-01 … S-27).
     ("config strategy missing from the registry -> X3", {"X3"}, 1, None,
      lambda w: replace_in(w / "config/strategies.yml",
                           '  S-05:\n    timeframe: "5m"',
-                          '  S-05:\n    timeframe: "5m"\n  S-09:\n    timeframe: "5m"')),
+                          '  S-05:\n    timeframe: "5m"\n  S-99:\n    timeframe: "5m"')),
 
     ("trial_log row missing -> X4", {"X4"}, 1, None,
      lambda w: (w / "strategy/trial_log.md").write_text(
