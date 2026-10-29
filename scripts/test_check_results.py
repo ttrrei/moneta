@@ -200,6 +200,21 @@ def write_oos_dir(work: Path, status: str = "tested",
                 })
 
 
+def _drop_column(path: Path, col: str) -> None:
+    """Rewrite a committed summary.csv without `col` (header + all rows)."""
+    if not path.exists():
+        return
+    with open(path, newline="", encoding="utf-8") as fh:
+        rd = csv.DictReader(fh)
+        fields = [f for f in (rd.fieldnames or []) if f != col]
+        rows = list(rd)
+    with open(path, "w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=fields, extrasaction="ignore")
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+
+
 CASES = [
     ("baseline: a legal repo must PASS", set(), 0, None, lambda w: None),
 
@@ -303,6 +318,13 @@ CASES = [
                               committed_pass=True, committed_ib=2),
                 (w / "strategy" / "results" / f"{OOS_SID}_oos")
                 .rename(w / "strategy" / "results" / "S77_oos"))),
+
+    # ---- H1 (§3.3): committed header must equal the shared field list -----
+    # A summary.csv missing a required column (sharpe_weekly / ...) -> the
+    # header no longer matches strategy/schema.py -> H1.
+    ("committed summary.csv missing a shared column -> H1", {"H1"}, 1, None,
+     lambda w: _drop_column(w / "strategy" / "results" / "S05" / "summary.csv",
+                            "sharpe_weekly")),
 ]
 
 

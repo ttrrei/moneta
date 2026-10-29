@@ -1,10 +1,15 @@
 # Repo Review — 2026-10-28 (consolidated)
 
+> ⚠️ **Superseded (2026-10-29).** This file is now **historical**. The active
+> review is [`repo_review_20261029.md`](repo_review_20261029.md) (OOS gate
+> hardening, Phases 1–3), which re-did and extended the OOS-gate work tracked
+> here (A3, C1, P0, F1) and is the file to read first. The status lines below
+> reflect the 2026-10-28 state.
+>
 > **What this is:** a synthesis of the four AI review passes on the current
 > tree (2026-10-28), plus the status of each finding **as of this commit**.
-> It is the single active review going forward. `repo_review_20261026.md` is
-> now historical; `repo_review_20261027.md` is its predecessor. If you are
-> an AI session starting work here, **read this file first**.
+> `repo_review_20261026.md` is now historical; `repo_review_20261027.md` is
+> its predecessor.
 >
 > **Sources:** `legacy/review1.md` (CN, loop/completion audit), `legacy/review2.md`
 > (EN, static source review), `legacy/review3.md` (CN, evidence-integrity audit,
@@ -50,7 +55,7 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 |---|---|---|
 | A1 | S-01 `full`/`last_12m` ran over the OOS holdout (2025-08-01+); numbers in registry/trial_log/report were contaminated (review3 §1) | ✅ S-01 re-run capped at `until: 2025-07-31`; registry, trial_log, report realigned |
 | A2 | CLI had no `--until`; WORKFLOW manual path *had* to cross the holdout (review2 P0.2, review3 §2) | ✅ `--until` added to all three CLIs (`strategy_rsi`, `strategy_supertrend`, `strategy_ema_spread`) |
-| A3 | `_check_oos_once` locks on the **label** (a `window=oos` row), not the data — a strategy already seen on the holdout could still "cleanly" run `--windows oos` (review3 §1, §8.11; review4 §2) | ✅ **Fixed (2026-10-28).** `_data_fingerprint` now binds the ledger to the *data* (holdout_start + row count + bar range + order-independent content hash of `(time, close)` over the holdout interval), not to path/mtime/rows. A rebuild of the same data — even to a new path — keeps the same lock key, so the once-per-dataset rule survives a rebuild. `_fingerprint_key` deliberately excludes path/file metadata. Covered by `test_oos_data_bound_lock` (rebuild-to-new-path case) in `tests/test_metrics.py`. |
+| A3 | `_check_oos_once` locks on the **label** (a `window=oos` row), not the data — a strategy already seen on the holdout could still "cleanly" run `--windows oos` (review3 §1, §8.11; review4 §2) | ✅ **Superseded (2026-10-29, see 20261029 §1.2/§2.3).** The label lock is gone: the holdout is now a fixed, closed window with an explicit id, and the lock is keyed on `(strategy, holdout_id)` (a rebuilt/repaid/appended dataset cannot re-open it). `_data_fingerprint` (now covering OHLCV incl. `open`, 64-bit order-independent hash + indicators/config provenance) is an **audit field**, no longer the lock key. |
 | A4 | Registry/trial_log/report numbers must trace to the matrix | ✅ `scripts/check_results.py` enforces this (G5/W/X/S families); 9 previously-broken cells now PASS |
 | A5 | "60/3 & 120/3 never beat buy-hold" claim had **zero evidence** (not in results/, trial_log, or any report) — violated G5 (review3 §7.1) | ✅ Removed. The registry row no longer cites un-run variants. If they are ever tested they get fresh S-IDs. |
 
@@ -66,7 +71,7 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 
 | # | Finding | Status |
 |---|---|---|
-| C1 | Sharpe = `mean(tr)/std(tr)*sqrt(n_trades/span)` — it **rewards trade frequency** (same per-trade edge ×30 trades ⇒ Sharpe ×5.48 = √30), yet `engine.py` documented it as "comparable across strategies". That sentence is false (review3 §3, review4 §1, review1 §1.9) | 🟡 The **false docstring line is being removed/qualified now** (minimal fix). Changing the *formula* to a daily-equity Sharpe is **not** done — it is a policy decision (see §3). |
+| C1 | Sharpe = `mean(tr)/std(tr)*sqrt(n_trades/span)` — it **rewards trade frequency** (same per-trade edge ×30 trades ⇒ Sharpe ×5.48 = √30), yet `engine.py` documented it as "comparable across strategies". That sentence is false (review3 §3, review4 §1, review1 §1.9) | ✅ **Done (2026-10-29).** `matrix.md` now labels the column `Sharpe (trade-rate, not for ranking)` (kept `Sharpe (weekly)`); `engine.py`/`METRIC_FORMULAS` document `sharpe` as NOT comparable and `sharpe_weekly` as the comparable one; WORKFLOW Step 6 says cross-strategy ranking uses `sharpe_weekly` only. Formula unchanged (policy decision, still open). |
 
 ### D. Loop completeness (S-05/S-06)
 
@@ -80,15 +85,15 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 
 | # | Finding | Status |
 |---|---|---|
-| E1 | No CI; no machine check on registry/trial_log/results format — autopilot's biggest trust hole (review1 §四, review3 §5, review4 §1) | ✅ `scripts/check_results.py` (data-free, 16 self-test mutations, incl. X12 trial-log-timeframe) + `.github/workflows/ci.yml` added |
+| E1 | No CI; no machine check on registry/trial_log/results format — autopilot's biggest trust hole (review1 §四, review3 §5, review4 §1) | ✅ `scripts/check_results.py` (data-free, **23 self-test mutations**, incl. X12 trial-log-timeframe, F finalist bar, X13 OOS pass/fail, H1 header) + `.github/workflows/ci.yml` added |
 | E2 | No `requirements.lock` | ✅ Done (see B2) — `requirements.lock` committed and used by CI |
 
 ### F. Documentation drift
 
 | # | Finding | Status |
 |---|---|---|
-| F1 | Test count: root `README.md` says 86, `docs/README.md` says 80 (review2 §4, review3 §4.5) | ✅ Reconciled and re-verified: all READMEs now state **120** (the current suite size, 2026-10-29; +16 over the earlier 104: rule tests for S-01/S-02/S-03/S-04, plus OOS gate hardening tests). |
-| P0 | OOS gate hardening (finalist-only + preserve consumption record) | ✅ `run_matrix._check_oos_once` now refuses an **untried** strategy (no trial record) from consuming the finalist-only holdout "blind", and `_reserve_oos` preserves the prior consumption record in a `superseded` chain instead of destroying it. The data-bound lock from the 2026-10-28 review is unchanged. |
+| F1 | Test count: root `README.md` says 86, `docs/README.md` says 80 (review2 §4, review3 §4.5) | ✅ Reconciled and re-verified: all READMEs now state **140** (the current suite size, 2026-10-29: OOS-gate §1.7 suite + §2.2 position tests + engine/metrics/rule tests). |
+| P0 | OOS gate hardening (finalist-only + preserve consumption record) | ✅ **Superseded and extended (2026-10-29, see 20261029 §1.2/§1.3/§1.4).** The `superseded`-chain design was replaced by an append-only `consumptions` list keyed on `(strategy, holdout_id)`, walked in full, fail-closed, and the lock is now a finalist-only + once-per-holdout gate (the data fingerprint is audit-only, not the lock key). |
 | F2 | `docs/README.md` read-order pointed at the obsolete 10-26 review (review2 §1, review4 §1) | ✅ Points at the consolidated 10-27 → now this file. |
 | F3 | `supertrend.py` docstring still claimed "global warmup removes start-point dependence" (review3 §4.5, review4 §1) | 🟡 See §3 — the correct fix is a one-line honest note, not a code change. |
 | F4 | `library/README.md:30` / `supertrend.py:20` same WARMUP_DROP overclaim (review3 §4.5) | ✅ **Fixed (2026-10-28).** Both now state honestly that dropping `WARMUP_DROP` leading rows *reduces but does not eliminate* start-point dependence (a fixed warmup is not proof of start-point independence). |
@@ -155,11 +160,12 @@ one deterministic rule test per strategy, and result manifests.
 4. Fix the `supertrend.py`/`library` WARMUP_DROP overclaim — one honest line each (F4).
 
 **Batch 2 — before any autopilot run**
-1. Decide the Sharpe policy: relabel `sharpe_trade_rate` (and stop ranking by
-   it) **or** switch to a daily-equity Sharpe. Do not leave it ambiguous (C1).
-2. ✅ Hardened `_check_oos_once` to bind to data (holdout_start + row count +
-   bar range + content hash), not just the `window` label (A3) — done
-   (see A3; `test_oos_data_bound_lock`).
+1. ✅ **Done (2026-10-29).** Sharpe relabelled `Sharpe (trade-rate, not for
+   ranking)` in `matrix.md`; ranking now uses `sharpe_weekly` only (C1). The
+   *formula* change (daily-equity Sharpe) remains a policy decision, deferred.
+2. ✅ **Superseded (2026-10-29).** The OOS lock is now keyed on
+   `(strategy, holdout_id)` with a fixed, closed holdout window (20261029
+   §1.1/§1.2); the data fingerprint is audit-only (see A3).
 3. Decide: designate `run_matrix.py` the single canonical execution path and
    treat per-strategy CLIs as thin convenience wrappers (removes the "two
    execution paths" drift risk).

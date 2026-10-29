@@ -533,15 +533,36 @@ def collect_results(results_dir: Path, cfg: dict, rep: Report, root: Path) -> St
         return None
 
     with open(csv_path, newline="", encoding="utf-8") as fh:
-        rows = list(csv.DictReader(fh))
+        reader = csv.DictReader(fh)
+        fieldnames = list(reader.fieldnames or [])
+        rows = list(reader)
     if not rows:
         rep.fail("F1", rel, "summary.csv has no data rows")
         return None
 
     # Whether this directory is an OOS holdout matrix (a distinct `<ID>_oos`
     # dir, see the X1 identity check) — the X13 check re-computes pass/fail for
-    # it. (The §3.3 *header-must-match* check is a Phase-3 addition.)
+    # it.
     is_oos = results_dir.name.lower().endswith("_oos")
+
+    # ---- H1 (§3.3): the committed header must equal the shared field list --
+    # The single source is strategy/schema.py; the runner (write_csv) writes
+    # exactly this. This is the check that would have caught S01/S05/S06 being
+    # committed on the old schema (missing sharpe_weekly / trades_per_year /
+    # mean_net_position_pct) — CI never caught it because there was no rule.
+    expected = schema.OOS_HEADER if is_oos else schema.SUMMARY_FIELDS
+    if fieldnames != expected:
+        missing = [f for f in expected if f not in fieldnames]
+        extra = [f for f in fieldnames if f not in expected]
+        parts = []
+        if missing:
+            parts.append(f"missing {missing}")
+        if extra:
+            parts.append(f"unexpected {extra}")
+        rep.fail("H1", rel,
+                 f"summary.csv header must equal the shared field list from "
+                 f"strategy/schema.py ({' and '.join(parts) or 'column order differs'}); "
+                 f"regenerate with run_matrix.py so the committed schema is current")
 
     windows = cfg.get("windows") or {}
     oos = cfg.get("oos") or {}

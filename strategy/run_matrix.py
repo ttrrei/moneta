@@ -668,7 +668,7 @@ def write_markdown(cells: list[dict], path: Path) -> None:
             "",
             f"### Window: `{window}`",
             "",
-            "| Instrument | Cost (bps) | Ret % | Buy-hold % | Trades | Win % | MaxDD % | Sharpe | Sharpe (weekly) | Trades/yr | Exposure % | Mean pos % |",
+            "| Instrument | Cost (bps) | Ret % | Buy-hold % | Trades | Win % | MaxDD % | Sharpe (trade-rate, not for ranking) | Sharpe (weekly) | Trades/yr | Exposure % | Mean pos % |",
             "|---|---|---|---|---|---|---|---|---|---|---|---|",
         ]
         for c in cells:

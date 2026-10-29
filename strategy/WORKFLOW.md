@@ -189,6 +189,13 @@ count ≤ 300) — do not restate it here, reference it.
   snooping and is prohibited — that is a new hypothesis, not a re-run. This is
   the single most important guard against the overfitting risk the BRD names as #1.
 
+- **Cross-strategy ranking (Sharpe):** the `Sharpe` column is a *trade-rate*
+  Sharpe (annualised from per-trade returns) — it is **not comparable across
+  strategies** and must not be used to rank them. Rank strategies on
+  `sharpe_weekly` (Sharpe of the per-bar equity curve on a weekly close
+  basis) only. `matrix.md` labels the columns accordingly: `Sharpe
+  (trade-rate, not for ranking)` vs `Sharpe (weekly)`.
+
 - **Gate G6:** status assigned and justified in the report; if `tested`, the
   one-shot holdout result is present. A `rejected` outcome with a good
   diagnosis is a **complete, successful run** — do not re-tune to escape it.

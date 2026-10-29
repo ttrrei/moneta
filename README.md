@@ -42,8 +42,10 @@ Still **not** implemented (see Roadmap / BRD §5.3): automated strategy
 *generation*, a vectorized/DuckDB-only engine, a formal dedup engine, and a
 full walk-forward harness. **CI is now in place** (`.github/workflows/ci.yml`:
 the data-free `check_results.py` gate + the `pytest` suite), and the
-out-of-sample discipline (holdout + trial log, `config/strategies.yml`) is
-enforced by that CI. A full walk-forward harness is still future work.
+out-of-sample discipline (one-shot, fail-closed, finalist-only holdout gate in
+`strategy/run_matrix.py` + `strategy/oos_ledger.json`, with the pass bar defined
+once in `config/strategies.yml → oos.pass_criteria`) is enforced by that CI. A
+full walk-forward harness is still future work.
 
 Note on `legacy/` and `data/`: their *contents* are git-ignored
 (`legacy/` holds earlier review notes and reference code; `data/` holds the
@@ -97,7 +99,7 @@ moneta/
 │   ├── results/S01|S05|S06/     ← per-cell JSON + matrix.md + summary.csv
 │   └── docs/strategy_rsi_report.md
 ├── config/                      ← indicators.yml, strategies.yml, history_map.yml
-├── tests/                       ← 120 pytest tests (pipeline + engine + metrics + strategy rules + custom indicators)
+├── tests/                       ← 140 pytest tests (pipeline + engine + metrics + strategy rules + OOS gate + custom indicators)
 ├── scripts/  data/  legacy/     ← helpers / runtime artifacts / notes (git-ignored contents)
 └── requirement.txt
 ```
@@ -221,11 +223,11 @@ Done (tracked in Git):
 - [x] Gold feature wide tables — **305 / 270 columns** (`pipeline/indicators.py` + `library/`, spec in `docs/indicators.md`)
 - [x] **Shared, tested backtest engine** with standard metrics, cost handling, and buy-and-hold (`strategy/engine.py`)
 - [x] Strategy registry + background/checklist + trial log + OOS holdout discipline
-- [x] Automated tests — **120 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS lock + wiring)
+- [x] Automated tests — **140 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS gate: finalist-only + one-shot + fail-closed + machine pass/fail)
 
 Not yet done (future, see BRD §5.3 / §11):
 
-- [ ] Out-of-sample / walk-forward validation harness (a lightweight holdout + trial log now exists in `config/strategies.yml`)
+- [ ] Full out-of-sample / walk-forward *harness* (a one-shot, finalist-only, machine-checked holdout gate now exists — `strategy/run_matrix.py`, `strategy/oos_ledger.json`, `config/strategies.yml → oos`; running a real holdout still needs the owner's go-ahead)
 - [ ] Automated strategy *generation* (LLM-driven) — the loop is currently AI-assisted/manual
 - [ ] Vectorized / DuckDB-only backtest engine for large-scale sweeps
 - [ ] Formal deduplication engine (fingerprinting, signal correlation)
