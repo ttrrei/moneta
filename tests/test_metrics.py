@@ -329,8 +329,20 @@ def test_oos_data_bound_lock(tmp_path, monkeypatch):
     monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")  # absent -> label lock off
     monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
 
-    fp_a = {"path": "a.parquet", "mtime": 100.0, "rows": 1000}
-    fp_b = {"path": "b.parquet", "mtime": 200.0, "rows": 2000}
+    # Content-bound fingerprints (review 2026-10-28: bind to data, not file
+    # metadata). Identical content -> same lock key; different content -> different.
+    fp_a = {"path": "a.parquet", "holdout_start": "2025-08-01", "rows": 1000,
+            "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2026-10-24 00:00:00+00:00",
+            "content_hash": 11111}
+    fp_b = {"path": "b.parquet", "holdout_start": "2025-08-01", "rows": 2000,
+            "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2026-11-01 00:00:00+00:00",
+            "content_hash": 22222}
+    # Same data as A, but rebuilt to a NEW path (fresh file, fresh mtime) — this
+    # is the exact case the review flagged: the lock must survive a rebuild, so
+    # the content-bound key is identical to fp_a and a re-run is refused.
+    fp_a_rebuilt = {"path": "a_rebuilt.parquet", "holdout_start": "2025-08-01",
+                    "rows": 1000, "tmin": "2025-08-01 00:00:00+00:00",
+                    "tmax": "2026-10-24 00:00:00+00:00", "content_hash": 11111}
 
     # First run on dataset A: allowed, then reserved.
     rm._check_oos_once("s01", fp_a, {})
@@ -340,7 +352,12 @@ def test_oos_data_bound_lock(tmp_path, monkeypatch):
     with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
         rm._check_oos_once("s01", fp_a, {})
 
-    # A genuinely different dataset B is still allowed (new data, new attempt).
+    # A rebuild of the SAME data to a new path is STILL refused — the lock is
+    # bound to content, not to the file. (The core of the review fix.)
+    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
+        rm._check_oos_once("s01", fp_a_rebuilt, {})
+
+    # A genuinely different dataset B (different holdout bars) is still allowed.
     rm._check_oos_once("s01", fp_b, {})
 
     # Case/dash-insensitive: "S-01" and "s01" are the same strategy.
@@ -355,12 +372,74 @@ def test_oos_reserve_is_idempotent_for_same_data(tmp_path, monkeypatch):
     monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")
     monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
 
-    fp = {"path": "x.parquet", "mtime": 1.0, "rows": 5}
+    fp = {"path": "x.parquet", "holdout_start": "2025-08-01", "rows": 5,
+          "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2025-08-02 00:00:00+00:00",
+          "content_hash": 777}
     rm._reserve_oos("s02", fp, {"k": 1})
     rm._reserve_oos("s02", fp, {"k": 2})  # supersede, not append
     ledger = rm._load_oos_ledger()
     assert list(ledger.keys()) == ["S02"]
     assert ledger["S02"]["manifest"] == {"k": 2}
+
+
+def test_run_matrix_oos_wiring_end_to_end(tmp_path, monkeypatch):
+    """E2E wiring of the `--windows oos` path (review 2026-10-28: run the OOS
+    flow end-to-end so the first *real* survivor isn't its first live test).
+
+    Drives the real ``run_matrix`` with a stub strategy on a scratch dataset.
+    Proves the three things that only unit tests had covered in isolation:
+      1. an OOS run reserves the attempt in the ledger BEFORE any cell runs;
+      2. OOS output goes to a SEPARATE ``<name>_oos`` dir (never overwrites the
+         in-sample matrix);
+      3. a second ``--windows oos`` run on the same data is refused by the
+         data-bound lock (the ledger the first run wrote).
+    Uses a stub strategy + a stub fingerprint so it touches no real parquet,
+    ledger, or trial_log — no evidence pollution.
+    """
+    import strategy.run_matrix as rm
+
+    # Isolate every persistent side effect.
+    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")  # absent -> label lock off
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
+    fp = {"path": "scratch.parquet", "holdout_start": "2025-08-01", "rows": 3,
+          "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2025-08-03 00:00:00+00:00",
+          "content_hash": 424242}
+    monkeypatch.setattr(rm, "_data_fingerprint", lambda parquet: fp)
+
+    # Stub the strategy's per-cell run: returns a minimal result dict and never
+    # touches real data.
+    calls = []
+
+    def stub_run(parquet, instrument, timeframe, since, until, cost_bps, entry_guard):
+        calls.append((instrument, since, until, cost_bps))
+        return {
+            "instrument": instrument, "cost_bps": cost_bps, "start": "2025-08-01 00:00:00",
+            "end": "2025-08-03 00:00:00", "n_bars": 10, "n_trades": 2,
+            "total_return_pct": 1.0, "buyhold_return_pct": 0.5,
+            "max_drawdown_pct": 1.0, "win_rate_pct": 50.0,
+            "avg_trade_return_pct": 0.5, "sharpe": 0.1, "sharpe_weekly": 0.1,
+            "trades_per_year": 0.1, "exposure_pct": 50.0, "span_years": 0.01,
+        }
+
+    rm._STRATEGIES["stub"] = {"label": "stub", "run": stub_run}
+    monkeypatch.setitem(rm._STRATEGIES, "stub", {"label": "stub", "run": stub_run})
+
+    out_dir = tmp_path / "results" / "stub"
+    # (1) First OOS run succeeds and writes to a SEPARATE _oos dir.
+    cells = rm.run_matrix("stub", ["EUR_USD"], ["oos"], [2.0], "5m", False, out_dir)
+    assert cells, "the OOS run produced no cells"
+    assert (tmp_path / "results" / "stub_oos").exists(), "OOS output must go to a separate dir"
+    assert not (out_dir / "EUR_USD__oos__c2.json").exists(), "in-sample dir must stay untouched"
+
+    # (2) The attempt was reserved in the ledger BEFORE the holdout was loaded.
+    ledger = rm._load_oos_ledger()
+    assert "STUB" in ledger and ledger["STUB"]["fingerprint_key"] == rm._fingerprint_key(fp)
+
+    # (3) A second `--windows oos` run on the SAME data is now refused by the
+    #     data-bound lock (the ledger written by run 1).
+    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
+        rm.run_matrix("stub", ["EUR_USD"], ["oos"], [2.0], "5m", False,
+                      tmp_path / "results" / "stub2")
 
 
 def test_run_matrix_n_tried_before_counts_distinct_strategies():

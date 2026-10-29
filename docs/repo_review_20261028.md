@@ -50,7 +50,7 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 |---|---|---|
 | A1 | S-01 `full`/`last_12m` ran over the OOS holdout (2025-08-01+); numbers in registry/trial_log/report were contaminated (review3 §1) | ✅ S-01 re-run capped at `until: 2025-07-31`; registry, trial_log, report realigned |
 | A2 | CLI had no `--until`; WORKFLOW manual path *had* to cross the holdout (review2 P0.2, review3 §2) | ✅ `--until` added to all three CLIs (`strategy_rsi`, `strategy_supertrend`, `strategy_ema_spread`) |
-| A3 | `_check_oos_once` locks on the **label** (a `window=oos` row), not the data — a strategy already seen on the holdout could still "cleanly" run `--windows oos` (review3 §1, §8.11; review4 §2) | ⬜ **Open.** The lock is still label-based. Acceptable for the current 3-strategy count because **no strategy has passed in-sample**, so none is OOS-eligible; flagged as the #1 thing to harden before autopilot. |
+| A3 | `_check_oos_once` locks on the **label** (a `window=oos` row), not the data — a strategy already seen on the holdout could still "cleanly" run `--windows oos` (review3 §1, §8.11; review4 §2) | ✅ **Fixed (2026-10-28).** `_data_fingerprint` now binds the ledger to the *data* (holdout_start + row count + bar range + order-independent content hash of `(time, close)` over the holdout interval), not to path/mtime/rows. A rebuild of the same data — even to a new path — keeps the same lock key, so the once-per-dataset rule survives a rebuild. `_fingerprint_key` deliberately excludes path/file metadata. Covered by `test_oos_data_bound_lock` (rebuild-to-new-path case) in `tests/test_metrics.py`. |
 | A4 | Registry/trial_log/report numbers must trace to the matrix | ✅ `scripts/check_results.py` enforces this (G5/W/X/S families); 9 previously-broken cells now PASS |
 | A5 | "60/3 & 120/3 never beat buy-hold" claim had **zero evidence** (not in results/, trial_log, or any report) — violated G5 (review3 §7.1) | ✅ Removed. The registry row no longer cites un-run variants. If they are ever tested they get fresh S-IDs. |
 
@@ -59,7 +59,7 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 | # | Finding | Status |
 |---|---|---|
 | B1 | `duckdb.connect()` in `strategy_lib.py` / `strategy_rsi_lib.py` had no `SET TimeZone`, so date bounds were read in local tz (review3 §4.1) | ✅ Both pinned to UTC. `run_matrix.py:172` does only a `count(*)` (no date filter), so it is left unpinned deliberately. |
-| B2 | `requirement.txt` has bare package names; TA-Lib (ATR/SAR/RSI) drift would silently change every result (review3 §5, review4 §1) | ⬜ **Open** — `pip freeze > requirements.lock` is queued (cheap, no code). |
+| B2 | `requirement.txt` has bare package names; TA-Lib (ATR/SAR/RSI) drift would silently change every result (review3 §5, review4 §1) | ✅ **Fixed (2026-10-28).** `requirements.lock` (pip freeze) is committed and is the CI install source (`.github/workflows/ci.yml` `pytest` job installs `-r requirements.lock` only). |
 | B3 | S-01 still uses its own `strategy_rsi_lib.py` `load_bars/make_bars`, duplicating the shared core — two places to fix any future bug (review3 §7.5, review4 §1) | 🟡 Acknowledged. Merging is **not** safe yet (a stateful-rule reuse was attempted and reverted for a state-leak bug). Left as-is; tracked. |
 
 ### C. The Sharpe metric (the one "policy" item)
@@ -80,14 +80,14 @@ Legend: ✅ fixed now · 🟡 fixed-with-caveat · ⬜ deliberately not done (se
 
 | # | Finding | Status |
 |---|---|---|
-| E1 | No CI; no machine check on registry/trial_log/results format — autopilot's biggest trust hole (review1 §四, review3 §5, review4 §1) | ✅ `scripts/check_results.py` (data-free, 15 self-test mutations) + `.github/workflows/ci.yml` added |
-| E2 | No `requirements.lock` | ⬜ Queued (B2) |
+| E1 | No CI; no machine check on registry/trial_log/results format — autopilot's biggest trust hole (review1 §四, review3 §5, review4 §1) | ✅ `scripts/check_results.py` (data-free, 16 self-test mutations, incl. X12 trial-log-timeframe) + `.github/workflows/ci.yml` added |
+| E2 | No `requirements.lock` | ✅ Done (see B2) — `requirements.lock` committed and used by CI |
 
 ### F. Documentation drift
 
 | # | Finding | Status |
 |---|---|---|
-| F1 | Test count: root `README.md` says 86, `docs/README.md` says 80 (review2 §4, review3 §4.5) | ✅ Reconciled (suite is 86). |
+| F1 | Test count: root `README.md` says 86, `docs/README.md` says 80 (review2 §4, review3 §4.5) | ✅ Reconciled and re-verified: all READMEs now state **104** (the current suite size, 2026-10-28; +1 for the OOS wiring E2E test). |
 | F2 | `docs/README.md` read-order pointed at the obsolete 10-26 review (review2 §1, review4 §1) | ✅ Points at the consolidated 10-27 → now this file. |
 | F3 | `supertrend.py` docstring still claimed "global warmup removes start-point dependence" (review3 §4.5, review4 §1) | 🟡 See §3 — the correct fix is a one-line honest note, not a code change. |
 | F4 | `library/README.md:30` / `supertrend.py:20` same WARMUP_DROP overclaim (review3 §4.5) | ⬜ Queued (one-line doc fix). |
@@ -149,7 +149,7 @@ one deterministic rule test per strategy, and result manifests.
 1. Remove the false "comparable across strategies" Sharpe line from
    `engine.py` docstring + `METRIC_FORMULAS` (C1) — **docstring only**, do not
    change the formula yet.
-2. `pip freeze > requirements.lock` (B2/E2).
+2. ✅ `pip freeze > requirements.lock` (B2/E2) — done; CI installs from it.
 3. Add one deterministic strategy-rule test per strategy + a DST/timezone
    boundary test, reusing the `verify_engine.py` probe pattern (F3/D-series).
 4. Fix the `supertrend.py`/`library` WARMUP_DROP overclaim — one honest line each (F4).
@@ -157,14 +157,15 @@ one deterministic rule test per strategy, and result manifests.
 **Batch 2 — before any autopilot run**
 1. Decide the Sharpe policy: relabel `sharpe_trade_rate` (and stop ranking by
    it) **or** switch to a daily-equity Sharpe. Do not leave it ambiguous (C1).
-2. Harden `_check_oos_once` to bind to data (fingerprint + manifest), not just
-   the `window` label (A3).
+2. ✅ Hardened `_check_oos_once` to bind to data (holdout_start + row count +
+   bar range + content hash), not just the `window` label (A3) — done
+   (see A3; `test_oos_data_bound_lock`).
 3. Decide: designate `run_matrix.py` the single canonical execution path and
    treat per-strategy CLIs as thin convenience wrappers (removes the "two
    execution paths" drift risk).
-4. Run the **untested** registered candidates S-02/S-03/S-04 first (S-02 is 1h
-   RSI — the cheapest test of the "slow the signal" hypothesis) rather than
-   inventing new IDs.
+4. ✅ Ran the **untested** registered candidates S-02/S-03/S-04 (all rejected;
+   see `strategy/trial_log.md` rows 4-6 and `STRATEGY_REGISTRY.md`). S-07
+   (regime-gated slow trend) also tried and rejected.
 
 **Explicitly deferred** — everything in §3, and the Sharpe *formula* change
 until the policy in 4.2-1 is chosen.

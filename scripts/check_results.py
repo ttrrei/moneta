@@ -43,6 +43,8 @@ What it checks
   X8  the strategy report (``strategy/docs/<stem>_report.md``) exists
   X9  the registry "Last run" date matches the trial-log date
   X10 the CSV timeframe matches the config registry
+  X11 the registry's buy-hold claim agrees with the matrix (no false "beats BH")
+  X12 the trial-log row's stated timeframe matches the config registry
 
 **Stop conditions (generated_strategy.md §5), machine-enforced**
   S1  trade count > 300  -> the status must be rejected / parked
@@ -714,6 +716,22 @@ def check_cross_artifacts(root: Path, cfg: dict, registry: dict, trials: list[di
                          f"registry status {status!r} disagrees with the trial-log outcome(s) "
                          f"{sorted({t['outcome'] for t in trows})}")
 
+        # ---- X12: trial-log timeframe agrees with the config -------------
+        # The trial-log `hypothesis` column is free text, but when a row names
+        # a bar timeframe (e.g. "5m RSI-24 ...") that claim must agree with the
+        # strategy's registered timeframe in config/strategies.yml. This is the
+        # check that would have caught the S-05/S-06 "1h" mislabel (their
+        # registry + config + CSV are 5m).
+        cfg_tf = ((cfg.get("strategies") or {}).get(canon_id) or {}).get("timeframe")
+        if cfg_tf and trows:
+            for t in trows:
+                hyp = t["hypothesis"] or ""
+                tokens = set(re.findall(r"\b\d+(?:m|h|d|w)\b", hyp))
+                if tokens and cfg_tf not in tokens:
+                    rep.fail("X12", f"trial_log {canon_id}",
+                             f"trial-log row {t['n']} names timeframe(s) "
+                             f"{sorted(tokens)} but {canon_id} is registered "
+                             f"as {cfg_tf!r} in config/strategies.yml")
         # ---- W5: at most one adjudicated OOS row ------------------------
         adjudicated = [t for t in trows if t["window"] == "oos" and t["outcome"] != "<TBD>"]
         if len(adjudicated) > 1:

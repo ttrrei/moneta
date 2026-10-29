@@ -166,18 +166,33 @@ def _cell_name(instrument: str, window: str, cost: float) -> str:
 
 
 def _data_fingerprint(parquet: str) -> dict:
-    """Identity of the input data for a cell (repo_review_20261027 §2.2):
-    path + mtime + row count, so a rerun after a data rebuild can be told
-    apart from a rerun on identical data."""
+    """Content-identity of the OOS dataset (review 2026-10-28: bind the lock
+    to the DATA, not to file metadata).
+
+    Fingerprint = (row count, first bar, last bar, order-independent checksum
+    of (time, close) over the holdout interval) plus the path as the identity
+    of *which* dataset this is. Rebuilding the same data (fresh mtime, same
+    bars, even reordered rows) produces the SAME fingerprint, so the
+    once-per-dataset rule survives a rebuild; a dataset with different holdout
+    bars produces a different one. The checksum is order-independent (a sum of
+    per-row hashes), so row order in the parquet cannot change it.
+    """
+    import duckdb  # lazy: keeps the OOS-lock path importable without duckdb at module load
     p = Path(parquet)
-    st = p.stat()
-    import duckdb
-    conn = duckdb.connect()
+    holdout_start = _load_config()["oos"]["holdout_start"]
+    prime = 1000000007  # int64 prime; keeps the additive hash in INT64 range
+    con = duckdb.connect()
     try:
-        n = conn.execute("SELECT count(*) FROM read_parquet(?)", [str(p)]).fetchone()[0]
+        n, tmin, tmax, h = con.execute(
+            "SELECT count(*) n, min(time) tmin, max(time) tmax, "
+            "mod(sum(hash(cast(time as VARCHAR) || '#' || cast(close as VARCHAR))), ?)::BIGINT h "
+            "FROM read_parquet(?) WHERE time >= ?",
+            [prime, str(p), holdout_start]).fetchone()
     finally:
-        conn.close()
-    return {"path": str(p), "mtime": st.st_mtime, "rows": int(n)}
+        con.close()
+    return {"path": str(p), "holdout_start": holdout_start,
+            "rows": int(n), "tmin": str(tmin), "tmax": str(tmax),
+            "content_hash": int(h)}
 
 
 # ---------------------------------------------------------------------------
@@ -216,10 +231,21 @@ def _save_oos_ledger(ledger: dict) -> None:
 
 
 def _fingerprint_key(fp: dict | None) -> str | None:
-    """Stable identity of a data fingerprint (path + mtime + rows)."""
+    """Stable identity of a data fingerprint — bound to the *data*, not the file.
+
+    Keyed on the content-bound fields only (holdout_start + row count + bar
+    range + content hash), deliberately **excluding** path and any file
+    metadata. That is the point of the review fix: rebuilding the same data
+    (fresh mtime, even a new file path, reordered rows) yields the same key,
+    so the once-per-dataset rule survives a rebuild. A genuinely different
+    dataset has a different content hash and is allowed its own attempt.
+    (``path`` is still stored in the fingerprint for human audit, but is not
+    part of the lock.)
+    """
     if not fp:
         return None
-    return f"{fp.get('path')}|{fp.get('mtime')}|{fp.get('rows')}"
+    return (f"{fp.get('holdout_start')}|{fp.get('rows')}"
+            f"|{fp.get('tmin')}|{fp.get('tmax')}|{fp.get('content_hash')}")
 
 
 def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> None:

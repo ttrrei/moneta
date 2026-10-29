@@ -135,6 +135,10 @@ CASES = [
      lambda w: edit_csv(w / "strategy/results/S05/summary.csv",
                         lambda r: {**r, "timeframe": "1h"})),
 
+    ("trial_log names a timeframe the config disagrees with -> X12", {"X12"}, 1, None,
+     lambda w: replace_in(w / "strategy/trial_log.md",
+                          "5m SuperTrend(24, 2.0)", "1h SuperTrend(24, 2.0)")),
+
     ("registry quotes a number absent from the matrix -> G5", {"G5"}, 1, None,
      lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", "+2402%", "+9999%")),
 

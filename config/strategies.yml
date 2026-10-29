@@ -54,10 +54,35 @@ oos:
   # evaluated exactly once. Re-running it to improve the holdout number is
   # prohibited (that is re-tuning and must open a new S-NN).
   usage: "finalist_only_once"
+  # Adjudication bar — FIXED in advance, before any holdout number is looked
+  # at (review 2026-10-28: the pass rule must be decided before the next
+  # strategy result is seen, not after). A strategy is promoted to `tested`
+  # only if ALL of the following hold on the single holdout evaluation:
+  pass_criteria:
+    # 1. Cross-market: beats buy-hold at 2 bps on AT LEAST 2 of the 3
+    #    instruments. (A single-instrument win is a BTC-beta artifact, not a
+    #    strategy — see S-06.)
+    min_instruments_beating_bh_at_2bps: 2
+    # 2. Risk/scale comparator: on the instruments it wins, the holdout
+    #    total-return vs buy-hold must be positive at 2 bps (already required
+    #    by #1) — AND the win must not come from taking more net long exposure
+    #    than buy-hold. In practice: report the strategy's mean net position
+    #    alongside buy-hold's (+100%) so a "win" from doubled leverage is
+    #    visible and can be rejected. (No extra metric computed; just reported.)
+    comparator: "beat_bh_at_2bps_on_min_2_of_3_instruments; report mean net position for same-exposure sanity"
+    # 3. Frequency guard (generated_strategy §5): the holdout run must stay
+    #    inside the registered trade-count ceiling, else reject as cost×frequency.
+    respect_trade_ceiling: true
+    # Rationale for the ">=2 of 3" (not "all 3") bar: all-3 is nearly
+    # impossible for long-only strategies and would make every result a
+    # "rejected" (the exact failure the review warned about), while 1 of 3 is
+    # a single-instrument artifact. 2 of 3 is the defensible middle.
   note: >
     The in-sample window for discovery/tuning is data < holdout_start.
     The holdout is the single, final, out-of-sample check. Recording which
     strategies were tried against it (trial_log) is mandatory.
+    The pass_criteria above are the bar for that check; do not change them
+    after seeing a holdout number (that is re-tuning the criterion).
 
 # ---------------------------------------------------------------------------
 # Strategy registry (config side). Each entry pins what the *runner* must
