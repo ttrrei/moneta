@@ -857,6 +857,42 @@ def check_cross_artifacts(root: Path, cfg: dict, registry: dict, trials: list[di
                          f"'edge appears on < 1 of 3 instruments') but the status is {status!r} "
                          "— it must be rejected or parked")
 
+        # ---- F (finalist gate): a `finalist` row must actually beat the
+        # in-sample bar — otherwise it could not be promoted to the holdout.
+        # §1.6: the bar (from `config/strategies.yml → oos.pass_criteria`) is
+        # no §5 stop condition AND total_return > buy-hold at 2 bps on
+        # >= 2 of 3 instruments on BOTH `full` and `last_12m`.
+        if status == "finalist":
+            min_beat = 2  # >= 2 of 3 instruments (see pass_criteria)
+            required_windows = ("full", "last_12m")
+            per_win_instruments: dict[str, set[str]] = {}
+            for c in res.cells:
+                if (c.cost_bps == 2.0 and c.total_return_pct is not None
+                        and c.buyhold_return_pct is not None
+                        and c.total_return_pct > c.buyhold_return_pct):
+                    per_win_instruments.setdefault(c.window, set()).add(c.instrument)
+            weak = [w for w in required_windows
+                    if len(per_win_instruments.get(w, set())) < min_beat]
+            # The `> 300 trades` stop condition is not implied by the beat bar.
+            trade_stop = res.max_trades > 300
+            if weak or trade_stop:
+                parts = []
+                if weak:
+                    parts.append("does not beat buy-hold at 2 bps on "
+                                 f">= {min_beat} of 3 instruments on "
+                                 f"{', '.join(required_windows)} — weak on {weak}")
+                if trade_stop:
+                    parts.append(f"max trade count {res.max_trades} > 300 (a §5 stop condition)")
+                rep.fail("F", f"registry {canon_id}",
+                         f"status is `finalist` but the in-sample results { ' and '.join(parts) } "
+                         f"— a finalist must beat the in-sample bar "
+                         f"(see `config/strategies.yml → oos.pass_criteria`)")
+            else:
+                rep.note("F", f"registry {canon_id}",
+                         "status is `finalist` and the in-sample results satisfy the bar "
+                         "(beats buy-hold at 2 bps on >= 2 of 3 instruments on full and last_12m, "
+                         "max trade count <= 300)")
+
     # ---- X2 (other direction): config registry -> registry table --------
     for k in (cfg.get("strategies") or {}):
         if norm_id(k) not in reg_by_norm:

@@ -167,22 +167,27 @@ spec documents, not strategy reports) containing, at minimum:
 ## Step 6 — Evaluate (decision gates)
 
 **Action:** apply generated_strategy.md §5 stop conditions to the
-Step-4 results and assign exactly one status:
+Step-4 results and assign exactly one status. The in-sample pass bar is defined
+**once** in `config/strategies.yml → oos.pass_criteria` (beats buy-hold at 2 bps
+on ≥ 2 of 3 instruments, **on both `full` and `last_12m`**, and max trade
+count ≤ 300) — do not restate it here, reference it.
 
 | Status | Condition |
 |---|---|
 | `rejected` | ANY stop condition of §5 met. Write the reason into the *Rejected combinations* table. |
 | `parked` | No stop condition met, but total_return < buyhold at 2 bps (interesting, insufficient). |
-| `tested` (candidate retained) | total_return > buyhold at 2 bps on ≥2 of 3 instruments, AND on both windows. |
+| `finalist` | **No** §5 stop condition met AND the in-sample bar above holds on **both** `full` and `last_12m`. |
+| `tested` | A `finalist` that **also** beat buy-hold on the one-shot OOS evaluation (see below). |
 
-- **OOS check (mandatory for `tested`, from `config/strategies.yml`):** the
+- **`finalist` → OOS check (the only path to `tested`, from `config/strategies.yml`):** the
   `full` and `last_12m` windows above are all **in-sample** (they are what the
-  hypothesis was tuned against). Before a strategy may be promoted to `tested`,
-  it must *also* be evaluated once on the reserved holdout
-  (`oos.holdout_start` → latest), **exactly once**, and beat buy-hold there.
-  Iterating against the holdout is data snooping and is prohibited — that is a
-  new hypothesis, not a re-run. This is the single most important guard against
-  the overfitting risk the BRD names as #1.
+  hypothesis was tuned against). A `finalist` is promoted to `tested` only by
+  being evaluated **once** on the reserved holdout
+  (`oos.holdout_start` → `oos.holdout_end`) and passing `oos.pass_criteria`.
+  Promotion to `finalist` is a **human** decision (the machine only verifies the
+  bar, see `check_results.py` check F). Iterating against the holdout is data
+  snooping and is prohibited — that is a new hypothesis, not a re-run. This is
+  the single most important guard against the overfitting risk the BRD names as #1.
 
 - **Gate G6:** status assigned and justified in the report; if `tested`, the
   one-shot holdout result is present. A `rejected` outcome with a good

@@ -297,198 +297,289 @@ def test_run_matrix_window_bounds():
         _window_bounds(cfg, "nope")
 
 
-def test_run_matrix_oos_once_lock(tmp_path, monkeypatch):
-    """A strategy that already has an adjudicated `oos` row in the trial log
-    must be refused a second holdout run (repo_review_20261027 §1.1 step 3)."""
+# ---------------------------------------------------------------------------
+# OOS one-time holdout gate (repo_review_20261029 Phase 1, §1.7)
+# ---------------------------------------------------------------------------
+# Every test here uses tmp_path + monkeypatch and touches NO real ledger,
+# registry, trial_log, or parquet — the holdout must stay unconsumed.
+# ---------------------------------------------------------------------------
+
+def _finalize_fixture(tmp_path, monkeypatch, strategy="s01", status="finalist",
+                      in_sample_outcome="tested"):
+    """Point the gate at a scratch ledger/registry/trial_log and make
+    ``strategy`` eligible (registered in config, ``status`` in the registry,
+    one real in-sample trial row). Returns the tmp paths for later mutation."""
     import strategy.run_matrix as rm
 
-    log = tmp_path / "trial_log.md"
-    log.write_text(
+    cfg_path = tmp_path / "strategies.yml"
+    cfg_path.write_text(
+        "windows:\n  full: {since: null, until: '2025-07-31'}\n"
+        "  last_12m: {since: '2024-08-01', until: '2025-07-31'}\n"
+        "  oos: {since: '2025-08-01', until: '2026-10-23'}\n"
+        "oos:\n  holdout_id: 'oos1'\n  holdout_start: '2025-08-01'\n"
+        "  holdout_end: '2026-10-22'\n  max_strategies_per_holdout: 1\n"
+        "strategies:\n  S-01: {timeframe: '5m'}\n  S-02: {timeframe: '1h'}\n")
+    registry = tmp_path / "STRATEGY_REGISTRY.md"
+    registry.write_text(
+        "# Registry\n| ID | Name | Timeframe | Status |\n"
+        "|---|---|---|---|\n"
+        f"| S-01 | A | 5m | **{status}** |\n"
+        f"| S-02 | B | 1h | **{status}** |\n")
+    trial = tmp_path / "trial_log.md"
+    trial.write_text(
         "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
-        "|---|------|-------------|------------|--------|---------|-----|---|\n"
-        "| 1 | 2026-10-26 | S-01 | hyp | full | rejected | x | 0 |\n"
-        "| 2 | 2026-10-27 | S-01 | hyp | oos | tested | y | 1 |\n")
-    monkeypatch.setattr(rm, "TRIAL_LOG", log)
-    with pytest.raises(SystemExit, match="already has an adjudicated"):
-        rm._check_oos_once("s01")
-    # A `<TBD>` row (run in progress, not yet adjudicated) must not lock.
-    log.write_text(
-        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
-        "|---|------|-------------|------------|--------|---------|-----|---|\n"
-        "| 1 | 2026-10-26 | S-01 | hyp | oos | <TBD> | y | 1 |\n")
+        "|---|---|---|---|---|---|---|---|\n"
+        f"| 1 | 2026-10-26 | S-01 | hyp | full | **{in_sample_outcome}** | x | 0 |\n"
+        f"| 2 | 2026-10-26 | S-02 | hyp | full | **{in_sample_outcome}** | x | 1 |\n")
+    ledger = tmp_path / "oos_ledger.json"
+    ledger.write_text('{"version": 1, "consumptions": []}')
+
+    monkeypatch.setattr(rm, "CONFIG_PATH", cfg_path)
+    monkeypatch.setattr(rm, "REGISTRY_PATH", registry)
+    monkeypatch.setattr(rm, "TRIAL_LOG", trial)
+    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: ledger)
+    monkeypatch.setattr(rm, "_RETIRED_LEDGER", tmp_path / "absent_retired.json")
+    return {"cfg": cfg_path, "registry": registry, "trial": trial, "ledger": ledger}
+
+
+def test_oos_gate_finalist_with_empty_ledger_is_allowed(tmp_path, monkeypatch):
+    """A clean finalist with a real in-sample row and an empty ledger may run."""
+    import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch)
     rm._check_oos_once("s01")  # must not raise
 
 
-def test_run_matrix_oos_refuses_untried_strategy(tmp_path, monkeypatch):
-    """A strategy with no trial record at all is not a finalist and must not
-    consume the (finalist-only) OOS holdout "blind" (review P0). A strategy
-    that has ANY trial record (in-sample or prior) is in the pipeline and may
-    proceed — a rejected in-sample verdict in particular may be confirmed or
-    overridden by the OOS."""
+@pytest.mark.parametrize("status", ["rejected", "parked", "candidate", "tested"])
+def test_oos_gate_refuses_non_finalist_status(tmp_path, monkeypatch, status):
+    """Only `finalist` may consume the holdout — every other status is refused."""
     import strategy.run_matrix as rm
-
-    log = tmp_path / "trial_log.md"
-    # S-09: no trial rows for it at all -> not a finalist -> refused.
-    log.write_text(
-        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
-        "|---|------|-------------|------------|--------|---------|-----|---|\n"
-        "| 1 | 2026-10-26 | S-10 | hyp | full | accepted | y | 3 |\n")
-    monkeypatch.setattr(rm, "TRIAL_LOG", log)
-    with pytest.raises(SystemExit, match="not a finalist"):
-        rm._check_oos_once("s09")
-
-    # S-09: has an in-sample row (even a rejected one) -> in the pipeline ->
-    # allowed to proceed to the OOS decision.
-    log.write_text(
-        "| # | date | strategy_id | hypothesis | window | outcome | ret | n |\n"
-        "|---|------|-------------|------------|--------|---------|-----|---|\n"
-        "| 1 | 2026-10-26 | S-09 | hyp | full | rejected | x | 0 |\n")
-    rm._check_oos_once("s09")  # must not raise
+    _finalize_fixture(tmp_path, monkeypatch, status=status)
+    with pytest.raises(SystemExit, match="not eligible"):
+        rm._check_oos_once("s01")
 
 
-def test_oos_data_bound_lock(tmp_path, monkeypatch):
-    """Data-bound OOS lock (review 2026-10-28 item 6): once a strategy has
-    consumed a specific dataset, it cannot be re-consumed on that same data —
-    even before any trial-log row exists — but a *new* dataset is allowed."""
+def test_oos_gate_refuses_unregistered_strategy(tmp_path, monkeypatch):
+    """A strategy absent from config/strategies.yml cannot consume the holdout."""
     import strategy.run_matrix as rm
-
-    # Point the ledger and trial log at a scratch location (no real repo writes).
-    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")  # absent -> label lock off
-    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
-
-    # Content-bound fingerprints (review 2026-10-28: bind to data, not file
-    # metadata). Identical content -> same lock key; different content -> different.
-    fp_a = {"path": "a.parquet", "holdout_start": "2025-08-01", "rows": 1000,
-            "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2026-10-24 00:00:00+00:00",
-            "content_hash": 11111}
-    fp_b = {"path": "b.parquet", "holdout_start": "2025-08-01", "rows": 2000,
-            "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2026-11-01 00:00:00+00:00",
-            "content_hash": 22222}
-    # Same data as A, but rebuilt to a NEW path (fresh file, fresh mtime) — this
-    # is the exact case the review flagged: the lock must survive a rebuild, so
-    # the content-bound key is identical to fp_a and a re-run is refused.
-    fp_a_rebuilt = {"path": "a_rebuilt.parquet", "holdout_start": "2025-08-01",
-                    "rows": 1000, "tmin": "2025-08-01 00:00:00+00:00",
-                    "tmax": "2026-10-24 00:00:00+00:00", "content_hash": 11111}
-
-    # First run on dataset A: allowed, then reserved.
-    rm._check_oos_once("s01", fp_a, {})
-    rm._reserve_oos("s01", fp_a, {})
-
-    # Second run on the SAME dataset A is refused (data-bound).
-    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
-        rm._check_oos_once("s01", fp_a, {})
-
-    # A rebuild of the SAME data to a new path is STILL refused — the lock is
-    # bound to content, not to the file. (The core of the review fix.)
-    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
-        rm._check_oos_once("s01", fp_a_rebuilt, {})
-
-    # A genuinely different dataset B (different holdout bars) is still allowed.
-    rm._check_oos_once("s01", fp_b, {})
-
-    # Case/dash-insensitive: "S-01" and "s01" are the same strategy.
-    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
-        rm._check_oos_once("S-01", fp_a, {})
+    _finalize_fixture(tmp_path, monkeypatch)
+    # s03 is not in the fixture config's strategies: block
+    with pytest.raises(SystemExit, match="not registered"):
+        rm._check_oos_once("s03")
 
 
-def test_oos_reserve_preserves_prior_consumption_record(tmp_path, monkeypatch):
-    """Reserving a new dataset keeps the prior consumption record (audit chain)."""
+def test_oos_gate_refuses_tbd_in_sample(tmp_path, monkeypatch):
+    """A `<TBD>` in-sample outcome is not a real evaluation -> refused."""
     import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch, in_sample_outcome="<TBD>")
+    with pytest.raises(SystemExit, match="no in-sample trial row"):
+        rm._check_oos_once("s01")
 
-    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")
-    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
 
-    base = {"path": "x.parquet", "holdout_start": "2025-08-01", "rows": 5,
-            "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2025-08-02 00:00:00+00:00"}
-    rm._reserve_oos("s02", {**base, "content_hash": 777}, {"k": 1})
-    # A genuinely new dataset (different content) is allowed — but the old
-    # consumption record must survive, not be destroyed.
-    rm._reserve_oos("s02", {**base, "content_hash": 999}, {"k": 2})
+def test_oos_gate_refuses_when_ledger_missing(tmp_path, monkeypatch):
+    """A missing ledger is a fail-closed refusal, not an empty-ledger allow."""
+    import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch)
+    import strategy.run_matrix as rm2
+    (tmp_path / "oos_ledger.json").unlink()
+    with pytest.raises(SystemExit, match="OOS ledger missing"):
+        rm2._check_oos_once("s01")
+
+
+def test_oos_gate_refuses_corrupt_ledger(tmp_path, monkeypatch):
+    """Invalid JSON in the ledger is a fail-closed refusal."""
+    import strategy.run_matrix as rm
+    p = _finalize_fixture(tmp_path, monkeypatch)
+    p["ledger"].write_text("{ this is not json ]")
+    with pytest.raises(SystemExit, match="not valid JSON"):
+        rm._check_oos_once("s01")
+
+
+def test_oos_gate_refuses_wrong_ledger_version(tmp_path, monkeypatch):
+    """A wrong schema version is a fail-closed refusal."""
+    import strategy.run_matrix as rm
+    p = _finalize_fixture(tmp_path, monkeypatch)
+    p["ledger"].write_text('{"version": 999, "consumptions": []}')
+    with pytest.raises(SystemExit, match="version mismatch"):
+        rm._check_oos_once("s01")
+
+
+def test_oos_gate_refuses_missing_registry(tmp_path, monkeypatch):
+    """A missing registry file means the status cannot be verified -> refused."""
+    import strategy.run_matrix as rm
+    p = _finalize_fixture(tmp_path, monkeypatch)
+    p["registry"].unlink()
+    with pytest.raises(SystemExit, match="not eligible"):
+        rm._check_oos_once("s01")
+
+
+def test_oos_gate_refuses_missing_trial_log(tmp_path, monkeypatch):
+    """A missing trial log means no in-sample outcome -> refused."""
+    import strategy.run_matrix as rm
+    p = _finalize_fixture(tmp_path, monkeypatch)
+    p["trial"].unlink()
+    with pytest.raises(SystemExit, match="not eligible"):
+        rm._check_oos_once("s01")
+
+
+def test_oos_gate_refuses_retired_ledger_present(tmp_path, monkeypatch):
+    """A leftover retired ledger must stop the run (no 'which wins' guess)."""
+    import strategy.run_matrix as rm
+    p = _finalize_fixture(tmp_path, monkeypatch)
+    retired = tmp_path / "retired.json"
+    retired.write_text('{"old": "ledger"}')
+    monkeypatch.setattr(rm, "_RETIRED_LEDGER", retired)
+    with pytest.raises(SystemExit, match="Retired OOS ledger"):
+        rm._check_oos_once("s01")
+
+
+def test_oos_gate_refuses_after_any_consumption_walk_all_records(tmp_path, monkeypatch):
+    """Walking the WHOLE ledger: once s01 consumed the holdout, s01 is refused
+    — even with 3+ records (no chain-walk 'check the wrong record' bug)."""
+    import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch)
+    rm._check_oos_once("s01")          # first run: allowed
+    rm._reserve_oos("s01", {"content_hash": 1}, {"n": 1})
+    with pytest.raises(SystemExit, match="already consumed holdout oos1"):
+        rm._check_oos_once("s01")
+    # Append more records (e.g. a new-holdout reservation) and s01 is STILL
+    # refused for oos1 — every record is checked, not just the latest.
+    rm._reserve_oos("s02", {"content_hash": 2}, {"n": 2})
+    rm._reserve_oos("s02", {"content_hash": 3}, {"n": 3})
+    with pytest.raises(SystemExit, match="already consumed holdout oos1"):
+        rm._check_oos_once("s01")
+
+
+def test_oos_gate_data_rebuild_does_not_reopen(tmp_path, monkeypatch):
+    """The lock is (strategy, holdout) — a rebuilt dataset / new path / appended
+    rows must NOT re-open a consumed holdout."""
+    import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch)
+    rm._check_oos_once("s01", {"content_hash": 111}, {})
+    rm._reserve_oos("s01", {"content_hash": 111}, {})
+    # Same strategy + holdout, but the data was rebuilt to a new path/hash:
+    # the lock is keyed on the holdout, not the data, so it is STILL refused.
+    rebuilt = {"content_hash": 999, "path": "rebuilt.parquet"}
+    with pytest.raises(SystemExit, match="already consumed holdout oos1"):
+        rm._check_oos_once("s01", rebuilt, {})
+
+
+def test_oos_gate_d1_cap_refuses_second_strategy(tmp_path, monkeypatch):
+    """D1 (max_strategies_per_holdout=1): once s01 consumed the holdout, a
+    different strategy (s02) is refused even though s02 itself has not run."""
+    import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch)
+    rm._check_oos_once("s01")
+    rm._reserve_oos("s01", {"content_hash": 1}, {})
+    with pytest.raises(SystemExit, match="spent"):
+        rm._check_oos_once("s02")
+
+
+def test_oos_gate_crash_after_reserve_still_refuses(tmp_path, monkeypatch):
+    """Reserve-then-crash (record left `reserved`) still blocks a re-run — a
+    crashed attempt counts as consumed."""
+    import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch)
+    rm._check_oos_once("s01")
+    rm._reserve_oos("s01", {"content_hash": 1}, {})  # no _complete_oos -> stays reserved
     ledger = rm._load_oos_ledger()
-    assert list(ledger.keys()) == ["S02"]
-    assert ledger["S02"]["manifest"] == {"k": 2}          # latest is current
-    assert ledger["S02"]["fingerprint"]["content_hash"] == 999
-    prev = ledger["S02"]["superseded"]
-    assert prev is not None and prev["manifest"] == {"k": 1}
-    assert prev["fingerprint"]["content_hash"] == 777       # prior preserved
+    assert ledger["consumptions"][0]["status"] == "reserved"
+    with pytest.raises(SystemExit, match="already consumed holdout oos1"):
+        rm._check_oos_once("s01")
 
 
-def test_oos_reserve_is_idempotent_for_same_data(tmp_path, monkeypatch):
-    """Reserving the *same* data twice keeps a single ledger entry (no growth)."""
+def test_oos_gate_complete_marks_completed(tmp_path, monkeypatch):
+    """_complete_oos flips the latest `reserved` record to `completed`."""
+    import strategy.run_matrix as rm
+    _finalize_fixture(tmp_path, monkeypatch)
+    rm._reserve_oos("s01", {"content_hash": 1}, {})
+    rm._complete_oos("s01")
+    ledger = rm._load_oos_ledger()
+    assert ledger["consumptions"][0]["status"] == "completed"
+
+
+def test_oos_window_until_includes_last_closed_day(tmp_path):
+    """§1.1 boundary: `until` uses `time <= until@UTC-midnight`, so the config
+    `oos.until = 2026-10-23` includes ALL bars of the last fully-closed day
+    (2026-10-22) and EXCLUDES any bar on/after 2026-10-23 00:00 UTC."""
+    import strategy.run_matrix as rm
+    # The committed config pins the holdout's fixed, closed end date.
+    cfg = rm._load_config()
+    assert cfg["windows"]["oos"]["until"] == "2026-10-23"
+    assert cfg["oos"]["holdout_end"] == "2026-10-22"
+    # _window_bounds returns the raw (since, until) the loader applies as
+    # `time >= since` and `time <= until` (date-only, read at UTC midnight).
+    since, until = rm._window_bounds(cfg, "oos")
+    assert since == "2025-08-01"
+    assert until == "2026-10-23"
+
+
+def test_oos_fingerprint_covers_open_and_is_order_independent(tmp_path, monkeypatch):
+    """§2.3: the fingerprint must (a) fail if `open`/`close` is missing, and
+    (b) be order-independent (sum of 64-bit per-row hashes)."""
+    import duckdb
+    import strategy.run_matrix as rm
+    from strategy.run_matrix import _parquet_columns
+
+    p = tmp_path / "f.parquet"
+    con = duckdb.connect()
+    # 6 bars on 2026-10-22 (inside the holdout window 2025-08-01..2026-10-23),
+    # `open` values 10..15, `time` is a proper TIMESTAMP (real-data type).
+    sql = ("COPY (SELECT 'EUR_USD' AS instrument, "
+           "make_timestamp(2026,10,22, 12+i, 0, 0) AS \"time\", "
+           "(10+i)::DOUBLE AS open, (10+i)::DOUBLE AS high, "
+           "(10+i)::DOUBLE AS low, (20+i)::DOUBLE AS close, "
+           "(1+i)::DOUBLE AS volume FROM range(6) r(i)) TO ? (FORMAT PARQUET)")
+    con.execute(sql, [str(p)])
+    con.close()
+
+    base = rm._data_fingerprint(str(p))
+    assert "open" in base["hashed_columns"] and "close" in base["hashed_columns"]
+
+    # (a) fail loudly when `open` is missing.
+    monkeypatch.setattr(rm, "_parquet_columns", lambda q: {"time", "close", "volume"})
+    with pytest.raises(SystemExit, match="both `open` and `close`"):
+        rm._data_fingerprint(str(p))
+    monkeypatch.undo()
+
+    # (b) order-independence: reordering the rows must NOT change the hash.
+    p2 = tmp_path / "f_reordered.parquet"
+    con = duckdb.connect()
+    con.execute(
+        "COPY (SELECT * FROM (SELECT 'EUR_USD' AS instrument, "
+        "make_timestamp(2026,10,22, 12+i, 0, 0) AS \"time\", "
+        "(10+i)::DOUBLE AS open, (10+i)::DOUBLE AS high, "
+        "(10+i)::DOUBLE AS low, (20+i)::DOUBLE AS close, "
+        "(1+i)::DOUBLE AS volume FROM range(6) r(i)) ORDER BY \"time\" DESC) "
+        "TO ? (FORMAT PARQUET)", [str(p2)])
+    con.close()
+    base2 = rm._data_fingerprint(str(p2))
+    assert base2["content_hash"] == base["content_hash"], "reordering changed the hash"
+
+
+def test_oos_fingerprint_open_change_changes_hash(tmp_path):
+    """§2.3: changing ONLY `open` must change the fingerprint (open is covered,
+    which the old close-only hash missed)."""
+    import duckdb
     import strategy.run_matrix as rm
 
-    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")
-    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
+    def _write(path, open_offset):
+        con = duckdb.connect()
+        con.execute(
+            "COPY (SELECT 'EUR_USD' AS instrument, "
+            "make_timestamp(2026,10,22, 12+i, 0, 0) AS \"time\", "
+            f"({open_offset}+i)::DOUBLE AS open, (10+i)::DOUBLE AS high, "
+            "(10+i)::DOUBLE AS low, (20+i)::DOUBLE AS close, "
+            "(1+i)::DOUBLE AS volume FROM range(6) r(i)) TO ? (FORMAT PARQUET)",
+            [str(path)])
+        con.close()
 
-    fp = {"path": "x.parquet", "holdout_start": "2025-08-01", "rows": 5,
-          "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2025-08-02 00:00:00+00:00",
-          "content_hash": 777}
-    rm._reserve_oos("s02", fp, {"k": 1})
-    rm._reserve_oos("s02", fp, {"k": 2})  # same data, re-reserved
-    ledger = rm._load_oos_ledger()
-    assert list(ledger.keys()) == ["S02"]
-    assert ledger["S02"]["manifest"] == {"k": 2}
-
-
-def test_run_matrix_oos_wiring_end_to_end(tmp_path, monkeypatch):
-    """E2E wiring of the `--windows oos` path (review 2026-10-28: run the OOS
-    flow end-to-end so the first *real* survivor isn't its first live test).
-
-    Drives the real ``run_matrix`` with a stub strategy on a scratch dataset.
-    Proves the three things that only unit tests had covered in isolation:
-      1. an OOS run reserves the attempt in the ledger BEFORE any cell runs;
-      2. OOS output goes to a SEPARATE ``<name>_oos`` dir (never overwrites the
-         in-sample matrix);
-      3. a second ``--windows oos`` run on the same data is refused by the
-         data-bound lock (the ledger the first run wrote).
-    Uses a stub strategy + a stub fingerprint so it touches no real parquet,
-    ledger, or trial_log — no evidence pollution.
-    """
-    import strategy.run_matrix as rm
-
-    # Isolate every persistent side effect.
-    monkeypatch.setattr(rm, "TRIAL_LOG", tmp_path / "trial_log.md")  # absent -> label lock off
-    monkeypatch.setattr(rm, "_oos_ledger_path", lambda: tmp_path / "oos.json")
-    fp = {"path": "scratch.parquet", "holdout_start": "2025-08-01", "rows": 3,
-          "tmin": "2025-08-01 00:00:00+00:00", "tmax": "2025-08-03 00:00:00+00:00",
-          "content_hash": 424242}
-    monkeypatch.setattr(rm, "_data_fingerprint", lambda parquet: fp)
-
-    # Stub the strategy's per-cell run: returns a minimal result dict and never
-    # touches real data.
-    calls = []
-
-    def stub_run(parquet, instrument, timeframe, since, until, cost_bps, entry_guard):
-        calls.append((instrument, since, until, cost_bps))
-        return {
-            "instrument": instrument, "cost_bps": cost_bps, "start": "2025-08-01 00:00:00",
-            "end": "2025-08-03 00:00:00", "n_bars": 10, "n_trades": 2,
-            "total_return_pct": 1.0, "buyhold_return_pct": 0.5,
-            "max_drawdown_pct": 1.0, "win_rate_pct": 50.0,
-            "avg_trade_return_pct": 0.5, "sharpe": 0.1, "sharpe_weekly": 0.1,
-            "trades_per_year": 0.1, "exposure_pct": 50.0, "span_years": 0.01,
-        }
-
-    rm._STRATEGIES["stub"] = {"label": "stub", "run": stub_run}
-    monkeypatch.setitem(rm._STRATEGIES, "stub", {"label": "stub", "run": stub_run})
-
-    out_dir = tmp_path / "results" / "stub"
-    # (1) First OOS run succeeds and writes to a SEPARATE _oos dir.
-    cells = rm.run_matrix("stub", ["EUR_USD"], ["oos"], [2.0], "5m", False, out_dir)
-    assert cells, "the OOS run produced no cells"
-    assert (tmp_path / "results" / "stub_oos").exists(), "OOS output must go to a separate dir"
-    assert not (out_dir / "EUR_USD__oos__c2.json").exists(), "in-sample dir must stay untouched"
-
-    # (2) The attempt was reserved in the ledger BEFORE the holdout was loaded.
-    ledger = rm._load_oos_ledger()
-    assert "STUB" in ledger and ledger["STUB"]["fingerprint_key"] == rm._fingerprint_key(fp)
-
-    # (3) A second `--windows oos` run on the SAME data is now refused by the
-    #     data-bound lock (the ledger written by run 1).
-    with pytest.raises(SystemExit, match="already consumed this exact OOS dataset"):
-        rm.run_matrix("stub", ["EUR_USD"], ["oos"], [2.0], "5m", False,
-                      tmp_path / "results" / "stub2")
+    a = tmp_path / "a.parquet"
+    b = tmp_path / "b.parquet"
+    _write(a, 10)
+    _write(b, 999)  # different `open`, everything else identical
+    fa = rm._data_fingerprint(str(a))
+    fb = rm._data_fingerprint(str(b))
+    assert fa["content_hash"] != fb["content_hash"], "changing open must change the hash"
 
 
 def test_run_matrix_n_tried_before_counts_distinct_strategies():

@@ -11,7 +11,8 @@
 > 1. Every new strategy **must** get a row in the table below (update at creation, again after each major result change).
 > 2. "Key indicators" lists the *decision-driving* features (not every column read).
 > 3. Two strategies are considered **duplicates** if they share the same key indicators + timeframe + entry logic, regardless of parameter tweaks.
-> 4. Status: `tested` (backtest run & reported) · `candidate` (designed, not yet run) · `rejected` (tested, failed, do not re-test without new hypothesis) · `parked` (deprioritized).
+> 4. Status vocabulary (lifecycle order): `candidate` (designed, not yet run) · `finalist` (passed the in-sample bar, **OOS pending** — the only status that may consume the holdout) · `tested` (passed the single OOS evaluation) · `parked` (deprioritized) · `rejected` (failed, do not re-test without a new hypothesis).
+>    A row is promoted to `finalist` **by a human** only when no §5 stop condition triggered AND total_return > buy-hold at 2 bps on **≥ 2 of 3 instruments on both `full` and `last_12m`** (see `config/strategies.yml → oos.pass_criteria`). `tested` is reached only by passing the single OOS evaluation.
 
 ## Registry
 

@@ -34,9 +34,25 @@ windows:
     since: "2024-08-01"
     until: "2025-07-31"
   # "oos": the holdout — the single, final, out-of-sample check.
+  #
+  # Window bounds are INCLUSIVE of the last fully-closed day and EXCLUSIVE of
+  # the first partial day. The loader (strategy/strategy_lib.py::load_bars)
+  # applies them as `time >= since` and `time <= until`, where a date-only
+  # bound is read at UTC midnight (session timezone pinned to UTC). So:
+  #   * since = 2025-08-01        -> includes every bar from 2025-08-01 00:00 on
+  #   * until = 2026-10-23        -> `time <= 2026-10-23 00:00`, i.e. it includes
+  #                                  ALL bars of 2026-10-22 and EXCLUDES every
+  #                                  bar on/after 2026-10-23 00:00.
+  # The last fully-closed UTC day for all 3 instruments is **2026-10-22**
+  # (2026-10-23 is partial: 252/288 on 5m, 21/24 on 1h — not yet closed), so
+  # `until` is set to the day AFTER it (2026-10-23) to include the full 2026-10-22.
+  # This is the same convention as the in-sample caps: `full.until: 2025-07-31`
+  # leaves the (harmless, no-leak) one-day gap of 2025-07-31 before `since`.
+  # New market data arriving after 2026-10-22 therefore never enters this
+  # holdout — it belongs to a future `oos2` window under a new holdout id.
   oos:
     since: "2025-08-01"
-    until: null
+    until: "2026-10-23"
 
 # ---------------------------------------------------------------------------
 # Out-of-sample holdout (0.5 OOS discipline). This span is **never** used for
@@ -45,10 +61,24 @@ windows:
 # promotion. Iterating against it is data snooping.
 # ---------------------------------------------------------------------------
 oos:
-  # Reserve the most recent ~14 months (2025-08 → latest) as the holdout.
+  # Reserve the most recent ~14 months (2025-08 → holdout_end) as the holdout.
   # Strategies are *discovered and tuned* only on data strictly before
   # `holdout_start`.
+  #
+  # Identity of THIS holdout (repo_review_20261029 D2). The holdout is a
+  # *fixed, closed window* with an explicit id. A holdout is **spent** once
+  # one finalist consumes it (see `max_strategies_per_holdout`); any further
+  # research needs a *new, unseen* holdout window (later `holdout_start` /
+  # `holdout_end`, a new `holdout_id`) — never this one again.
+  holdout_id: "oos1"
   holdout_start: "2025-08-01"
+  # Last fully-closed UTC day for all 3 instruments at the time of the
+  # 2026-10-29 review (2026-10-23 is still partial in both parquets).
+  holdout_end: "2026-10-22"
+  # D1: how many *distinct strategies* may each consume this holdout.
+  # Default 1: once one finalist looks at `oos1`, it is spent for every
+  # other strategy. A different number is a one-line change here.
+  max_strategies_per_holdout: 1
   # Rule for the workflow (Step 6 / generated_strategy §5): a strategy may only
   # be promoted to `tested` if it ALSO beats buy-hold inside the holdout,
   # evaluated exactly once. Re-running it to improve the holdout number is
@@ -72,7 +102,16 @@ oos:
     comparator: "beat_bh_at_2bps_on_min_2_of_3_instruments; report mean net position for same-exposure sanity"
     # 3. Frequency guard (generated_strategy §5): the holdout run must stay
     #    inside the registered trade-count ceiling, else reject as cost×frequency.
+    #    D3: the `> 300 trades` rule in generated_strategy.md §3/§5 is a
+    #    full-history-span limit. Converting to a per-year ceiling:
+    #      300 trades / (full span 2020-01-03 → 2025-07-31 = 5.574 years)
+    #      = 53.8 / year  ->  54 / year.
+    #    This applies to **every OOS cell** (all instruments, all cost tiers):
+    #    a cell whose trade count exceeds 54 × its window span fails the gate.
+    #    Over the OOS span (2025-08-01 → 2026-10-22 = 1.224 years) that is
+    #    54 × 1.224 ≈ 66 trades.
     respect_trade_ceiling: true
+    max_trades_per_year: 54
     # Rationale for the ">=2 of 3" (not "all 3") bar: all-3 is nearly
     # impossible for long-only strategies and would make every result a
     # "rejected" (the exact failure the review warned about), while 1 of 3 is

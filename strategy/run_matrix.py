@@ -44,6 +44,8 @@ _REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
 
+import strategy.registry as registry_mod  # noqa: E402  (shared gate parsing, §1.6)
+
 CONFIG_PATH = _REPO_ROOT / "config" / "strategies.yml"
 TRIAL_LOG = _REPO_ROOT / "strategy" / "trial_log.md"
 INSTRUMENTS = ["EUR_USD", "BTC_USD", "XAU_USD"]
@@ -165,178 +167,330 @@ def _cell_name(instrument: str, window: str, cost: float) -> str:
     return f"{instrument}__{window}__c{cost:g}"
 
 
-def _data_fingerprint(parquet: str) -> dict:
-    """Content-identity of the OOS dataset (review 2026-10-28: bind the lock
-    to the DATA, not to file metadata).
+def _parquet_columns(parquet: str) -> set[str]:
+    """The set of column names present in a parquet file (cheap: metadata only)."""
+    import duckdb
+    con = duckdb.connect()
+    try:
+        rows = con.execute(
+            "SELECT column_name FROM (DESCRIBE SELECT * FROM read_parquet(?))",
+            [str(parquet)]).fetchall()
+    finally:
+        con.close()
+    return {r[0] for r in rows}
 
-    Fingerprint = (row count, first bar, last bar, order-independent checksum
-    of (time, close) over the holdout interval) plus the path as the identity
-    of *which* dataset this is. Rebuilding the same data (fresh mtime, same
-    bars, even reordered rows) produces the SAME fingerprint, so the
-    once-per-dataset rule survives a rebuild; a dataset with different holdout
-    bars produces a different one. The checksum is order-independent (a sum of
-    per-row hashes), so row order in the parquet cannot change it.
+
+def _sha256_file(path: Path) -> str | None:
+    """Hex sha256 of a file, or ``None`` if it does not exist."""
+    if not path.exists():
+        return None
+    import hashlib
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def _git_commit_of(path: Path) -> str | None:
+    """The abbreviated git commit that last touched ``path`` (None if unavailable)."""
+    import subprocess
+    try:
+        out = subprocess.run(
+            ["git", "log", "-1", "--format=%h", "--", str(path)],
+            cwd=_REPO_ROOT, capture_output=True, text=True, timeout=15)
+        if out.returncode == 0 and out.stdout.strip():
+            return out.stdout.strip()
+    except (subprocess.SubprocessError, OSError):
+        pass
+    return None
+
+
+def _talib_version() -> str | None:
+    """The installed TA-Lib version (so a feature-code change is visible)."""
+    try:
+        import talib  # lazy: keeps the import path clean when talib is absent
+        return talib.__version__
+    except Exception:  # noqa: BLE001 — audit field, never fatal
+        return None
+
+
+def _data_fingerprint(parquet: str) -> dict:
+    """Audit identity of the OOS dataset (repo_review_20261029 §2.3).
+
+    The fingerprint is an **audit field** — it is recorded in the ledger but is
+    *not* part of the lock key (the lock is keyed on (strategy, holdout_id),
+    §1.2). It exists so a future reviewer can see *exactly which data* a
+    consumption saw, and so a genuinely different holdout is distinguishable.
+
+    It hashes the OHLCV columns — ``instrument, time, open, high, low, close,
+    volume`` (whichever exist) — over the holdout interval only, using DuckDB's
+    64-bit ``hash()`` summed as an order-independent :class:`HUGEINT` (a
+    rebuild that only reorders rows keeps the same hash). ``open`` and ``close``
+    must both be present — if either is missing the fingerprint fails loudly
+    (the engine fills at ``open[T+1]``, so ``open`` must be covered). Also
+    recorded: row count, first/last bar, ``sha256(config/indicators.yml)``, the
+    git commit of ``pipeline/indicators.py``, and the TA-Lib version.
     """
     import duckdb  # lazy: keeps the OOS-lock path importable without duckdb at module load
     p = Path(parquet)
-    holdout_start = _load_config()["oos"]["holdout_start"]
-    prime = 1000000007  # int64 prime; keeps the additive hash in INT64 range
+    cfg = _load_config()
+    oos_win = (cfg.get("windows") or {}).get("oos") or {}
+    holdout_start = oos_win.get("since") or cfg["oos"].get("holdout_start")
+    holdout_until = oos_win.get("until")
+
+    cols = _parquet_columns(str(p))
+    if "open" not in cols or "close" not in cols:
+        missing = [c for c in ("open", "close") if c not in cols]
+        raise SystemExit(
+            f"OOS data fingerprint requires both `open` and `close` in {p}; "
+            f"missing {missing}. Refusing to fingerprint (the engine fills at "
+            f"`open[T+1]`, so `open` must be covered).")
+
+    hashed_cols = ["instrument", "time", "open", "high", "low", "close", "volume"]
+    hashed_cols = [c for c in hashed_cols if c in cols]
+    row_hash = " || '#' || ".join(f"cast({c} as VARCHAR)" for c in hashed_cols)
+
+    where = ["time >= ?"]
+    params: list = [str(p), holdout_start]
+    if holdout_until:
+        where.append("time <= ?")
+        params.append(holdout_until)
+    where_sql = " AND ".join(where)
+
     con = duckdb.connect()
     try:
         n, tmin, tmax, h = con.execute(
-            "SELECT count(*) n, min(time) tmin, max(time) tmax, "
-            "mod(sum(hash(cast(time as VARCHAR) || '#' || cast(close as VARCHAR))), ?)::BIGINT h "
-            "FROM read_parquet(?) WHERE time >= ?",
-            [prime, str(p), holdout_start]).fetchone()
+            f"SELECT count(*) n, min(time) tmin, max(time) tmax, "
+            f"sum(hash({row_hash}))::HUGEINT h "
+            f"FROM read_parquet(?) WHERE {where_sql}",
+            params).fetchone()
     finally:
         con.close()
-    return {"path": str(p), "holdout_start": holdout_start,
-            "rows": int(n), "tmin": str(tmin), "tmax": str(tmax),
-            "content_hash": int(h)}
+
+    return {
+        "path": str(p),
+        "holdout_start": holdout_start,
+        "holdout_until": holdout_until,
+        "hashed_columns": hashed_cols,
+        "rows": int(n),
+        "tmin": str(tmin),
+        "tmax": str(tmax),
+        "content_hash": int(h),
+        "indicators_sha256": _sha256_file(_REPO_ROOT / "config" / "indicators.yml"),
+        "indicators_git_commit": _git_commit_of(_REPO_ROOT / "pipeline" / "indicators.py"),
+        "talib_version": _talib_version(),
+    }
 
 
 # ---------------------------------------------------------------------------
-# Data-bound OOS consumption (review 2026-10-28 item 6 / reviews 2-4).
+# One-time OOS holdout consumption (repo_review_20261029 Phase 1).
 #
-# The trial-log lock above is *label*-based: it stops a second run once an
-# adjudicated `oos` row exists, but it does not know that the *same data* was
-# already used. A strategy whose in-sample numbers were already seen on the
-# holdout could still "cleanly" run `--windows oos`. This ledger binds OOS
-# consumption to the **data fingerprint** and **reserves the attempt before the
-# holdout is loaded**, so a crash mid-run cannot silently open a fresh attempt
-# on the same data. It is a small ledger, not a state-machine framework.
+# The holdout is a **fixed, closed window with an explicit id**
+# (``oos.holdout_id``). Access is gated three ways, all *fail closed*:
+#
+#   1. **Finalist-only** (shared in :mod:`strategy.registry`): the strategy
+#      must be registered in config, be ``finalist`` in the registry, and have
+#      a real in-sample trial row. `rejected` / `parked` / `candidate` /
+#      unregistered / `<TBD>` are all refused.
+#   2. **Once per (strategy, holdout)**: the ledger is an *append-only*
+#      ``consumptions`` list and the lock is keyed on ``(strategy, holdout_id)``
+#      — **not** on data content. Rebuilt data, a new path, appended rows or a
+#      restart cannot re-open it. Every record is walked (not just the latest),
+#      so the old ``reserve(A) → reserve(B) → check(A)`` chain-walk bug is gone.
+#   3. **Per-holdout strategy cap** (D1): once ``max_strategies_per_holdout``
+#      distinct strategies have consumed a holdout, it is *spent* for everyone.
+#
+# The attempt is **reserved before the holdout is loaded**, so a crash mid-run
+# still counts as consumed. The data fingerprint is recorded for audit only —
+# it is not part of the lock key (repo_review_20261029 §1.2 / §2.3).
 # ---------------------------------------------------------------------------
+
+#: Registry file the OOS gate reads (separate from the config so the gate and
+#: the results-checker both parse the same table via :mod:`strategy.registry`).
+REGISTRY_PATH = Path(__file__).resolve().parent / "STRATEGY_REGISTRY.md"
+
+#: Schema version of strategy/oos_ledger.json (bump + migrate if the shape
+#: ever changes; the loader refuses any other version, fail closed).
+OOS_LEDGER_VERSION = 1
+
+#: The retired pre-2026-10-29 ledger path. If it still exists we refuse to run
+#: rather than guess which ledger is authoritative (repo_review_20261029 §1.3).
+_RETIRED_LEDGER = Path(__file__).resolve().parent / "results" / "oos_consumption.json"
+
 
 def _oos_ledger_path() -> Path:
-    return Path(__file__).resolve().parent / "results" / "oos_consumption.json"
+    return Path(__file__).resolve().parent / "oos_ledger.json"
+
+
+def _oos_holdout_spec(cfg: dict) -> tuple[str, int, object, object]:
+    """Resolve the holdout identity + cap from config, failing closed.
+
+    Returns ``(holdout_id, max_strategies_per_holdout, holdout_start,
+    holdout_end)``. A holdout without an id is a config error — the runner
+    refuses to run it instead of guessing (there is no "default holdout").
+    """
+    oos = cfg.get("oos") or {}
+    holdout_id = oos.get("holdout_id")
+    if not holdout_id:
+        raise SystemExit(
+            "config/strategies.yml has no `oos.holdout_id` — the holdout has no "
+            "identity, so OOS is undefined. Set it before running the holdout.")
+    max_per = oos.get("max_strategies_per_holdout", 1)
+    if not isinstance(max_per, int) or isinstance(max_per, bool) or max_per < 1:
+        raise SystemExit(
+            f"config/strategies.yml: `oos.max_strategies_per_holdout` must be a "
+            f"positive integer, got {max_per!r}.")
+    return holdout_id, max_per, oos.get("holdout_start"), oos.get("holdout_end")
 
 
 def _load_oos_ledger() -> dict:
+    """Load the consumption ledger, **failing closed** on any bad input.
+
+    A missing, unreadable, invalid-JSON, wrong-version or wrong-shape ledger
+    all raise :class:`SystemExit`. There is deliberately **no** `return {}`
+    fallback: the moment a guard cannot read its input it must refuse to run,
+    never default to "allowed" (repo_review_20261029 §1.4).
+    """
     p = _oos_ledger_path()
     if not p.exists():
-        return {}
+        raise SystemExit(
+            f"OOS ledger missing: {p}. Refusing to run the holdout (fail closed). "
+            f"Create it as {{\"version\": {OOS_LEDGER_VERSION}, \"consumptions\": []}}.")
     try:
-        data = json.loads(p.read_text())
-        return data if isinstance(data, dict) else {}
-    except (json.JSONDecodeError, OSError):
-        return {}
+        text = p.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise SystemExit(f"OOS ledger unreadable ({p}): {exc}") from exc
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"OOS ledger is not valid JSON ({p}): {exc}") from exc
+    if not isinstance(data, dict):
+        raise SystemExit(f"OOS ledger must be a JSON object ({p}), got {type(data).__name__}.")
+    if data.get("version") != OOS_LEDGER_VERSION:
+        raise SystemExit(
+            f"OOS ledger version mismatch ({p}): found {data.get('version')!r}, "
+            f"expected {OOS_LEDGER_VERSION}. Refusing to run (fail closed).")
+    if not isinstance(data.get("consumptions"), list):
+        raise SystemExit(f"OOS ledger `consumptions` must be a list ({p}).")
+    return data
 
 
 def _save_oos_ledger(ledger: dict) -> None:
     p = _oos_ledger_path()
     p.parent.mkdir(parents=True, exist_ok=True)
     tmp = p.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(ledger, indent=2, sort_keys=True))
+    tmp.write_text(json.dumps(ledger, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     tmp.replace(p)  # atomic-ish: readers never see a torn file
 
 
-def _fingerprint_key(fp: dict | None) -> str | None:
-    """Stable identity of a data fingerprint — bound to the *data*, not the file.
+def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> dict:
+    """Append a consumption record **before** the holdout is loaded.
 
-    Keyed on the content-bound fields only (holdout_start + row count + bar
-    range + content hash), deliberately **excluding** path and any file
-    metadata. That is the point of the review fix: rebuilding the same data
-    (fresh mtime, even a new file path, reordered rows) yields the same key,
-    so the once-per-dataset rule survives a rebuild. A genuinely different
-    dataset has a different content hash and is allowed its own attempt.
-    (``path`` is still stored in the fingerprint for human audit, but is not
-    part of the lock.)
-    """
-    if not fp:
-        return None
-    return (f"{fp.get('holdout_start')}|{fp.get('rows')}"
-            f"|{fp.get('tmin')}|{fp.get('tmax')}|{fp.get('content_hash')}")
-
-
-def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> None:
-    """Record an OOS attempt **before** the holdout is consumed (review item 6).
-
-    Keyed on the canonical strategy id + data-fingerprint, so a second run on
-    the *same* data is refused by :func:`_check_oos_once`, while a genuine
-    re-validation on a **new** dataset (rebuilt parquet) is still allowed.
+    Bound to ``(strategy, holdout_id)`` — rebuilt data, a new path, appended
+    rows or a restart cannot re-open the holdout. The data ``fingerprint`` is
+    recorded as an audit field only (not part of the lock key). Returns the
+    appended record.
     """
     ledger = _load_oos_ledger()
-    sid = strategy.upper().replace("-", "")
-    entry = {
-        "strategy": sid,
-        "fingerprint_key": _fingerprint_key(fingerprint),
-        "fingerprint": fingerprint,
-        "manifest": manifest,
+    cfg = _load_config()
+    holdout_id, _max, h_start, h_end = _oos_holdout_spec(cfg)
+    rec = {
+        "strategy": registry_mod.norm_id(strategy),
+        "holdout_id": holdout_id,
+        "holdout_start": h_start,
+        "holdout_end": h_end,
         "reserved_at": date.today().isoformat(),
         "status": "reserved",
-        # Preserve the prior consumption record instead of destroying it
-        # (review 2026-10-29 P0: 保留每次 OOS 数据集的消费记录). The top-level
-        # key still points at the latest record; the full chain lives in
-        # `superseded`, so every dataset this strategy has consumed is auditable.
-        "superseded": ledger.get(sid),
+        "fingerprint": fingerprint,
+        "manifest": manifest,
     }
-    ledger[sid] = entry
+    ledger["consumptions"].append(rec)
+    _save_oos_ledger(ledger)
+    return rec
+
+
+def _complete_oos(strategy: str) -> None:
+    """Mark this strategy's most recent `reserved` record for the holdout as
+    `completed`. Pure bookkeeping — a `reserved` record already blocks re-runs,
+    so a crash that never reaches here still counts as consumed."""
+    ledger = _load_oos_ledger()
+    cfg = _load_config()
+    holdout_id, _max, _hs, _he = _oos_holdout_spec(cfg)
+    sid = registry_mod.norm_id(strategy)
+    for rec in reversed(ledger["consumptions"]):
+        if (registry_mod.norm_id(rec.get("strategy", "")) == sid
+                and rec.get("holdout_id") == holdout_id
+                and rec.get("status") == "reserved"):
+            rec["status"] = "completed"
+            break
     _save_oos_ledger(ledger)
 
 
 def _check_oos_once(strategy: str, fingerprint: dict | None = None,
                     manifest: dict | None = None) -> None:
-    """Refuse a holdout run that is already spent.
+    """Refuse a holdout run unless the strategy is a clean finalist and the
+    holdout has not already been consumed (by anyone, for D1).
 
-    Two independent locks (either one blocks):
-      1. **Label** (repo_review_20261027 §1.1): an adjudicated `oos` trial-log
-         row for this strategy. Backward-compatible with the original lock.
-      2. **Data** (review 2026-10-28 item 6): the consumption ledger already
-         records this strategy against the *same* data fingerprint. This is
-         what stops a strategy whose numbers were already seen on the holdout
-         from being re-run "cleanly", even before a trial row is written.
+    All checks are *fail closed*: a missing/unreadable ledger, registry or
+    trial log raises rather than defaulting to "allowed" (repo_review_20261029
+    §1.4). ``fingerprint`` is accepted for compatibility but is audit-only —
+    the lock is keyed on ``(strategy, holdout_id)``, so data content cannot
+    re-open the holdout.
     """
-    # (1) label-based lock — unchanged behaviour, existing test still passes.
-    if not TRIAL_LOG.exists():
-        pass
-    else:
-        body = re.sub(r"<!--.*?-->", "", TRIAL_LOG.read_text(), flags=re.DOTALL)
-        wanted = strategy.upper().replace("-", "")
-        for line in body.splitlines():
-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) < 6 or not cells[0].isdigit():
-                continue
-            if (cells[2].replace("-", "") == wanted and cells[4] == "oos"
-                    and cells[5] != "<TBD>"):
-                raise SystemExit(
-                    f"Strategy {strategy.upper()} already has an adjudicated `oos` row "
-                    f"in strategy/trial_log.md ({line.strip()}). Re-running the holdout "
-                    f"is prohibited — open a new strategy ID instead.")
+    cfg = _load_config()
+    holdout_id, max_per, _hs, _he = _oos_holdout_spec(cfg)
 
-        # (2) finalist-only guard (review 2026-10-29 P0): the holdout is a
-        #     finalist-only resource (`oos.usage = finalist_only_once`). A
-        #     strategy with NO trial record at all has never been evaluated
-        #     and must not consume the one-shot holdout "blind" (data
-        #     snooping). Any in-sample or prior record counts as being in the
-        #     pipeline; a rejected in-sample verdict may still be
-        #     confirmed/overridden by the OOS. Skipped when trial_log is absent.
-        has_any_trial_row = False
-        for line in body.splitlines():
-            cells = [c.strip() for c in line.strip().strip("|").split("|")]
-            if len(cells) >= 6 and cells[0].isdigit() and cells[2].replace("-", "") == wanted:
-                has_any_trial_row = True
-                break
-        if not has_any_trial_row:
-            raise SystemExit(
-                f"Strategy {strategy.upper()} has no trial record — it is not a "
-                f"finalist. The OOS holdout is finalist-only "
-                f"(`oos.usage = finalist_only_once`) and may not be consumed by "
-                f"an untried strategy. Run the in-sample matrix first.")
-
-    # (3) data-bound lock — refuses a re-consumption of the same dataset.
-    if fingerprint is None:
-        return
-    ledger = _load_oos_ledger()
-    sid = strategy.upper().replace("-", "")
-    entry = ledger.get(sid)
-    if not entry:
-        return
-    if entry.get("fingerprint_key") == _fingerprint_key(fingerprint):
+    # Retired ledger present → refuse (there is no safe "which wins" answer).
+    if _RETIRED_LEDGER.exists():
         raise SystemExit(
-            f"Strategy {strategy.upper()} already consumed this exact OOS dataset "
-            f"(data fingerprint {entry.get('fingerprint_key')}) at "
-            f"{entry.get('reserved_at')}. Re-running the holdout on the same data "
-            f"is prohibited — re-validate on a new dataset or open a new strategy ID.")
+            f"Retired OOS ledger found at {_RETIRED_LEDGER}. It predates the "
+            f"one-time holdout lock and must be reviewed and removed (its "
+            f"consumptions belong in {_oos_ledger_path()}) before running OOS.")
+
+    # Load inputs — fail closed if any are unreadable / malformed.
+    ledger = _load_oos_ledger()
+    consumptions = ledger["consumptions"]
+    registry = registry_mod.parse_registry(REGISTRY_PATH)
+    trials = registry_mod.parse_trial_log(TRIAL_LOG)
+
+    # (1) Finalist-only gate (shared registry/trial parsing, §1.6).
+    ok, reason = registry_mod.oos_eligible(strategy, cfg, registry, trials)
+    if not ok:
+        raise SystemExit(
+            f"Strategy {strategy.upper()} is not eligible to consume the OOS holdout: "
+            f"{reason}. (Only a `finalist` with a real in-sample outcome may.)")
+
+    # (2) Label lock: an adjudicated `oos` row already exists for this strategy.
+    if registry_mod.adjudicated_oos_rows(trials, strategy):
+        raise SystemExit(
+            f"Strategy {strategy.upper()} already has an adjudicated `oos` row in "
+            f"{TRIAL_LOG}. Re-running the holdout is prohibited — open a new "
+            f"strategy ID or a new, unseen holdout window.")
+
+    sid = registry_mod.norm_id(strategy)
+
+    # (3) Walk **every** consumption record (§1.5), not just the latest: this
+    #     strategy may consume a given holdout exactly once.
+    for rec in consumptions:
+        if (registry_mod.norm_id(rec.get("strategy", "")) == sid
+                and rec.get("holdout_id") == holdout_id):
+            raise SystemExit(
+                f"Strategy {strategy.upper()} already consumed holdout {holdout_id} "
+                f"(reserved {rec.get('reserved_at')}, status {rec.get('status')!r}). "
+                f"Re-running the holdout is prohibited — use a new, unseen holdout "
+                f"window under a new holdout id.")
+
+    # (4) D1: the holdout is spent once `max_per` distinct strategies consumed it.
+    distinct = {registry_mod.norm_id(rec.get("strategy", ""))
+                for rec in consumptions if rec.get("holdout_id") == holdout_id}
+    if sid not in distinct and len(distinct) >= max_per:
+        plural = "y" if len(distinct) == 1 else "ies"
+        raise SystemExit(
+            f"Holdout {holdout_id} was already consumed by {len(distinct)} distinct "
+            f"strateg{plural} (the cap is `oos.max_strategies_per_holdout` = {max_per}). "
+            f"It is now spent — further research needs a new, unseen holdout window "
+            f"under a new holdout id.")
 
 
 def run_matrix(
@@ -375,7 +529,8 @@ def run_matrix(
 
     fingerprint = _data_fingerprint(parquet)
 
-    if "oos" in windows:
+    is_oos = "oos" in windows
+    if is_oos:
         manifest = {
             "strategy": strategy,
             "instruments": instruments,
@@ -384,10 +539,10 @@ def run_matrix(
             "timeframe": timeframe,
             "entry_guard": entry_guard,
         }
-        # (1) Data-bound lock (review 2026-10-28 item 6): refuse a re-consumption
-        #     of the same dataset *and* the legacy label-based lock.
+        # (1) Finalist gate + once-per-(strategy,holdout) lock + D1 cap:
+        #     refuse unless a clean finalist and the holdout is unspent.
         # (2) Reserve the attempt BEFORE the holdout is loaded, so a crash
-        #     mid-run cannot silently open a fresh attempt on identical data.
+        #     mid-run still counts as consumed (a `reserved` record blocks re-runs).
         # (3) OOS output goes to its own directory so it can never overwrite
         #     the in-sample matrix.md / summary.csv.
         _check_oos_once(strategy, fingerprint, manifest)
@@ -447,6 +602,14 @@ def run_matrix(
               "; ".join(f"{n}: {e}" for n, e in failures))
     if not cells:
         raise SystemExit("No cells completed; nothing to summarise.")
+
+    # Book the holdout consumption as `completed` only when the run produced a
+    # full matrix with no failed cells. A failed cell raises (unless
+    # --allow-partial) *before* this, leaving the record `reserved` — which
+    # still blocks re-runs, so a crash or partial run never re-opens the holdout.
+    if is_oos and not failures:
+        _complete_oos(strategy)
+
     return cells
 
 

@@ -163,6 +163,13 @@ CASES = [
      lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
                           S05_ROW.replace("**rejected**", "**tested**"))),
 
+    # §1.6 (check F): a `finalist` must actually beat the in-sample bar.
+    # S-05 beats 0 of 3 instruments at 2 bps (and has 10402 trades), so making
+    # it a `finalist` must be flagged as not satisfying the promotion bar.
+    ("finalist row fails the in-sample bar -> F", {"F"}, 1, None,
+     lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
+                          S05_ROW.replace("**rejected**", "**finalist**"))),
+
     ("stop condition met but status is not rejected -> S1", {"S1"}, 1, None,
      lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
                           S05_ROW.replace("**rejected**", "**tested**"))),
