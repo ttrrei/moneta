@@ -38,7 +38,7 @@ Implemented and tracked in Git:
 - **Config** (`config/`): `indicators.yml` (feature spec), `strategies.yml`
   (evaluation windows + OOS holdout + trial-log rules), `history_map.yml`,
   `setting.example.yml`.
-- **Tests** (`tests/`): **161 passing** unit tests covering the pipeline
+- **Tests** (`tests/`): **222 passing** unit tests covering the pipeline
   (`extract_oci`, `extract_oanda`, `aggregate_ohlcv`), the feature engine
   (`test_indicators.py` — the six quality gates on synthetic data), and the
   shared engine's metric definitions (`test_metrics.py`). Run with `pytest -q`.
@@ -230,7 +230,7 @@ Done (tracked in Git):
 - [x] Gold feature wide tables — **305 / 270 columns** (`pipeline/indicators.py` + `library/`, spec in `docs/indicators.md`)
 - [x] **Shared, tested backtest engine** with standard metrics, cost handling, and buy-and-hold (`strategy/engine.py`)
 - [x] Strategy registry + background/checklist + trial log + OOS holdout discipline
-- [x] Automated tests — **161 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS gate: finalist-only + one-shot + fail-closed + machine pass/fail + **data-layer holdout guard** (a direct `load_bars(until=None)` / holdout-window read is refused without a run_matrix token, and only an *active `reserved`* ledger record grants a read) + atomic reserve (concurrency-safe) + half-open holdout bound + holdout-window identity lock + void flow)
+- [x] Automated tests — **222 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS gate: finalist-only + one-shot + fail-closed + machine pass/fail + **data-layer holdout guard** (a direct `load_bars(until=None)` / holdout-window read is refused without a run_matrix token, and only an *active `reserved`* ledger record grants a read) + atomic reserve (concurrency-safe) + half-open holdout bound + holdout-window identity lock + void flow)
 
 Not yet done (future, see BRD §5.3 / §11):
 

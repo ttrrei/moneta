@@ -108,6 +108,126 @@ def _register_s07() -> None:
     _STRATEGIES["s07"] = {"label": "S-07 Regime-gated slow trend (ADX gate)", "run": run}
 
 
+def _register_s08() -> None:
+    from strategy.strategy_cci_reversion_lib import run
+
+    _STRATEGIES["s08"] = {"label": "S-08 CCI-24 dip-buying", "run": run}
+
+
+def _register_s09() -> None:
+    from strategy.strategy_willr_lib import run
+
+    _STRATEGIES["s09"] = {"label": "S-09 Williams %R-24 rebound buyer", "run": run}
+
+
+def _register_s10() -> None:
+    from strategy.strategy_stoch_lib import run
+
+    _STRATEGIES["s10"] = {"label": "S-10 Stochastic-24 oversold-turn", "run": run}
+
+
+def _register_s11() -> None:
+    from strategy.strategy_macd_lib import run
+
+    _STRATEGIES["s11"] = {"label": "S-11 MACD-12/60 momentum turn", "run": run}
+
+
+def _register_s12() -> None:
+    from strategy.strategy_dual_velocity_lib import run
+
+    _STRATEGIES["s12"] = {"label": "S-12 Dual-velocity (ROC + slow-EMA slope)", "run": run}
+
+
+def _register_s13() -> None:
+    from strategy.strategy_psar_lib import run
+
+    _STRATEGIES["s13"] = {"label": "S-13 Slow PSAR direction follower", "run": run}
+
+
+def _register_s14() -> None:
+    from strategy.strategy_donchian_lib import run
+
+    _STRATEGIES["s14"] = {"label": "S-14 Donchian-24 channel follower", "run": run}
+
+
+def _register_s15() -> None:
+    from strategy.strategy_aroon_lib import run
+
+    _STRATEGIES["s15"] = {"label": "S-15 Aroon-24 fresh-trend buyer", "run": run}
+
+
+def _register_s16() -> None:
+    from strategy.strategy_mfi_lib import run
+
+    _STRATEGIES["s16"] = {"label": "S-16 MFI-24 volume-exhaustion dip-buyer", "run": run}
+
+
+def _register_s17() -> None:
+    from strategy.strategy_rsi_slow_lib import run
+
+    _STRATEGIES["s17"] = {"label": "S-17 Slow RSI-60 (1h) with regime gate", "run": run}
+
+
+def _register_s18() -> None:
+    from strategy.strategy_vwap_stretch_lib import run
+
+    _STRATEGIES["s18"] = {"label": "S-18 VWAP-stretch reversion", "run": run}
+
+
+def _register_s19() -> None:
+    from strategy.strategy_cmf_lib import run
+
+    _STRATEGIES["s19"] = {"label": "S-19 CMF-24 accumulation follower", "run": run}
+
+
+def _register_s20() -> None:
+    from strategy.strategy_multiscale_lib import run
+
+    _STRATEGIES["s20"] = {"label": "S-20 Multi-scale SuperTrend alignment", "run": run}
+
+
+def _register_s21() -> None:
+    from strategy.strategy_squeeze_slow_lib import run
+
+    _STRATEGIES["s21"] = {"label": "S-21 Slow squeeze-expansion (60-bar) regime", "run": run}
+
+
+def _register_s22() -> None:
+    from strategy.strategy_er_lib import run
+
+    _STRATEGIES["s22"] = {"label": "S-22 Efficiency-ratio regime follower", "run": run}
+
+
+def _register_s23() -> None:
+    from strategy.strategy_macd_slow_lib import run
+
+    _STRATEGIES["s23"] = {"label": "S-23 Slow ATR-normalized MACD follower", "run": run}
+
+
+def _register_s24() -> None:
+    from strategy.strategy_atr_band_lib import run
+
+    _STRATEGIES["s24"] = {"label": "S-24 ATR-band breakout follower", "run": run}
+
+
+def _register_s25() -> None:
+    from strategy.strategy_chop_lib import run
+
+    _STRATEGIES["s25"] = {"label": "S-25 Chop-regime mean-reversion", "run": run}
+
+
+def _register_s26() -> None:
+    from strategy.strategy_spread_lib import run
+
+    _STRATEGIES["s26"] = {"label": "S-26 EMA-12/60-spread follower", "run": run}
+
+
+def _register_s27() -> None:
+    from strategy.strategy_volmom_lib import run
+
+    _STRATEGIES["s27"] = {"label": "S-27 Volume-confirmed momentum", "run": run}
+
+
 _register_s01()
 _register_s05()
 _register_s06()
@@ -115,6 +235,26 @@ _register_s02()
 _register_s03()
 _register_s04()
 _register_s07()
+_register_s08()
+_register_s09()
+_register_s10()
+_register_s11()
+_register_s12()
+_register_s13()
+_register_s14()
+_register_s15()
+_register_s16()
+_register_s17()
+_register_s18()
+_register_s19()
+_register_s20()
+_register_s21()
+_register_s22()
+_register_s23()
+_register_s24()
+_register_s25()
+_register_s26()
+_register_s27()
 
 
 def _load_config() -> dict:

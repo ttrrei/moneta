@@ -25,6 +25,26 @@
 | S-05 | SuperTrend-24 direction follower | 5m | `st_dir_24_2` | st_dir_24_2 up | st_dir_24_2 down | long | **rejected** | [code/strategy_supertrend.py](code/strategy_supertrend.py) | [docs/strategy_supertrend_report.md](docs/strategy_supertrend_report.md) | 2026-10-28 | cost × frequency: 10,402 trades (full), below buy-hold at every cost tier on all 3 instruments (full c2 EUR −98.95% vs +2.3%; BTC −96.73% vs +1538%; XAU −98.23% vs +113%) → reject. See report §3. |
 | S-06 | EMA-spread trend follower | 5m | `ema_spread_24_120` | spread > 0 | spread ≤ 0 | long | **rejected** | [code/strategy_ema_spread.py](code/strategy_ema_spread.py) | [docs/strategy_ema_spread_report.md](docs/strategy_ema_spread_report.md) | 2026-10-28 | not a cross-market edge: above buy-hold on BTC at **0 bps only** (full c0 +2402% vs BH +1538%), below buy-hold at 2/5 bps (+903/+154%); below buy-hold on EUR at every tier; below buy-hold on XAU at every tier. Long-only beta on a bullish BTC sample — see report §3. |
 | S-07 | Regime-gated slow-trend follower | 1h | `st_dir_120_2`, `adx_24` | ST-120 flip while adx_24 > 25 | next ST-120 flip (or adx-weak flip → flat) | long/short | **rejected** | [code/strategy_regime_trend.py](code/strategy_regime_trend.py) | [docs/strategy_regime_trend_report.md](docs/strategy_regime_trend_report.md) | 2026-10-29 | low-frequency (~68/yr) as intended, but below buy-hold at **every** cost tier incl. 0 bps (full c0 EUR −5.1% vs +3.1%; BTC +73.6% vs +1288%; XAU −16.2% vs +110%) — signal quality, not frequency. See report §3. |
+| S-08 | CCI-24 dip-buying | 5m | `cci_24`, `bb_pctb_24` | CCI down-cross < 100 while bb_pctb < 0.5 | CCI ≥ exit level | long | **candidate** | [code/strategy_cci_reversion.py](code/strategy_cci_reversion.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | best variant `1h` (edge −261.95 @2bps); no variant beat BH on ≥2/3 instruments — see sweep report |
+| S-09 | Williams %R-24 rebound buyer | 5m | `willr_24` | %R down-cross < −70 | %R up-cross > −40 | long | **candidate** | [code/strategy_willr.py](code/strategy_willr.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-10 | Stochastic-24 oversold-turn | 5m | `stoch_k_24`, `stoch_d_24` | K up-cross of D with K < 30 | K down-cross of D | long | **candidate** | [code/strategy_stoch.py](code/strategy_stoch.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-11 | MACD-12/60 momentum turn | 5m | `macd_12_60`, `macd_hist_12_60`, `atr_24` | MACD up-cross of 0 with hist/ATR ≥ 0.05 | MACD down-cross of 0 | long | **candidate** | [code/strategy_macd.py](code/strategy_macd.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-12 | Dual-velocity (ROC + slow-EMA slope) | 5m | `roc_24`, `ema_120` | roc_24 > 0 and ema_120 rising over lag 24 | either condition fails | long | **candidate** | [code/strategy_dual_velocity.py](code/strategy_dual_velocity.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-13 | Slow PSAR-0.01/0.1 direction follower | 5m | `psar_dir_0p01_0p1` | PSAR direction up | PSAR direction down | long | **candidate** | [code/strategy_psar.py](code/strategy_psar.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-14 | Donchian-24 channel follower | 5m | `dc_mid_24`, `dc_upper_24` | close > dc_mid_24 (+ optional hysteresis) | close ≤ dc_mid_24 | long | **candidate** | [code/strategy_donchian.py](code/strategy_donchian.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-15 | Aroon-24 fresh-trend buyer | 5m | `aroon_up_24`, `aroon_down_24` | aroon_up up-cross ≥ 70 while aroon_down < 30 | aroon_up ≤ 70 | long | **candidate** | [code/strategy_aroon.py](code/strategy_aroon.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-16 | MFI-24 volume-exhaustion dip-buyer | 5m | `mfi_24` | MFI down-cross < 20 | MFI ≥ 50 | long | **candidate** | [code/strategy_mfi.py](code/strategy_mfi.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-17 | Slow RSI-60 (1h) with regime gate | 1h | `rsi_60`, `st_dir_120_3`, `adx_24` | rsi_60 < 30 (gated by ST-120 / ADX variants) | rsi_60 ≥ 50 | long | **candidate** | [code/strategy_rsi_slow.py](code/strategy_rsi_slow.py) | [docs/strategy_sweep_2026-10-30.md](docs/strategy_sweep_2026-10-30.md) | 2026-10-30 | 6-iteration sweep in `results/iterations_2026-10-30.csv` — see sweep report |
+| S-18 | VWAP-stretch reversion | 5m | `vwap`, `atr_24` | (close−vwap)/atr up-cross > k | ratio < k_exit | long | **candidate** | [code/strategy_vwap_stretch.py](code/strategy_vwap_stretch.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-19 | CMF-24 accumulation follower | 5m | `cmf_24` | cmf_24 up-cross > k | cmf_24 down-cross < 0 | long | **candidate** | [code/strategy_cmf.py](code/strategy_cmf.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-20 | Multi-scale SuperTrend alignment | 5m | `st_dir_60_2`, `st_dir_120_2` (gated) | short ST up-flip while long-scale ST up | short ST down-flip | long | **candidate** | [code/strategy_multiscale.py](code/strategy_multiscale.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-21 | Slow squeeze-expansion (60-bar) regime | 5m | `sqz_on_60`, `bb_mid_60` | sqz_60 on + close > bb_mid_60 | sqz_60 off or close ≤ bb_mid_60 | long | **candidate** | [code/strategy_squeeze_slow.py](code/strategy_squeeze_slow.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-22 | Efficiency-ratio regime follower | 5m | `er_24`, `ema_24` | er_24 > k and close > ema_24 | either condition fails | long | **candidate** | [code/strategy_er.py](code/strategy_er.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-23 | Slow ATR-normalized MACD follower | 5m | `macd_hist_atr_24_120` | hist/atr > th | hist/atr ≤ th_exit | long | **candidate** | [code/strategy_macd_slow.py](code/strategy_macd_slow.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-24 | ATR-band breakout follower | 5m | `ema_24`, `atr_24` | (close−ema)/atr ≥ k | ratio < k_exit | long | **candidate** | [code/strategy_atr_band.py](code/strategy_atr_band.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-25 | Chop-regime mean-reversion | 5m | `chop_24`, `ema_24`, `atr_24` | (close−ema)/atr ≤ −k while chop_24 > chop_at | close ≥ ema_24 | long | **candidate** | [code/strategy_chop.py](code/strategy_chop.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-26 | EMA-12/60-spread follower | 5m | `ema_spread_12_60` | spread up-cross > th | spread < th_exit | long | **candidate** | [code/strategy_spread.py](code/strategy_spread.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-27 | Volume-confirmed momentum | 5m | `mom_24`, `vol_rel_24` | mom_24 > 0 and vol_rel_24 ≥ vmin | mom_24 ≤ 0 | long | **candidate** | [code/strategy_volmom.py](code/strategy_volmom.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
 
 ## Indicator usage map
 
@@ -38,8 +58,29 @@ Which key indicators are already *claimed* by tested/candidate strategies (helps
 | `bb_mid_24` | S-04 |
 | `st_dir_24_2` | S-05 |
 | `st_dir_120_2` | S-07 |
-| `adx_24` | S-07 |
+| `adx_24` | S-07, S-17 |
 | `ema_spread_24_120` | S-06 |
+| `cci_24`, `bb_pos_24` | S-08 |
+| `willr_24` | S-09 |
+| `stoch_k_24`, `stoch_d_24` | S-10 |
+| `macd_12_60`, `macd_hist_12_60` | S-11 |
+| `roc_24`, `ema_120` | S-12 |
+| `psar_dir_0p01_0p1` | S-13 |
+| `dc_mid_24`, `dc_upper_24` | S-14 |
+| `aroon_up_24`, `aroon_down_24` | S-15 |
+| `mfi_24` | S-16 |
+| `rsi_60`, `st_dir_120_3` | S-17 |
+| `vwap` | S-18 |
+| `atr_24` | S-18, S-24, S-25 |
+| `ema_24` | S-03, S-22, S-24, S-25 |
+| `cmf_24` | S-19 |
+| `st_dir_60_2` | S-20 |
+| `sqz_on_60`, `bb_mid_60` | S-21 |
+| `er_24` | S-22 |
+| `macd_hist_atr_24_120` | S-23 |
+| `ema_spread_12_60` | S-26 |
+| `chop_24` | S-25 |
+| `mom_24`, `vol_rel_24` | S-27 |
 
 ## Rejected combinations — do not re-test without a new hypothesis
 

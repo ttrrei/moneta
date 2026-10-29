@@ -141,6 +141,46 @@ oos:
 strategies:
   S-01:
     timeframe: "5m"
+  S-08:
+    timeframe: "5m"
+  S-09:
+    timeframe: "5m"
+  S-10:
+    timeframe: "5m"
+  S-11:
+    timeframe: "5m"
+  S-12:
+    timeframe: "5m"
+  S-13:
+    timeframe: "5m"
+  S-14:
+    timeframe: "5m"
+  S-15:
+    timeframe: "5m"
+  S-16:
+    timeframe: "5m"
+  S-17:
+    timeframe: "1h"
+  S-18:
+    timeframe: "5m"
+  S-19:
+    timeframe: "5m"
+  S-20:
+    timeframe: "5m"
+  S-21:
+    timeframe: "5m"
+  S-22:
+    timeframe: "5m"
+  S-23:
+    timeframe: "5m"
+  S-24:
+    timeframe: "5m"
+  S-25:
+    timeframe: "5m"
+  S-26:
+    timeframe: "5m"
+  S-27:
+    timeframe: "5m"
   S-02:
     timeframe: "1h"
   S-03:
