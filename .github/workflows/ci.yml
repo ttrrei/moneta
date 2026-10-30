@@ -19,7 +19,7 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: checker self-test (32 mutation cases)
+      - name: checker self-test
         run: python scripts/test_check_results.py
 
       # L1 (append-only) is the load-bearing check: the committed oos_ledger.json
@@ -35,6 +35,8 @@ jobs:
       # than skipping the check — the only documented exception is a base branch
       # that predates the ledger file entirely (a genuine bootstrap).
       - name: check the committed results (append-only ledger enforced vs base)
+        # A failing self-test must never skip the load-bearing results check.
+        if: always()
         env:
           BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
           EVENT_NAME: ${{ github.event_name }}

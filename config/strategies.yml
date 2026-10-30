@@ -331,6 +331,26 @@ strategies:
     timeframe: "5m"
   S-102:
     timeframe: "5m"
+  S-103:
+    timeframe: "5m"
+  S-104:
+    timeframe: "5m"
+  S-105:
+    timeframe: "5m"
+  S-106:
+    timeframe: "5m"
+  S-107:
+    timeframe: "5m"
+  S-108:
+    timeframe: "5m"
+  S-109:
+    timeframe: "5m"
+  S-110:
+    timeframe: "5m"
+  S-111:
+    timeframe: "5m"
+  S-112:
+    timeframe: "5m"
   S-02:
     timeframe: "1h"
   S-03:

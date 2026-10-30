@@ -343,6 +343,18 @@ CASES = [
      lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
                           S05_ROW.replace("**rejected**", "**tested**"))),
 
+    # B.1 (follow-up #3): X5 is now two-sided. A *non-terminal* registry status
+    # sitting on top of a terminal trial-log verdict must fail. (The harness
+    # checks expect_codes <= got, so it is fine if an adjacent rule such as S1
+    # also fires — the point is that X5 fires at all.)
+    ("registry 'candidate' + trial-log 'rejected' -> X5", {"X5"}, 1, None,
+     lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
+                          S05_ROW.replace("**rejected**", "**candidate**"))),
+
+    ("registry 'parked' + trial-log 'rejected' -> X5", {"X5"}, 1, None,
+     lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
+                          S05_ROW.replace("**rejected**", "**parked**"))),
+
     # §1.6 (check F): a `finalist` must actually beat the in-sample bar.
     # S-05 beats 0 of 3 instruments at 2 bps (and has 10402 trades), so making
     # it a `finalist` must be flagged as not satisfying the promotion bar.

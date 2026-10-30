@@ -4,9 +4,12 @@ For each of the new strategies, evaluate 6 improvement *iterations* (variants)
 over the in-sample matrix: 3 instruments (EUR_USD / BTC_USD / XAU_USD) x 2
 windows (full, last_12m) x 3 cost tiers (0 / 2 / 5 bps) = 18 cells.
 
-All variants run on **in-sample data only** (``until <= 2025-07-31``) — no
+All variants run on **in-sample data only** (window ``until`` is read from
+``config/strategies.yml → windows`` and always stops before the holdout) — no
 OOS holdout is touched (the holdout is a one-shot gate reserved for the single
-finalist under ``config/strategies.yml → oos.pass_criteria``).
+finalist under ``config/strategies.yml → oos.pass_criteria``). This file is a
+sweep-only helper, NOT the canonical execution path (see the comment near the
+imports).
 
 Each row of the CSV records one cell:
   strategy, variant, instrument, window, cost_bps,
@@ -30,11 +33,27 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-INSTRUMENTS = ["EUR_USD", "BTC_USD", "XAU_USD"]
-COST_TIERS = [0.0, 2.0, 5.0]
+# This is a **sweep-only helper**, NOT the canonical execution path.
+#   * Canonical path: `strategy/run_matrix.py` — it owns the OOS gate, the
+#     one-shot ledger reservation, the manifest, and the trial-log bookkeeping.
+#   * Any holdout read is forbidden here: this harness evaluates the
+#     in-sample windows only (full / last_12m) and must never touch the holdout.
+# The evaluation windows and the instrument/cost axes are read from the SAME
+# config the runner uses, so re-anchoring a window in `config/strategies.yml`
+# can no longer silently desynchronise the two execution paths
+# (review follow-up #3 §D).
+from strategy.run_matrix import (
+    INSTRUMENTS,
+    COST_TIERS,
+    _load_config,
+    _window_bounds,
+)
+
+_CFG = _load_config()
 WINDOWS = {
-    "full": {"since": None, "until": "2025-07-31"},
-    "last_12m": {"since": "2024-08-01", "until": "2025-07-31"},
+    name: {"since": _window_bounds(_CFG, name)[0],
+           "until": _window_bounds(_CFG, name)[1]}
+    for name in ("full", "last_12m")
 }
 PARQUET_5M = "data/ohlcv_5m_features/ohlcv_5m_features.parquet"
 PARQUET_1H = "data/ohlcv_1h_features/ohlcv_1h_features.parquet"
@@ -137,7 +156,34 @@ STRATEGIES = {
     "s100": "strategy_macdcross624_lib",
     "s101": "strategy_roc120ema120_lib",
     "s102": "strategy_dcpos12_lib",
+    "s103": "strategy_chop120_lib",
+    "s104": "strategy_cmf60_lib",
+    "s105": "strategy_hv60_lib",
+    "s106": "strategy_stochd60_lib",
+    "s107": "strategy_sqz120_lib",
+    "s108": "strategy_rsi6_lib",
+    "s109": "strategy_adx60_lib",
+    "s110": "strategy_stochk120_lib",
+    "s111": "strategy_willr6_lib",
+    "s112": "strategy_er60_lib",
 }
+
+#: Canonical per-strategy timeframe from config/strategies.yml — the same
+#: source run_matrix uses to refuse a mismatched timeframe. This replaces the
+#: old `sid != "s17"` special case (review follow-up #3 §D). Built from the
+#: harness's own strategy map so adding a strategy cannot go stale here.
+_STRATEGY_TF = {
+    sid: (_CFG.get("strategies", {}).get(f"S-{int(sid[1:]):02d}", {}) or {}).get("timeframe")
+    for sid in STRATEGIES
+}
+
+
+def _default_tf(sid: str) -> str:
+    """Default timeframe for a sweep strategy: the config timeframe, falling
+    back to 5m for any id missing from the config (defensive; all registered
+    strategies carry a timeframe)."""
+    return _STRATEGY_TF.get(sid) or "5m"
+
 
 #: Per-strategy list of (variant_name, kwargs) — the 6 improvement iterations.
 VARIANTS: dict[str, list[tuple[str, dict]]] = {
@@ -1053,6 +1099,106 @@ VARIANTS: dict[str, list[tuple[str, dict]]] = {
         ("entry_guard", {"entry_guard": True}),
         ("combo", {"k_in": 0.8,"k_exit": 0.5,"ema_gate": True}),
     ],
+    "s103": [
+        ("base", {}),
+        ("stronger", {"k_in": 30.0,"k_exit": 50.0}),
+        ("looser", {"k_in": 50.0,"k_exit": 70.0}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 40.0,"k_exit": 80.0}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 30.0,"k_exit": 50.0,"ema_gate": True}),
+    ],
+    "s104": [
+        ("base", {}),
+        ("stronger", {"k_in": 0.1,"k_exit": 0.05}),
+        ("looser", {"k_in": 0.03,"k_exit": -0.03}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 0.05,"k_exit": -0.05}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 0.1,"k_exit": 0.05,"ema_gate": True}),
+    ],
+    "s105": [
+        ("base", {}),
+        ("stronger", {"k_in": 0.0003,"k_exit": 0.0008}),
+        ("looser", {"k_in": 0.001,"k_exit": 0.003}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 0.0005,"k_exit": 0.002}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 0.0003,"k_exit": 0.0008,"ema_gate": True}),
+    ],
+    "s106": [
+        ("base", {}),
+        ("stronger", {"k_in": 65.0,"k_exit": 50.0}),
+        ("looser", {"k_in": 45.0,"k_exit": 30.0}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 55.0,"k_exit": 25.0}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 65.0,"k_exit": 50.0,"ema_gate": True}),
+    ],
+    "s107": [
+        ("base", {}),
+        ("ema_gate", {"ema_gate": True}),
+        ("entry_guard", {"entry_guard": True}),
+        ("1h", {"timeframe": "1h"}),
+        ("ema_guard", {"ema_gate": True,"entry_guard": True}),
+        ("1h_ema", {"timeframe": "1h","ema_gate": True}),
+        ("1h_guard", {"timeframe": "1h","entry_guard": True}),
+        ("1h_ema_guard", {"timeframe": "1h","ema_gate": True,"entry_guard": True}),
+    ],
+    "s108": [
+        ("base", {}),
+        ("stronger", {"k_in": 65.0,"k_exit": 50.0}),
+        ("looser", {"k_in": 45.0,"k_exit": 30.0}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 55.0,"k_exit": 25.0}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 65.0,"k_exit": 50.0,"ema_gate": True}),
+    ],
+    "s109": [
+        ("base", {}),
+        ("stronger", {"k_in": 15.0,"k_exit": 30.0}),
+        ("looser", {"k_in": 25.0,"k_exit": 45.0}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 20.0,"k_exit": 60.0}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 15.0,"k_exit": 30.0,"ema_gate": True}),
+    ],
+    "s110": [
+        ("base", {}),
+        ("stronger", {"k_in": 65.0,"k_exit": 50.0}),
+        ("looser", {"k_in": 45.0,"k_exit": 30.0}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 55.0,"k_exit": 25.0}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 65.0,"k_exit": 50.0,"ema_gate": True}),
+    ],
+    "s111": [
+        ("base", {}),
+        ("stronger", {"k_in": -40.0,"k_exit": -60.0}),
+        ("looser", {"k_in": -70.0,"k_exit": -90.0}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": -50.0,"k_exit": -95.0}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": -40.0,"k_exit": -60.0,"ema_gate": True}),
+    ],
+    "s112": [
+        ("base", {}),
+        ("stronger", {"k_in": 0.4,"k_exit": 0.25}),
+        ("looser", {"k_in": 0.2,"k_exit": 0.1}),
+        ("ema_gate", {"ema_gate": True}),
+        ("wide_exit", {"k_in": 0.3,"k_exit": 0.08}),
+        ("1h", {"timeframe": "1h"}),
+        ("entry_guard", {"entry_guard": True}),
+        ("combo", {"k_in": 0.4,"k_exit": 0.25,"ema_gate": True}),
+    ],
 }
 
 FIELDS = [
@@ -1068,7 +1214,7 @@ def _run_one(sid: str, variant: str, kw: dict, instrument: str,
              window: str, wcfg: dict, cost: float) -> dict:
     import importlib
     lib = importlib.import_module(f"strategy.{STRATEGIES[sid]}")
-    tf = kw.get("timeframe", "5m" if sid != "s17" else "1h")
+    tf = kw.get("timeframe") or _default_tf(sid)
     parquet = PARQUET_1H if tf == "1h" else PARQUET_5M
     try:
         res = lib.run(

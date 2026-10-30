@@ -3041,3 +3041,286 @@ def test_dcpos12_strict_threshold():
     s = DcPos12State(p, k_in=0.7, k_exit=0.4)
     assert s.desired_position(2) == 0   # 0.7 not > 0.7
     assert s.desired_position(3) == 1   # 0.72 > 0.7 fresh
+
+
+# ================= Round 6: S-103..S-112 =================
+
+from strategy.strategy_chop120_lib import Chop120State
+from strategy.strategy_cmf60_lib import Cmf60State
+from strategy.strategy_hv60_lib import Hv60State
+from strategy.strategy_stochd60_lib import StochD60State
+from strategy.strategy_sqz120_lib import Sqz120State
+from strategy.strategy_rsi6_lib import Rsi6State
+from strategy.strategy_adx60_lib import Adx60State
+from strategy.strategy_stochk120_lib import StochK120State
+from strategy.strategy_willr6_lib import Willr6State
+from strategy.strategy_er60_lib import Er60State
+
+
+# --- S-103 Chop120State: fresh chop_120 down-cross ----------------------------
+
+def test_chop120_entry_exit():
+    c = np.array([70.0, 35.0, 30.0, 65.0])
+    s = Chop120State(c, k_in=40.0, k_exit=60.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_chop120_nan_safe():
+    # NaN on bar0: the first readable bar below k_in counts as the fresh cross
+    s = Chop120State(np.array([np.nan, 20.0]), k_in=40.0, k_exit=60.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    # prev bar already below k_in -> not a fresh cross, no entry
+    s2 = Chop120State(np.array([np.nan, 70.0, 30.0]), k_in=40.0, k_exit=60.0)
+    assert s2.desired_position(2) == 0
+    assert s2.desired_position(3) == 1
+    # prev bar below k_in (finite) -> not fresh
+    s3 = Chop120State(np.array([50.0, 30.0, 25.0]), k_in=40.0, k_exit=60.0)
+    assert s3.desired_position(2) == 1
+    assert s3.desired_position(3) == 1
+
+
+def test_chop120_strong_trend():
+    c = np.array([80.0, 70.0, 25.0])
+    s = Chop120State(c, k_in=30.0, k_exit=50.0)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+# --- S-104 Cmf60State: fresh cmf_60 up-cross ----------------------------------
+
+def test_cmf60_entry_exit():
+    m = np.array([-0.1, 0.08, 0.1, -0.05])
+    s = Cmf60State(m, k_in=0.05, k_exit=0.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_cmf60_nan_safe():
+    m = np.array([np.nan, 0.2, 0.1, -0.05])
+    s = Cmf60State(m, k_in=0.05, k_exit=0.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+def test_cmf60_requires_rebound():
+    m = np.array([-0.2, -0.1, 0.08])
+    s = Cmf60State(m, k_in=0.05, k_exit=0.0)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+# --- S-105 Hv60State: fresh hv_60 down-cross -----------------------------------
+
+def test_hv60_entry_exit():
+    h = np.array([0.003, 0.0004, 0.0003, 0.002])
+    s = Hv60State(h, k_in=0.0005, k_exit=0.001)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_hv60_nan_safe():
+    h = np.array([np.nan, 0.002, 0.0004])
+    s = Hv60State(h, k_in=0.0005, k_exit=0.001)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    s2 = Hv60State(np.array([np.nan, 0.002, 0.0004]), k_in=0.0005, k_exit=0.001)
+    assert s2.desired_position(2) == 0
+    assert s2.desired_position(3) == 1
+
+
+def test_hv60_looser_threshold():
+    h = np.array([0.01, 0.002, 0.0008])
+    s = Hv60State(h, k_in=0.001, k_exit=0.003)
+    assert s.desired_position(2) == 0   # 0.002 not < 0.001
+    assert s.desired_position(3) == 1   # 0.0008 < 0.001 fresh (prev 0.002 >= 0.001)
+
+
+# --- S-106 StochD60State: fresh stoch_d_60 up-cross ----------------------------
+
+def test_stochd60_entry_exit():
+    d = np.array([40.0, 60.0, 65.0, 35.0])
+    s = StochD60State(d, k_in=55.0, k_exit=40.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_stochd60_nan_safe():
+    d = np.array([np.nan, 50.0, 60.0])
+    s = StochD60State(d, k_in=55.0, k_exit=40.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+def test_stochd60_strict_threshold():
+    d = np.array([50.0, 55.0, 56.0])
+    s = StochD60State(d, k_in=55.0, k_exit=40.0)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+# --- S-107 Sqz120State: fresh sqz_on_120 flag up-flip ---------------------------
+
+def test_sqz120_entry_exit():
+    q = np.array([0.0, 1.0, 1.0, 0.0])
+    s = Sqz120State(q)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_sqz120_nan_safe():
+    q = np.array([np.nan, 0.0, 1.0])
+    s = Sqz120State(q)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+def test_sqz120_no_reentry_while_on():
+    q = np.array([0.0, 1.0, 1.0, 1.0])
+    s = Sqz120State(q)
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 1
+
+
+# --- S-108 Rsi6State: fresh rsi_6 up-cross --------------------------------------
+
+def test_rsi6_entry_exit():
+    r = np.array([40.0, 60.0, 65.0, 35.0])
+    s = Rsi6State(r, k_in=55.0, k_exit=40.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_rsi6_nan_safe():
+    r = np.array([np.nan, 50.0, 60.0])
+    s = Rsi6State(r, k_in=55.0, k_exit=40.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+def test_rsi6_strong_rebound():
+    r = np.array([20.0, 30.0, 70.0])
+    s = Rsi6State(r, k_in=65.0, k_exit=50.0)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+# --- S-109 Adx60State: fresh adx_60 down-cross -----------------------------------
+
+def test_adx60_entry_exit():
+    a = np.array([40.0, 15.0, 10.0, 45.0])
+    s = Adx60State(a, k_in=20.0, k_exit=35.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_adx60_nan_safe():
+    a = np.array([np.nan, 30.0, 15.0])
+    s = Adx60State(a, k_in=20.0, k_exit=35.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+def test_adx60_strong_range():
+    a = np.array([50.0, 45.0, 10.0])
+    s = Adx60State(a, k_in=15.0, k_exit=30.0)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+# --- S-110 StochK120State: fresh stoch_k_120 up-cross -----------------------------
+
+def test_stochk120_entry_exit():
+    k = np.array([40.0, 60.0, 65.0, 35.0])
+    s = StochK120State(k, k_in=55.0, k_exit=40.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_stochk120_nan_safe():
+    k = np.array([np.nan, 50.0, 60.0])
+    s = StochK120State(k, k_in=55.0, k_exit=40.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+def test_stochk120_strong_turn():
+    k = np.array([20.0, 30.0, 70.0])
+    s = StochK120State(k, k_in=65.0, k_exit=50.0)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+# --- S-111 Willr6State: fresh willr_6 rebound up-cross -----------------------------
+
+def test_willr6_entry_exit():
+    w = np.array([-90.0, -50.0, -45.0, -85.0])
+    s = Willr6State(w, k_in=-60.0, k_exit=-80.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_willr6_nan_safe():
+    w = np.array([np.nan, -70.0, -50.0])
+    s = Willr6State(w, k_in=-60.0, k_exit=-80.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+def test_willr6_rebound_required():
+    w = np.array([-95.0, -85.0, -55.0])
+    s = Willr6State(w, k_in=-60.0, k_exit=-80.0)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+# --- S-112 Er60State: fresh er_60 up-cross -----------------------------------------
+
+def test_er60_entry_exit():
+    e = np.array([0.1, 0.4, 0.45, 0.12])
+    s = Er60State(e, k_in=0.3, k_exit=0.15)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+def test_er60_nan_safe():
+    e = np.array([np.nan, 0.2, 0.4])
+    s = Er60State(e, k_in=0.3, k_exit=0.15)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1
+
+
+def test_er60_strong_trend():
+    e = np.array([0.05, 0.1, 0.5])
+    s = Er60State(e, k_in=0.4, k_exit=0.25)
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 1

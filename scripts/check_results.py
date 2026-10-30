@@ -48,6 +48,11 @@ What it checks
   X14 a registered strategy has no committed evidence (no results dir and no
       sweep-CSV row), or a sweep CSV has no rows / is missing columns / has
       failed cells (review follow-up #3 §C5)
+  X15 registry saturation: the same (base indicator, timeframe) family already
+      holds too many strategies — WARN at >= 4 members, FAIL at >= 8
+      (review follow-up #3 §B.3). A strategy "belongs" to a family if any of
+      its backticked key indicators reduce to that base name (window suffix
+      stripped: willr_60 -> willr, macd_hist_6_24 -> macd_hist).
 
 **Stop conditions (generated_strategy.md §5), machine-enforced**
   S1  trade count > 300  -> the status must be rejected / parked
@@ -1023,15 +1028,36 @@ def check_cross_artifacts(root: Path, cfg: dict, registry: dict, trials: list[di
             # directory, not to the holdout result — stop here.
             continue
 
-        # ---- X5: status vs outcome --------------------------------------
+        # ---- X5: status vs outcome (two-sided) --------------------------
+        # Existing (terminal-status) direction: the registry status must be one
+        # of the trial-log outcomes. New (review follow-up #3 B.1) direction:
+        # a *non-terminal* registry status (`candidate` / `finalist`) must not
+        # sit on top of a terminal verdict in the trial log (`rejected` /
+        # `parked` / `tested`) — that is "the row says adjudicated but the
+        # registry still says not-run / OOS-pending", the exact hole 20 rows
+        # sat in at e6350d5. `finalist` may carry a `tested` outcome (the OOS
+        # just passed and the registry update is pending — transient, not a
+        # contradiction).
         if status and trows:
-            norm_out = {t["outcome"].lower().replace(" ", "").replace("-", "")
-                        for t in trows}
-            norm_status = status.replace(" ", "").replace("-", "")
-            if norm_status in {"rejected", "parked", "tested"} and norm_status not in norm_out:
-                rep.fail("X5", f"registry {canon_id}",
-                         f"registry status {status!r} disagrees with the trial-log outcome(s) "
-                         f"{sorted({t['outcome'] for t in trows})}")
+            def _norm(s: str) -> str:
+                return s.lower().replace(" ", "").replace("-", "")
+            norm_out = {_norm(t["outcome"]) for t in trows}
+            norm_status = _norm(status)
+            terminal = {"rejected", "parked", "tested"}
+            if norm_status in terminal:
+                if norm_status not in norm_out:
+                    rep.fail("X5", f"registry {canon_id}",
+                             f"registry status {status!r} disagrees with the trial-log outcome(s) "
+                             f"{sorted({t['outcome'] for t in trows})}")
+            elif norm_status in {"candidate", "finalist"}:
+                allowed = {"tested"} if norm_status == "finalist" else set()
+                bad = (norm_out & terminal) - allowed
+                if bad:
+                    rep.fail("X5", f"registry {canon_id}",
+                             f"registry status {status!r} is non-terminal but the trial log "
+                             f"records a terminal verdict {sorted(bad)} — the row is "
+                             f"adjudicated but the registry still says "
+                             f"{'OOS pending' if norm_status == 'finalist' else 'not run'}")
 
         # ---- X12: trial-log timeframe agrees with the config -------------
         # The trial-log `hypothesis` column is free text, but when a row names
@@ -1504,7 +1530,57 @@ def run(root: Path, base_ledger: Path | None = None) -> Report:
     # have no results directory (S-08 … S-27 except the one with results/).
     check_sweep_evidence(root, cfg, registry, results, rep)
 
+    # B.3: registry saturation guard (X15).
+    check_saturation(registry, rep)
+
     return rep
+
+
+def _base_indicator(ind: str) -> str:
+    """Strip trailing window numeric suffixes: willr_60 -> willr,
+    macd_hist_6_24 -> macd_hist, st_dir_24_3 -> st_dir. Non-trailing suffixes
+    are kept (stoch_d, ema_spread, vol_ratio stay intact)."""
+    parts = ind.split("_")
+    while parts and parts[-1].isdigit():
+        parts = parts[:-1]
+    return "_".join(parts) if parts else ind
+
+
+def check_saturation(registry: dict, rep: Report) -> None:
+    """X15 (review follow-up #3 §B.3): enforce the registry's own duplicate
+    rule. Group strategy rows by (base indicator family, timeframe); a
+    strategy belongs to a family if any of its backticked key indicators
+    reduces to that base name. >= 4 members -> WARN, >= 8 -> FAIL.
+
+    Baseline produces 6 warnings (ema 5m, st_dir 5m, atr 5m, mfi 5m, roc 5m,
+    aroon_down 5m) and 0 failures, so the build stays green (D2). The guard
+    exists so the *next* session that adds another variant of a saturated
+    family trips it.
+    """
+    # family -> set of strategy ids
+    fam: dict[tuple[str, str], set[str]] = {}
+    for sid, rec in registry.items():
+        row = (rec.get("key indicators") or "").strip()
+        inds = re.findall(r"`([A-Za-z0-9_]+)`", row)
+        tf = (rec.get("timeframe") or "").strip()
+        for ind in set(inds):
+            base = _base_indicator(ind)
+            if not base:
+                continue
+            fam.setdefault((base, tf), set()).add(sid)
+
+    for (base, tf), sids in sorted(fam.items()):
+        n = len(sids)
+        if n >= 8:
+            rep.fail("X15", f"registry {base} {tf}",
+                     f"registry saturated for this family — {n} strategies share "
+                     f"({base!r}, {tf!r}) — STOP and report per WORKFLOW.md Step 1 "
+                     f"(saturation guard)")
+        elif n >= 4:
+            rep.warn("X15", f"registry {base} {tf}",
+                     f"the ({base!r}, {tf!r}) family already has {n} strategies; "
+                     f"the next variant needs a different indicator family — see "
+                     f"WORKFLOW.md Step 1 (registry saturation)")
 
 
 def print_human(rep: Report, strict: bool) -> None:
