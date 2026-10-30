@@ -73,10 +73,12 @@ def build_fixture(dest: Path) -> None:
             shutil.copytree(src, s / "results" / d)
 
     # The sweep CSVs are the committed evidence for the strategies that have no
-    # results directory (S-08 … S-57); C5 validates them and evaluates S1–S3
+    # results directory (S-08 … S-102); C5 validates them and evaluates S1–S3
     # from the `full`-window rows, so the fixture must carry them too.
     for name in ("iterations_2026-10-30.csv", "iterations_2026-11-01.csv",
-                 "iterations_2026-11-02.csv", "iterations_2026-11-03.csv"):
+                 "iterations_2026-11-02.csv", "iterations_2026-11-03.csv",
+                 "iterations_2026-11-04.csv", "iterations_2026-11-05.csv",
+                 "iterations_2026-11-06.csv"):
         src = REPO / "strategy" / "results" / name
         if src.exists():
             shutil.copy(src, s / "results" / name)
@@ -139,10 +141,13 @@ S05_ROW = ("| S-05 | SuperTrend-24 direction follower | 5m | `st_dir_24_2` | "
 #: A synthetic OOS strategy used by the X13 mutation cases. It is registered
 #: (config + registry + trial log) but has NO in-sample results directory, so
 #: only its `<ID>_oos` directory is present — exactly what Phase 2.4 commits.
-#: The id must NOT collide with a real registry row (S-01 … S-57): the real
+#: The id must NOT collide with a real registry row (S-01 … S-102): the real
 #: registry row would shadow the synthetic one and the X13 verdict check would
 #: be skipped.
-OOS_SID = "S-99"
+# Must NOT collide with any real registry id (S-01 … S-102); the checker
+# normalises ids (S-99 == S99 == s99), so any 2-digit id from batch 7 or
+# later is unsafe.
+OOS_SID = "S-999"
 
 
 def write_oos_dir(work: Path, status: str = "tested",
@@ -355,7 +360,7 @@ CASES = [
                           "beats buy-hold on BTC across all 3 cost tiers")),
 
     ("results dir name != strategy id -> X1", {"X1"}, 1, None,
-     lambda w: (w / "strategy/results/S05").rename(w / "strategy/results/S99")),
+     lambda w: (w / "strategy/results/S05").rename(w / "strategy/results/S999")),
 
     ("in-sample window without an until cap -> refuse to run", {"ERROR"}, 1,
      "windows.full.until is missing",
@@ -363,11 +368,12 @@ CASES = [
                           'until: "2025-07-31"        # day before oos.holdout_start',
                           "until: null")),
 
-    # S-99 cannot exist in the registry (real ids are S-01 … S-27).
+    # S-999 cannot exist in the registry (real ids are S-01 … S-102; S-99 is
+    # a real strategy from batch 7, so it is no longer a safe test id).
     ("config strategy missing from the registry -> X3", {"X3"}, 1, None,
      lambda w: replace_in(w / "config/strategies.yml",
                           '  S-05:\n    timeframe: "5m"',
-                          '  S-05:\n    timeframe: "5m"\n  S-99:\n    timeframe: "5m"')),
+                          '  S-05:\n    timeframe: "5m"\n  S-999:\n    timeframe: "5m"')),
 
     ("trial_log row missing -> X4", {"X4"}, 1, None,
      lambda w: (w / "strategy/trial_log.md").write_text(
@@ -466,7 +472,7 @@ CASES = [
     ("registered strategy with no committed evidence -> X14", {"X14"}, 1, None,
      lambda w: replace_in(w / "config/strategies.yml",
                           '  S-05:\n    timeframe: "5m"',
-                          '  S-05:\n    timeframe: "5m"\n  S-98:\n    timeframe: "5m"')),
+                          '  S-05:\n    timeframe: "5m"\n  S-998:\n    timeframe: "5m"')),
     # §B2: the OOS dir's committed evidence is summary.csv / matrix.md (the
     # per-cell JSON files are git-ignored). A voided record with a committed
     # summary.csv in the OOS dir must still be caught.

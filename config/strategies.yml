@@ -241,6 +241,96 @@ strategies:
     timeframe: "5m"
   S-57:
     timeframe: "5m"
+  S-58:
+    timeframe: "5m"
+  S-59:
+    timeframe: "5m"
+  S-60:
+    timeframe: "5m"
+  S-61:
+    timeframe: "5m"
+  S-62:
+    timeframe: "5m"
+  S-63:
+    timeframe: "5m"
+  S-64:
+    timeframe: "5m"
+  S-65:
+    timeframe: "5m"
+  S-66:
+    timeframe: "5m"
+  S-67:
+    timeframe: "5m"
+  S-68:
+    timeframe: "5m"
+  S-69:
+    timeframe: "5m"
+  S-70:
+    timeframe: "5m"
+  S-71:
+    timeframe: "5m"
+  S-72:
+    timeframe: "5m"
+  S-73:
+    timeframe: "5m"
+  S-74:
+    timeframe: "5m"
+  S-75:
+    timeframe: "5m"
+  S-76:
+    timeframe: "5m"
+  S-77:
+    timeframe: "5m"
+  S-78:
+    timeframe: "5m"
+  S-79:
+    timeframe: "5m"
+  S-80:
+    timeframe: "5m"
+  S-81:
+    timeframe: "5m"
+  S-82:
+    timeframe: "5m"
+  S-83:
+    timeframe: "5m"
+  S-84:
+    timeframe: "5m"
+  S-85:
+    timeframe: "5m"
+  S-86:
+    timeframe: "5m"
+  S-87:
+    timeframe: "5m"
+  S-88:
+    timeframe: "5m"
+  S-89:
+    timeframe: "5m"
+  S-90:
+    timeframe: "5m"
+  S-91:
+    timeframe: "5m"
+  S-92:
+    timeframe: "5m"
+  S-93:
+    timeframe: "5m"
+  S-94:
+    timeframe: "5m"
+  S-95:
+    timeframe: "5m"
+  S-96:
+    timeframe: "5m"
+  S-97:
+    timeframe: "5m"
+  S-98:
+    timeframe: "5m"
+  S-99:
+    timeframe: "5m"
+  S-100:
+    timeframe: "5m"
+  S-101:
+    timeframe: "5m"
+  S-102:
+    timeframe: "5m"
   S-02:
     timeframe: "1h"
   S-03:
