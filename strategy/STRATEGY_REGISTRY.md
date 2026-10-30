@@ -7,6 +7,9 @@
 > Before starting a new strategy, check this registry so no strategy duplicates
 > an existing indicator + timeframe + rule combination.
 >
+> **Latest batch design:** S-113–S-132 were pre-registered together in
+> [strategy_batch_20261030_design.md](docs/strategy_batch_20261030_design.md).
+>
 > **Rules of use:**
 > 1. Every new strategy **must** get a row in the table below (update at creation, again after each major result change).
 > 2. "Key indicators" lists the *decision-driving* features (not every column read).
@@ -121,6 +124,37 @@
 | S-101 | Slow-ROC-120 + EMA-120 confluence | 5m | `roc_120`, `ema_120` | roc_120>k_in and close>ema_120 (fresh) | roc_120<k_exit or close≤ema_120 | long | **rejected** | [code/strategy_roc120ema120.py](code/strategy_roc120ema120.py) | [docs/strategy_sweep_2026-11-06.md](docs/strategy_sweep_2026-11-06.md) | 2026-11-06 | 8-iteration sweep in `results/iterations_2026-11-06.csv` — best `1h` −138%; no variant beat BH on ≥2/3 instruments |
 | S-102 | Slow Donchian-Pos-12 regime | 5m | `dc_pos_12` | dc_pos_12>k_in (fresh) | dc_pos_12<k_exit | long | **rejected** | [code/strategy_dcpos12.py](code/strategy_dcpos12.py) | [docs/strategy_sweep_2026-11-06.md](docs/strategy_sweep_2026-11-06.md) | 2026-11-06 | 8-iteration sweep in `results/iterations_2026-11-06.csv` — best `1h` −129%; no variant beat BH on ≥2/3 instruments |
 
+| S-103 | Slow Choppiness trend-regime entry | 5m | `chop_120` | cross below 40 | above 60 | long | **parked** | [code/strategy_chop120.py](code/strategy_chop120.py) | [docs/strategy_chop120_report.md](docs/strategy_chop120_report.md) | 2026-10-30 | +2.5% vs +2.3% (EUR_USD); variant=wide_exit; see report |
+| S-104 | Slow CMF accumulation | 5m | `cmf_60` | cross above 0.05 | below 0 | long | **rejected** | [code/strategy_cmf60.py](code/strategy_cmf60.py) | [docs/strategy_cmf60_report.md](docs/strategy_cmf60_report.md) | 2026-10-30 | -20.2% vs +3.1% (EUR_USD); variant=1h; see report |
+| S-105 | 60-bar HV low-volatility regime | 5m | `hv_60` | cross below 0.0005 | above 0.001 | long | **rejected** | [code/strategy_hv60.py](code/strategy_hv60.py) | [docs/strategy_hv60_report.md](docs/strategy_hv60_report.md) | 2026-10-30 | +2.3% vs +2.3% (EUR_USD); variant=looser; see report |
+| S-106 | Slow Stochastic-D turn | 5m | `stoch_d_60` | cross above 55 | below 40 | long | **rejected** | [code/strategy_stochd60.py](code/strategy_stochd60.py) | [docs/strategy_stochd60_report.md](docs/strategy_stochd60_report.md) | 2026-10-30 | -9.6% vs +3.1% (EUR_USD); variant=1h; see report |
+| S-107 | Slow Bollinger squeeze state | 5m | `sqz_on_120` | enter at squeeze onset | squeeze off | long | **rejected** | [code/strategy_sqz120.py](code/strategy_sqz120.py) | [docs/strategy_sqz120_report.md](docs/strategy_sqz120_report.md) | 2026-10-30 | -0.3% vs +3.1% (EUR_USD); variant=1h; see report |
+| S-108 | Ultra-fast RSI-6 turn | 5m | `rsi_6` | cross above 55 | below 40 | long | **rejected** | [code/strategy_rsi6.py](code/strategy_rsi6.py) | [docs/strategy_rsi6_report.md](docs/strategy_rsi6_report.md) | 2026-10-30 | -53.2% vs +3.1% (EUR_USD); variant=1h; see report |
+| S-109 | Slow ADX range-regime rule | 5m | `adx_60` | cross below 20 | above 35 | long | **rejected** | [code/strategy_adx60.py](code/strategy_adx60.py) | [docs/strategy_adx60_report.md](docs/strategy_adx60_report.md) | 2026-10-30 | +2.3% vs +2.3% (EUR_USD); variant=wide_exit; see report |
+| S-110 | Slow Stochastic-K (120-bar) | 5m | `stoch_k_120` | cross above 55 | below 40 | long | **rejected** | [code/strategy_stochk120.py](code/strategy_stochk120.py) | [docs/strategy_stochk120_report.md](docs/strategy_stochk120_report.md) | 2026-10-30 | -70.3% vs +2.3% (EUR_USD); variant=wide_exit; see report |
+| S-111 | Ultra-fast Williams-%R rebound | 5m | `willr_6` | cross above −60 | below −80 | long | **rejected** | [code/strategy_willr6.py](code/strategy_willr6.py) | [docs/strategy_willr6_report.md](docs/strategy_willr6_report.md) | 2026-10-30 | -66.6% vs +3.1% (EUR_USD); variant=1h; see report |
+| S-112 | Slow Efficiency-Ratio trend | 5m | `er_60` | cross above 0.3 | below 0.15 | long | **rejected** | [code/strategy_er60.py](code/strategy_er60.py) | [docs/strategy_er60_report.md](docs/strategy_er60_report.md) | 2026-10-30 | -19.9% vs +3.1% (EUR_USD); variant=1h; see report |
+| S-113 | 1h Aroon direction with ADX regime | 1h | `aroon_up_24`, `aroon_down_24`, `adx_24` | directional Aroon cross with ADX > 20 | reverse Aroon cross | long/short | **rejected** | [code/strategy_aroon_adx_1h.py](code/strategy_aroon_adx_1h.py) | [docs/strategy_aroon_adx_1h_report.md](docs/strategy_aroon_adx_1h_report.md) | 2026-10-30 | -20.8% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-114 | Higher-timeframe trend pullback | 5m | `ema_dist_24`, `h1_ema_dist_24` | recover through −0.5/+0.5 in matching 1h trend | exit on EMA-distance zero-cross | long/short | **rejected** | [code/strategy_htf_ema_pullback.py](code/strategy_htf_ema_pullback.py) | [docs/strategy_htf_ema_pullback_report.md](docs/strategy_htf_ema_pullback_report.md) | 2026-10-30 | -99.8% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-115 | Higher-timeframe-gated channel break | 5m | `dist_high_24`, `dist_low_24`, `h1_adx_24`, `dc_pos_24` | prior-extreme break with 1h ADX > 20 | exit at channel midpoint | long/short | **rejected** | [code/strategy_htf_channel_break.py](code/strategy_htf_channel_break.py) | [docs/strategy_htf_channel_break_report.md](docs/strategy_htf_channel_break_report.md) | 2026-10-30 | -94.5% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-116 | Squeeze release with close-location direction | 5m | `sqz_on_24`, `bar_clv`, `h1_ema_dist_24` | squeeze release + close-location aligned with 1h trend | renewed squeeze or 1h reversal | long/short | **rejected** | [code/strategy_squeeze_clv_htf.py](code/strategy_squeeze_clv_htf.py) | [docs/strategy_squeeze_clv_htf_report.md](docs/strategy_squeeze_clv_htf_report.md) | 2026-10-30 | -72.3% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-117 | Low-trend VWAP reclaim | 5m | `vwap`, `h1_adx_24` | VWAP cross while 1h ADX < 20 | reverse VWAP cross | long/short | **rejected** | [code/strategy_vwap_range_reclaim.py](code/strategy_vwap_range_reclaim.py) | [docs/strategy_vwap_range_reclaim_report.md](docs/strategy_vwap_range_reclaim_report.md) | 2026-10-30 | -99.9% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-118 | Band re-entry in a choppy regime | 5m | `bb_pctb_24`, `chop_24`, `h1_adx_24` | outer 5% re-entry with high chop and weak 1h ADX | exit at band midpoint | long/short | **rejected** | [code/strategy_bb_chop_reversion.py](code/strategy_bb_chop_reversion.py) | [docs/strategy_bb_chop_reversion_report.md](docs/strategy_bb_chop_reversion_report.md) | 2026-10-30 | -85.5% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-119 | 60-bar prior-extreme breakout | 5m | `dist_high_60`, `dist_low_60`, `h1_ema_dist_24` | prior-extreme break in matching 1h direction | exit on recross of the broken extreme | long/short | **rejected** | [code/strategy_channel_position_continuation.py](code/strategy_channel_position_continuation.py) | [docs/strategy_channel_position_continuation_report.md](docs/strategy_channel_position_continuation_report.md) | 2026-10-30 | -96.6% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-120 | Directional-movement cross with ADX filter | 5m | `plus_di_60`, `minus_di_60`, `adx_60` | slow DI cross with ADX > 20 | reverse DI cross | long/short | **rejected** | [code/strategy_dmi_regime_cross.py](code/strategy_dmi_regime_cross.py) | [docs/strategy_dmi_regime_cross_report.md](docs/strategy_dmi_regime_cross_report.md) | 2026-10-30 | -5.6% vs +2.3% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-121 | 1h MACD momentum in efficient regimes | 1h | `macd_hist_atr_12_60`, `er_24` | normalized MACD zero-cross with ER > 0.25 | reverse MACD cross | long/short | **rejected** | [code/strategy_macd_er_1h.py](code/strategy_macd_er_1h.py) | [docs/strategy_macd_er_1h_report.md](docs/strategy_macd_er_1h_report.md) | 2026-10-30 | -11.4% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-122 | PSAR reversal aligned with 1h trend | 5m | `psar_dir_0p01_0p1`, `h1_st_dir_24_3` | slow PSAR flip only in same 1h SuperTrend direction | exit on PSAR flip | long/short | **rejected** | [code/strategy_psar_htf_alignment.py](code/strategy_psar_htf_alignment.py) | [docs/strategy_psar_htf_alignment_report.md](docs/strategy_psar_htf_alignment_report.md) | 2026-10-30 | -99.2% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-123 | Wick rejection at Bollinger extremes | 5m | `bar_lower_wick_ratio`, `bar_upper_wick_ratio`, `bar_clv`, `bb_pctb_60` | rejection wick at outer band with confirming close location | exit at band midpoint | long/short | **rejected** | [code/strategy_wick_band_reversal.py](code/strategy_wick_band_reversal.py) | [docs/strategy_wick_band_reversal_report.md](docs/strategy_wick_band_reversal_report.md) | 2026-10-30 | -85.0% vs +2.3% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-124 | Squeeze release with activity-confirmed break | 5m | `sqz_on_60`, `dist_high_60`, `dist_low_60`, `vol_rel_60`, `dc_pos_60` | release + activity > 1.2 + prior-extreme break | exit at midpoint | long/short | **rejected** | [code/strategy_squeeze_volume_break.py](code/strategy_squeeze_volume_break.py) | [docs/strategy_squeeze_volume_break_report.md](docs/strategy_squeeze_volume_break_report.md) | 2026-10-30 | -10.6% vs +2.3% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-125 | ATR-normalized EMA trend with 1h SuperTrend | 5m | `ema_dist_60`, `h1_st_dir_120_3` | slow EMA-distance zero-cross in matching 1h regime | exit on zero-cross | long/short | **rejected** | [code/strategy_ema_dist_htf.py](code/strategy_ema_dist_htf.py) | [docs/strategy_ema_dist_htf_report.md](docs/strategy_ema_dist_htf_report.md) | 2026-10-30 | -99.9% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-126 | ATR expansion plus prior-extreme breakout | 5m | `atr_pct_24`, `atr_pct_60`, `dist_high_24`, `dist_low_24`, `dc_pos_24` | relative ATR expansion plus prior-extreme break | exit at midpoint | long/short | **rejected** | [code/strategy_atr_expansion_break.py](code/strategy_atr_expansion_break.py) | [docs/strategy_atr_expansion_break_report.md](docs/strategy_atr_expansion_break_report.md) | 2026-10-30 | -22.2% vs +2.3% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-127 | Money-flow zero-cross with 1h trend alignment | 5m | `cmf_12`, `h1_ema_dist_24` | CMF zero-cross only with matching 1h direction | reverse flow cross | long/short | **rejected** | [code/strategy_cmf_htf_flow.py](code/strategy_cmf_htf_flow.py) | [docs/strategy_cmf_htf_flow_report.md](docs/strategy_cmf_htf_flow_report.md) | 2026-10-30 | -100.0% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-128 | VWAP reclaim in strong 1h trend | 5m | `vwap`, `h1_adx_24`, `h1_ema_dist_24` | VWAP cross with ADX > 25 and matching 1h direction | reverse VWAP cross | long/short | **rejected** | [code/strategy_vwap_trend_reclaim.py](code/strategy_vwap_trend_reclaim.py) | [docs/strategy_vwap_trend_reclaim_report.md](docs/strategy_vwap_trend_reclaim_report.md) | 2026-10-30 | -81.9% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-129 | 1h SuperTrend with 5m 120-bar breakout | 5m | `h1_st_dir_24_3`, `dist_high_120`, `dist_low_120`, `dc_pos_120` | 120-bar prior-extreme breakout gated by 1h SuperTrend | exit at channel midpoint | long/short | **rejected** | [code/strategy_htf_channel_break_120.py](code/strategy_htf_channel_break_120.py) | [docs/strategy_htf_channel_break_120_report.md](docs/strategy_htf_channel_break_120_report.md) | 2026-10-30 | -64.9% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-130 | 1h channel-position break in efficient trend | 1h | `dc_pos_60`, `er_60` | channel position beyond 0.8/0.2 with ER > 0.3 | exit at midpoint | long/short | **rejected** | [code/strategy_channel_efficiency_1h.py](code/strategy_channel_efficiency_1h.py) | [docs/strategy_channel_efficiency_1h_report.md](docs/strategy_channel_efficiency_1h_report.md) | 2026-10-30 | -9.8% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-131 | Close-location impulse with activity confirmation | 5m | `bar_clv`, `vol_rel_6`, `h1_adx_24` | strong close-location + activity > 1.2 + 1h ADX > 20 | exit on CLV sign reversal | long/short | **rejected** | [code/strategy_clv_activity_impulse.py](code/strategy_clv_activity_impulse.py) | [docs/strategy_clv_activity_impulse_report.md](docs/strategy_clv_activity_impulse_report.md) | 2026-10-30 | -99.2% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+| S-132 | Band-width expansion aligned with 1h trend | 5m | `bb_width_12`, `bb_width_60`, `h1_ema_dist_24`, `dc_pos_24` | width cross with channel location and matching 1h direction | exit at midpoint | long/short | **rejected** | [code/strategy_bandwidth_expansion_htf.py](code/strategy_bandwidth_expansion_htf.py) | [docs/strategy_bandwidth_expansion_htf_report.md](docs/strategy_bandwidth_expansion_htf_report.md) | 2026-10-30 | -66.5% vs +3.1% (EUR_USD); variant=pre-registered fixed rule; see report |
+
 ## Indicator usage map
 
 Which key indicators are already *claimed* by tested/candidate strategies (helps spot overlap fast):
@@ -226,6 +260,36 @@ Which key indicators are already *claimed* by tested/candidate strategies (helps
 | `macd_6_24`, `macd_signal_6_24` | S-100 |
 | `ema_120` | S-101 |
 | `dc_pos_12` | S-102 |
+| `chop_120` | S-103 |
+| `cmf_60` | S-104 |
+| `hv_60` | S-105 |
+| `stoch_d_60` | S-106 |
+| `sqz_on_120` | S-107 |
+| `rsi_6` | S-108 |
+| `adx_60` | S-109 |
+| `stoch_k_120` | S-110 |
+| `willr_6` | S-111 |
+| `er_60` | S-112, S-130 |
+| `aroon_up_24`, `aroon_down_24`, `adx_24` | S-113 |
+| `ema_dist_24`, `h1_ema_dist_24` | S-114 |
+| `dist_high_24`, `dist_low_24`, `h1_adx_24`, `dc_pos_24` | S-115 |
+| `sqz_on_24`, `bar_clv`, `h1_ema_dist_24` | S-116 |
+| `vwap`, `h1_adx_24` | S-117 |
+| `bb_pctb_24`, `chop_24`, `h1_adx_24` | S-118 |
+| `dist_high_60`, `dist_low_60`, `h1_ema_dist_24` | S-119 |
+| `plus_di_60`, `minus_di_60`, `adx_60` | S-120 |
+| `macd_hist_atr_12_60`, `er_24` | S-121 |
+| `psar_dir_0p01_0p1`, `h1_st_dir_24_3` | S-122 |
+| `bar_lower_wick_ratio`, `bar_upper_wick_ratio`, `bar_clv`, `bb_pctb_60` | S-123 |
+| `sqz_on_60`, `dist_high_60`, `dist_low_60`, `vol_rel_60`, `dc_pos_60` | S-124 |
+| `ema_dist_60`, `h1_st_dir_120_3` | S-125 |
+| `atr_pct_24`, `atr_pct_60`, `dist_high_24`, `dist_low_24`, `dc_pos_24` | S-126 |
+| `cmf_12`, `h1_ema_dist_24` | S-127 |
+| `vwap`, `h1_adx_24`, `h1_ema_dist_24` | S-128 |
+| `h1_st_dir_24_3`, `dist_high_120`, `dist_low_120`, `dc_pos_120` | S-129 |
+| `dc_pos_60`, `er_60` | S-130 |
+| `bar_clv`, `vol_rel_6`, `h1_adx_24` | S-131 |
+| `bb_width_12`, `bb_width_60`, `h1_ema_dist_24`, `dc_pos_24` | S-132 |
 
 ## Rejected combinations — do not re-test without a new hypothesis
 

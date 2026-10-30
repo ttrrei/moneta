@@ -228,6 +228,38 @@ def _register_s27() -> None:
     _STRATEGIES["s27"] = {"label": "S-27 Volume-confirmed momentum", "run": run}
 
 
+def _register_diverse_batch() -> None:
+    from strategy.strategy_diverse_lib import run_rule
+
+    labels = {
+        "s113": "S-113 1h Aroon + ADX",
+        "s114": "S-114 Higher-timeframe trend pullback",
+        "s115": "S-115 Higher-timeframe channel break",
+        "s116": "S-116 Squeeze release + close location",
+        "s117": "S-117 Low-trend VWAP reclaim",
+        "s118": "S-118 Choppy Bollinger re-entry",
+        "s119": "S-119 Channel-position continuation",
+        "s120": "S-120 DI cross + ADX",
+        "s121": "S-121 1h normalized MACD + ER",
+        "s122": "S-122 PSAR + 1h SuperTrend",
+        "s123": "S-123 Wick rejection at bands",
+        "s124": "S-124 Activity-confirmed squeeze break",
+        "s125": "S-125 EMA distance + 1h SuperTrend",
+        "s126": "S-126 ATR expansion breakout",
+        "s127": "S-127 CMF + 1h trend",
+        "s128": "S-128 Trend-aligned VWAP reclaim",
+        "s129": "S-129 1h SuperTrend + 5m pullback",
+        "s130": "S-130 1h channel + efficiency",
+        "s131": "S-131 Close-location activity impulse",
+        "s132": "S-132 Bandwidth expansion + 1h trend",
+    }
+
+    for strategy_id, label in labels.items():
+        def runner(*, strategy_id=strategy_id, **kwargs):
+            return run_rule(strategy_id=strategy_id, **kwargs)
+        _STRATEGIES[strategy_id] = {"label": label, "run": runner}
+
+
 _register_s01()
 _register_s05()
 _register_s06()
@@ -255,6 +287,7 @@ _register_s24()
 _register_s25()
 _register_s26()
 _register_s27()
+_register_diverse_batch()
 
 
 def _load_config() -> dict:

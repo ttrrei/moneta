@@ -135,10 +135,10 @@
 
 | Quantity | Count | Basis |
 |---|---:|---|
-| **Strategies tried** (S-01 … S-102) | **102** | rows 1–102 above |
-| **Configurations tried** (distinct `(strategy, variant)` pairs) | **727** | 7 hand-run configs (S-01…S-07, one rule each — S-02 is S-01's rule on 1h) + **120** distinct `(strategy, variant)` pairs in `strategy/results/iterations_2026-10-30.csv` and `iterations_2026-11-01.csv` (S-08…S-27 × 6 variants each) + **120** distinct pairs in `strategy/results/iterations_2026-11-02.csv` (S-28…S-42 × 8 variants each) + **120** distinct pairs in `strategy/results/iterations_2026-11-03.csv` (S-43…S-57 × 8 variants each) + **120** distinct pairs in `strategy/results/iterations_2026-11-04.csv` (S-58…S-72 × 8 variants each) + **120** distinct pairs in `strategy/results/iterations_2026-11-05.csv` (S-73…S-87 × 8 variants each) + **120** distinct pairs in `strategy/results/iterations_2026-11-06.csv` (S-88…S-102 × 8 variants each) |
+| **Strategies tried** (S-01 … S-132) | **132** | rows 1–132 above |
+| **Configurations tried** (distinct `(strategy, variant)` pairs) | **827** | 727 prior configs + 80 sweep variants for S-103…S-112 + 20 fixed rules S-113…S-132 |
 | **Cells per configuration** | 18 | 3 instruments × 2 windows × 3 cost tiers |
-| **Total cells evaluated** | **≥ 13,086** | 727 × 18 |
+| **Total cells evaluated** | **≥ 14,886** | 827 × 18 |
 
 **The finalist bar is *not* corrected for multiple testing.** A configuration
 that "beats" the in-sample bar may have done so by chance among ~727
@@ -155,3 +155,34 @@ the running count is always the true number of strategies tried so far.
 Example next row:
 | 2 | 2026-11-02 | S-02 | same RSI rule on 1h bars (1/12 the cost) | full | <outcome> | <ret vs BH> | 1 |
 -->
+
+| 103 | 2026-10-30 | S-103 | 5m strategy; 8-variant sweep; +2.5% vs +2.3% (EUR_USD) | full | **parked** | +2.5% vs +2.3% (EUR_USD) | 102 |
+| 104 | 2026-10-30 | S-104 | 5m strategy; 8-variant sweep; -20.2% vs +3.1% (EUR_USD) | full | **rejected** | -20.2% vs +3.1% (EUR_USD) | 103 |
+| 105 | 2026-10-30 | S-105 | 5m strategy; 8-variant sweep; +2.3% vs +2.3% (EUR_USD) | full | **rejected** | +2.3% vs +2.3% (EUR_USD) | 104 |
+| 106 | 2026-10-30 | S-106 | 5m strategy; 8-variant sweep; -9.6% vs +3.1% (EUR_USD) | full | **rejected** | -9.6% vs +3.1% (EUR_USD) | 105 |
+| 107 | 2026-10-30 | S-107 | 5m strategy; 8-variant sweep; -0.3% vs +3.1% (EUR_USD) | full | **rejected** | -0.3% vs +3.1% (EUR_USD) | 106 |
+| 108 | 2026-10-30 | S-108 | 5m strategy; 8-variant sweep; -53.2% vs +3.1% (EUR_USD) | full | **rejected** | -53.2% vs +3.1% (EUR_USD) | 107 |
+| 109 | 2026-10-30 | S-109 | 5m strategy; 8-variant sweep; +2.3% vs +2.3% (EUR_USD) | full | **rejected** | +2.3% vs +2.3% (EUR_USD) | 108 |
+| 110 | 2026-10-30 | S-110 | 5m strategy; 8-variant sweep; -70.3% vs +2.3% (EUR_USD) | full | **rejected** | -70.3% vs +2.3% (EUR_USD) | 109 |
+| 111 | 2026-10-30 | S-111 | 5m strategy; 8-variant sweep; -66.6% vs +3.1% (EUR_USD) | full | **rejected** | -66.6% vs +3.1% (EUR_USD) | 110 |
+| 112 | 2026-10-30 | S-112 | 5m strategy; 8-variant sweep; -19.9% vs +3.1% (EUR_USD) | full | **rejected** | -19.9% vs +3.1% (EUR_USD) | 111 |
+| 113 | 2026-10-30 | S-113 | 1h strategy; Aroon direction changes may persist longer when 1h ADX confirms a directional regime. | full | **rejected** | -20.8% vs +3.1% (EUR_USD) | 112 |
+| 114 | 2026-10-30 | S-114 | 5m strategy; A 5m pullback recovery aligned with closed 1h direction may avoid counter-trend entries. | full | **rejected** | -99.8% vs +3.1% (EUR_USD) | 113 |
+| 115 | 2026-10-30 | S-115 | 5m strategy; A break of the prior 24-bar extreme may persist when closed 1h ADX confirms trend strength. | full | **rejected** | -94.5% vs +3.1% (EUR_USD) | 114 |
+| 116 | 2026-10-30 | S-116 | 5m strategy; Compression release with close-location aligned with 1h direction may filter weak breakouts. | full | **rejected** | -72.3% vs +3.1% (EUR_USD) | 115 |
+| 117 | 2026-10-30 | S-117 | 5m strategy; In weak 1h trend regimes, a VWAP reclaim may capture intraday mean reversion. | full | **rejected** | -99.9% vs +3.1% (EUR_USD) | 116 |
+| 118 | 2026-10-30 | S-118 | 5m strategy; Band re-entry may mean-revert when both local and 1h regimes are non-trending. | full | **rejected** | -85.5% vs +3.1% (EUR_USD) | 117 |
+| 119 | 2026-10-30 | S-119 | 5m strategy; A break of the prior 60-bar extreme may continue when the closed 1h context agrees. | full | **rejected** | -96.6% vs +3.1% (EUR_USD) | 118 |
+| 120 | 2026-10-30 | S-120 | 5m strategy; A slow directional-movement cross may reduce false starts when 60-bar ADX is established. | full | **rejected** | -5.6% vs +2.3% (EUR_USD) | 119 |
+| 121 | 2026-10-30 | S-121 | 1h strategy; A normalized 1h MACD zero-cross may persist when the path is directionally efficient. | full | **rejected** | -11.4% vs +3.1% (EUR_USD) | 120 |
+| 122 | 2026-10-30 | S-122 | 5m strategy; A slow PSAR reversal may be more selective when the closed 1h SuperTrend agrees. | full | **rejected** | -99.2% vs +3.1% (EUR_USD) | 121 |
+| 123 | 2026-10-30 | S-123 | 5m strategy; Extreme band location plus rejection wick and close location may identify failed extensions. | full | **rejected** | -85.0% vs +2.3% (EUR_USD) | 122 |
+| 124 | 2026-10-30 | S-124 | 5m strategy; A 60-bar squeeze release with activity and an extreme break may avoid low-energy false breaks. | full | **rejected** | -10.6% vs +2.3% (EUR_USD) | 123 |
+| 125 | 2026-10-30 | S-125 | 5m strategy; A sustained normalized EMA-distance transition may carry when the slower 1h SuperTrend agrees. | full | **rejected** | -99.9% vs +3.1% (EUR_USD) | 124 |
+| 126 | 2026-10-30 | S-126 | 5m strategy; Local volatility expansion relative to its slower baseline may confirm a channel break. | full | **rejected** | -22.2% vs +2.3% (EUR_USD) | 125 |
+| 127 | 2026-10-30 | S-127 | 5m strategy; A shorter money-flow regime change may be useful only when closed 1h price trend agrees. | full | **rejected** | -100.0% vs +3.1% (EUR_USD) | 126 |
+| 128 | 2026-10-30 | S-128 | 5m strategy; A session VWAP reclaim may be trend resumption when the closed 1h regime is strong and aligned. | full | **rejected** | -81.9% vs +3.1% (EUR_USD) | 127 |
+| 129 | 2026-10-30 | S-129 | 5m strategy; A long-window 5m extreme break may persist when the closed 1h SuperTrend agrees. | full | **rejected** | -64.9% vs +3.1% (EUR_USD) | 128 |
+| 130 | 2026-10-30 | S-130 | 1h strategy; A sustained 1h channel-position break may be more reliable when path efficiency is high. | full | **rejected** | -9.8% vs +3.1% (EUR_USD) | 129 |
+| 131 | 2026-10-30 | S-131 | 5m strategy; Directional close-location with elevated tick activity may indicate an impulse in an established regime. | full | **rejected** | -99.2% vs +3.1% (EUR_USD) | 130 |
+| 132 | 2026-10-30 | S-132 | 5m strategy; Short-window volatility expansion may signal a phase change when price location and 1h trend agree. | full | **rejected** | -66.5% vs +3.1% (EUR_USD) | 131 |

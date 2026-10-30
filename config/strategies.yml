@@ -351,6 +351,46 @@ strategies:
     timeframe: "5m"
   S-112:
     timeframe: "5m"
+  S-113:
+    timeframe: "1h"
+  S-114:
+    timeframe: "5m"
+  S-115:
+    timeframe: "5m"
+  S-116:
+    timeframe: "5m"
+  S-117:
+    timeframe: "5m"
+  S-118:
+    timeframe: "5m"
+  S-119:
+    timeframe: "5m"
+  S-120:
+    timeframe: "5m"
+  S-121:
+    timeframe: "1h"
+  S-122:
+    timeframe: "5m"
+  S-123:
+    timeframe: "5m"
+  S-124:
+    timeframe: "5m"
+  S-125:
+    timeframe: "5m"
+  S-126:
+    timeframe: "5m"
+  S-127:
+    timeframe: "5m"
+  S-128:
+    timeframe: "5m"
+  S-129:
+    timeframe: "5m"
+  S-130:
+    timeframe: "1h"
+  S-131:
+    timeframe: "5m"
+  S-132:
+    timeframe: "5m"
   S-02:
     timeframe: "1h"
   S-03:

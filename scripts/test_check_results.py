@@ -78,13 +78,39 @@ def build_fixture(dest: Path) -> None:
     for name in ("iterations_2026-10-30.csv", "iterations_2026-11-01.csv",
                  "iterations_2026-11-02.csv", "iterations_2026-11-03.csv",
                  "iterations_2026-11-04.csv", "iterations_2026-11-05.csv",
-                 "iterations_2026-11-06.csv"):
+                 "iterations_2026-11-06.csv", "iterations_2026-11-07.csv"):
         src = REPO / "strategy" / "results" / name
         if src.exists():
             shutil.copy(src, s / "results" / name)
 
+    registry_lines = (REPO / "strategy" / "STRATEGY_REGISTRY.md").read_text(
+        encoding="utf-8").splitlines()
+    for line in registry_lines:
+        if not re.match(r"^\| S-(?:0[3-9]|[1-9]\d|1[0-3]\d) \|", line):
+            continue
+        links = re.findall(r"\[[^]]+\]\(([^)]+)\)", line)
+        if len(links) < 2:
+            continue
+        code_target = links[0]
+        report_target = links[1]
+        cli_source = REPO / "strategy" / code_target
+        report_source = REPO / "strategy" / report_target
+        if cli_source.exists():
+            shutil.copy(cli_source, s / code_target)
+        if report_source.exists():
+            shutil.copy(report_source, s / report_target)
+        stem = Path(code_target).stem
+        lib_source = REPO / "strategy" / f"{stem}_lib.py"
+        if lib_source.exists():
+            shutil.copy(lib_source, s / lib_source.name)
+
+    for number in range(113, 133):
+        source = REPO / "strategy" / "results" / f"S{number}"
+        if source.exists():
+            shutil.copytree(source, s / "results" / source.name)
+
     for f in ("strategy_supertrend_lib.py", "strategy_ema_spread_lib.py",
-              "oos_ledger.json"):
+              "strategy_diverse_lib.py", "oos_ledger.json"):
         p = REPO / "strategy" / f
         if p.exists():
             shutil.copy(p, s / f)
