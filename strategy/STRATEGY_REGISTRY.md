@@ -45,6 +45,36 @@
 | S-25 | Chop-regime mean-reversion | 5m | `chop_24`, `ema_24`, `atr_24` | (close−ema)/atr ≤ −k while chop_24 > chop_at | close ≥ ema_24 | long | **rejected** | [code/strategy_chop.py](code/strategy_chop.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
 | S-26 | EMA-12/60-spread follower | 5m | `ema_spread_12_60` | spread up-cross > th | spread < th_exit | long | **rejected** | [code/strategy_spread.py](code/strategy_spread.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
 | S-27 | Volume-confirmed momentum | 5m | `mom_24`, `vol_rel_24` | mom_24 > 0 and vol_rel_24 ≥ vmin | mom_24 ≤ 0 | long | **rejected** | [code/strategy_volmom.py](code/strategy_volmom.py) | [docs/strategy_sweep_2026-11-01.md](docs/strategy_sweep_2026-11-01.md) | 2026-11-01 | 6-iteration sweep in `results/iterations_2026-11-01.csv` — see sweep report |
+| S-28 | Candle close-location turn | 5m | `bar_clv` | bar_clv up-cross > k_in (fresh) | bar_clv < k_exit | long | **rejected** | [code/strategy_candle.py](code/strategy_candle.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-29 | Volume-contraction trend buyer | 5m | `vol_rel_24`, `ema_24` | vol_rel_24 < vmin and close > ema_24 | vol_rel_24 > vmax | long | **rejected** | [code/strategy_volconverge.py](code/strategy_volconverge.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-30 | ATR-band EMA-distance turn | 5m | `ema_dist_24` | ema_dist_24 up-cross > k_in (fresh) | ema_dist_24 < k_exit | long | **rejected** | [code/strategy_atrbandpct.py](code/strategy_atrbandpct.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-31 | Supertrend-distance follower | 5m | `st_dist_24_2` | st_dist_24_2 > th_in | st_dist_24_2 < th_exit | long | **rejected** | [code/strategy_stdist.py](code/strategy_stdist.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-32 | PSAR-distance follower | 5m | `psar_dist_0p01_0p1` | psar_dist > th_in | psar_dist < th_exit | long | **rejected** | [code/strategy_psardist.py](code/strategy_psardist.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-33 | Keltner upper-band breakout | 5m | `kc_upper_24`, `kc_mid_24` | close up-cross > kc_upper_24 (fresh) | close <= kc_mid_24 | long | **rejected** | [code/strategy_kcbreak.py](code/strategy_kcbreak.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-34 | Bollinger %B dip turn | 5m | `bb_pctb_24` | bb_pctb_24 down-cross < k_in (fresh) | bb_pctb_24 >= k_exit | long | **rejected** | [code/strategy_bb_pctb.py](code/strategy_bb_pctb.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-35 | Bollinger-width compression dip | 5m | `bb_width_24`, `bb_pctb_24` | bb_width_24 down-cross < low (fresh) and pctb>0 | bb_width_24 > high | long | **rejected** | [code/strategy_bb_width.py](code/strategy_bb_width.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-36 | Donchian-position turn | 5m | `dc_pos_24` | dc_pos_24 up-cross > k_in (fresh) | dc_pos_24 < k_exit | long | **rejected** | [code/strategy_dcpos.py](code/strategy_dcpos.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-37 | Donchian midline fresh-cross | 5m | `dc_mid_24` | close up-cross > dc_mid_24 (fresh) | close <= dc_mid_24 | long | **rejected** | [code/strategy_dcmid.py](code/strategy_dcmid.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-38 | Distance-from-low turn | 5m | `dist_low_24` | dist_low_24 up-cross > k_in (fresh) | dist_low_24 < k_exit | long | **rejected** | [code/strategy_distlow.py](code/strategy_distlow.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-39 | Donchian-width compression dip | 5m | `dc_upper_24`, `dc_lower_24`, `atr_24` | width down-cross < w_in*atr (fresh) | width > w_exit*atr | long | **rejected** | [code/strategy_dcwidth.py](code/strategy_dcwidth.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-40 | SuperTrend side + distance hysteresis | 5m | `st_dir_24_2`, `st_dist_24_2` | side up and st_dist > th_in (fresh) | side down or st_dist < th_exit | long | **rejected** | [code/strategy_stdist_hyst.py](code/strategy_stdist_hyst.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-41 | Realized-volatility contraction | 5m | `hv_24` | hv_24 < k_in (realized vol compressing) | hv_24 > k_exit | long | **rejected** | [code/strategy_hvconverge.py](code/strategy_hvconverge.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-42 | Bar-body momentum turn | 5m | `bar_body_ratio` | bar_body_ratio up-cross > k_in (fresh) | bar_body_ratio < k_exit | long | **rejected** | [code/strategy_barbody.py](code/strategy_barbody.py) | [docs/strategy_sweep_2026-11-02.md](docs/strategy_sweep_2026-11-02.md) | 2026-11-02 | 8-iteration sweep in `results/iterations_2026-11-02.csv` — see sweep report |
+| S-43 | Directional-Index spread turn | 5m | `plus_di_24`, `minus_di_24` | plus_di−minus_di up-cross > k_in (fresh) | spread < −k_exit | long | **rejected** | [code/strategy_dispread.py](code/strategy_dispread.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-44 | Dual-SMA trend follower | 5m | `close`, `sma_24`, `sma_60` | close > sma_24 > sma_60 (fresh) | close < sma_60 | long | **rejected** | [code/strategy_dualsma.py](code/strategy_dualsma.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-45 | MACD signal-line cross | 5m | `macd_12_60`, `macd_signal_12_60` | macd up-cross > signal (fresh) | macd < signal | long | **rejected** | [code/strategy_macdsig.py](code/strategy_macdsig.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-46 | ATR-% low-volatility trend | 5m | `atr_pct_24` | atr_pct < k_in and close > ema (fresh) | atr_pct > k_exit | long | **rejected** | [code/strategy_atrpct.py](code/strategy_atrpct.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-47 | Distance-to-prior-high room | 5m | `dist_high_24` | dist_high up-cross > k_in (fresh) | dist_high < k_exit | long | **rejected** | [code/strategy_disthigh.py](code/strategy_disthigh.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-48 | ATR vol-ratio expansion | 5m | `vol_ratio_12_60` | vol_ratio up-cross > k_in (fresh) | vol_ratio < k_exit | long | **rejected** | [code/strategy_volratio.py](code/strategy_volratio.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-49 | Keltner lower-band bounce | 5m | `close`, `kc_lower_24`, `kc_mid_24` | close up-cross > kc_lower (fresh) | close < kc_mid | long | **rejected** | [code/strategy_kclower.py](code/strategy_kclower.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-50 | Bollinger midline pullback | 5m | `close`, `bb_mid_24`, `bb_lower_24` | close up-cross > bb_mid (fresh) | close < bb_lower | long | **rejected** | [code/strategy_bbmid.py](code/strategy_bbmid.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-51 | Low upper-wick strong close | 5m | `bar_upper_wick_ratio` | bar_upper_wick down-cross < k_in (fresh) | bar_upper_wick > k_exit | long | **rejected** | [code/strategy_upwick.py](code/strategy_upwick.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-52 | Close-location (CLV) turn | 5m | `bar_clv` | bar_clv up-cross > k_in (fresh) | bar_clv < k_exit | long | **rejected** | [code/strategy_clv.py](code/strategy_clv.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-53 | Fast MACD histogram turn | 5m | `macd_hist_atr_6_24` | macd_hist_atr up-cross > k_in (fresh) | macd_hist_atr < k_exit | long | **rejected** | [code/strategy_macdhist6.py](code/strategy_macdhist6.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-54 | 1h ADX trend regime | 5m | `h1_adx_24` | h1_adx up-cross > k_in and close > ema (fresh) | h1_adx < k_exit | long | **rejected** | [code/strategy_h1adx.py](code/strategy_h1adx.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-55 | 1h RSI momentum | 5m | `h1_rsi_24` | h1_rsi up-cross > k_in (fresh) | h1_rsi < k_exit | long | **parked** | [code/strategy_h1rsi.py](code/strategy_h1rsi.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | **in-sample finalist candidate**: `looser` (k_in=33/k_exit=27) beats buy-hold at 2 bps on 2/3 instruments (BTC, XAU) on **both** `full` and `last_12m` (~11 tpy, 98% exposure). S1 forces a terminal status because the `base` variant hits 360 full-window trades (EUR); held as `parked` for the human-nominated one-shot OOS gate — see sweep report |
+| S-56 | 1h efficiency-ratio regime | 5m | `h1_er_24` | h1_er up-cross > k_in (fresh) | h1_er < k_exit | long | **rejected** | [code/strategy_h1er.py](code/strategy_h1er.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
+| S-57 | 1h EMA-distance pullback | 5m | `h1_ema_dist_24` | h1_ema_dist enters 0<k_in band (fresh) | h1_ema_dist < −k_exit | long | **rejected** | [code/strategy_h1edist.py](code/strategy_h1edist.py) | [docs/strategy_sweep_2026-11-03.md](docs/strategy_sweep_2026-11-03.md) | 2026-11-03 | 8-iteration sweep in `results/iterations_2026-11-03.csv` — see sweep report |
 
 ## Indicator usage map
 
@@ -81,6 +111,36 @@ Which key indicators are already *claimed* by tested/candidate strategies (helps
 | `ema_spread_12_60` | S-26 |
 | `chop_24` | S-25 |
 | `mom_24`, `vol_rel_24` | S-27 |
+| `bar_clv` | S-28 |
+| `vol_rel_24` | S-27, S-29 |
+| `ema_dist_24` | S-30 |
+| `st_dist_24_2` | S-31, S-40 |
+| `psar_dist_0p01_0p1` | S-32 |
+| `kc_upper_24`, `kc_mid_24` | S-33 |
+| `bb_pctb_24` | S-34, S-35 |
+| `bb_width_24` | S-35 |
+| `dc_pos_24` | S-36 |
+| `dc_mid_24` | S-14, S-37 |
+| `dist_low_24` | S-38 |
+| `dc_upper_24`, `dc_lower_24` | S-39 |
+| `st_dir_24_2` | S-05, S-40 |
+| `hv_24` | S-41 |
+| `bar_body_ratio` | S-42 |
+| `minus_di_24`, `plus_di_24` | S-43 |
+| `sma_24`, `sma_60` | S-44 |
+| `macd_12_60`, `macd_signal_12_60` | S-45 |
+| `atr_pct_24` | S-46 |
+| `dist_high_24` | S-47 |
+| `vol_ratio_12_60` | S-48 |
+| `kc_lower_24`, `kc_mid_24` | S-49 |
+| `bb_lower_24`, `bb_mid_24` | S-50 |
+| `bar_upper_wick_ratio` | S-51 |
+| `bar_clv` | S-52 |
+| `macd_hist_atr_6_24` | S-53 |
+| `h1_adx_24` | S-54 |
+| `h1_rsi_24` | S-55 |
+| `h1_er_24` | S-56 |
+| `h1_ema_dist_24` | S-57 |
 
 ## Rejected combinations — do not re-test without a new hypothesis
 

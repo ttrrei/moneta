@@ -48,6 +48,36 @@
 | 25 | 2026-11-01 | S-25 | Chop-regime mean-reversion: stretched-below-ema while chop_24 > chop_at (6-variant chop_at 55–65) | full | **rejected** | best `1h` mean edge −254%; low-frequency (1h ~19/yr) but long-only in down-trending EUR/XAU; no variant beat BH on ≥2/3 instruments | 24 |
 | 26 | 2026-11-01 | S-26 | EMA-12/60-spread follower: spread up-cross > th, hysteresis exit (6-variant incl. hysteresis) | full | **rejected** | best `1h` mean edge −170%; 5m variants 49–685 tpy; same cost×frequency signature as S-06 (EMA-spread family) | 25 |
 | 27 | 2026-11-01 | S-27 | Volume-confirmed momentum: mom_24 > 0 and vol_rel_24 ≥ vmin (6-variant vol 0.8–2.0) | full | **rejected** | best `1h` mean edge −230%; 5m variants 195–2,976 tpy (cost × frequency); volume gate reduces trades without a cross-market edge | 26 |
+| 28 | 2026-11-02 | S-28 | Candle-close momentum: long while `close > ema` (k-in/exit, `ema_gate`), 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −323%; 5m ~1,290 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 27 |
+| 29 | 2026-11-02 | S-29 | Vol-convergence: close/EMA separation with `ema_std_ratio_20` hysteresis, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −19% (full win 1/3); 5m ~226 tpy; no cross-market edge on ≥2/3 instruments | 28 |
+| 30 | 2026-11-02 | S-30 | ATR-band % move: `atr_range_position_pct` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −127%; 5m ~139 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 29 |
+| 31 | 2026-11-02 | S-31 | Std-dev distance: `ema_std_ratio_20` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −95%; 5m ~136 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 30 |
+| 32 | 2026-11-02 | S-32 | Parabolic-SAR distance: `parabolic_sar_distance` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −145%; 5m ~157 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 31 |
+| 33 | 2026-11-02 | S-33 | Keltner close breakout: `keltner_close_breakout` flag, 8 flag-variants incl. 1h | full | **rejected** | best `1h` mean edge −211%; 5m ~73 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 32 |
+| 34 | 2026-11-02 | S-34 | Bollinger %B: `bb_pctb` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −276%; 5m ~178 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 33 |
+| 35 | 2026-11-02 | S-35 | Bollinger width: `bb_width` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge +33% (full win 2/3, last-12m 1/3) but BTC-only, 18 full trades; fails ≥2/3-instruments + both-windows rule | 34 |
+| 36 | 2026-11-02 | S-36 | Donchian position: `dc_position` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge +48% (full win 1/3, BTC +416% on 630 trades); fails ≥2/3-instruments + both-windows rule | 35 |
+| 37 | 2026-11-02 | S-37 | Donchian-mid cross: `donchian_mid_cross` flag, 8 flag-variants incl. 1h+guard | full | **rejected** | best `1h_guard` mean edge −78%; 5m ~292 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 36 |
+| 38 | 2026-11-02 | S-38 | Distance to 20-bar low: `dist_low_20` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −158%; 5m ~156 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 37 |
+| 39 | 2026-11-02 | S-39 | Donchian width: `dc_width` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −248%; near-flat exposure (~0.1 tpy); no variant beat BH on ≥2/3 instruments | 38 |
+| 40 | 2026-11-02 | S-40 | Std-dev distance hysteresis band: `ema_std_ratio_20` band, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −86%; 5m ~152 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 39 |
+| 41 | 2026-11-02 | S-41 | Realized-vol contraction: `hv_24` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −248%; near-flat exposure (~0.5 tpy); no variant beat BH on ≥2/3 instruments | 40 |
+| 42 | 2026-11-02 | S-42 | Bar-body momentum: `bar_body_ratio` vs prior-13, 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −221%; 5m ~988 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 41 |
+| 43 | 2026-11-03 | S-43 | Directional-Index spread: `plus_di_24`−`minus_di_24` up-cross > k_in (fresh), 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −175%; 5m ~97 tpy; no variant beat BH on ≥2/3 instruments | 42 |
+| 44 | 2026-11-03 | S-44 | Dual-SMA trend: close > `sma_24` > `sma_60` (fresh), exit close < `sma_60`, 8 flag-variants | full | **rejected** | best `1h_ema` mean edge −157%; 5m ~90 tpy; no variant beat BH on ≥2/3 instruments | 43 |
+| 45 | 2026-11-03 | S-45 | MACD signal-line cross: `macd_12_60` > `macd_signal_12_60` (fresh), 8 flag-variants | full | **rejected** | best `1h_guard` mean edge +147% but **BTC-only** (full +1,068 on 182 tpy, XAU −71); fails ≥2/3-instruments on both windows | 44 |
+| 46 | 2026-11-03 | S-46 | ATR-% low-vol trend: `atr_pct_24` < k_in and close > ema, 8-variant incl. 1h | full | **rejected** | best `looser` mean edge −27%; near-flat (~5 tpy); no variant beat BH on ≥2/3 instruments | 45 |
+| 47 | 2026-11-03 | S-47 | Distance-to-prior-high: `dist_high_24` up-cross > k_in (fresh), 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −247%; 5m ~163 tpy; no variant beat BH on ≥2/3 instruments | 46 |
+| 48 | 2026-11-03 | S-48 | ATR vol-ratio: `vol_ratio_12_60` up-cross > k_in (fresh), 8-variant incl. 1h | full | **rejected** | best `wide_exit` mean edge −69%; 5m ~90 tpy; no variant beat BH on ≥2/3 instruments | 47 |
+| 49 | 2026-11-03 | S-49 | Keltner lower-band bounce: close > `kc_lower_24` (fresh), 8 flag-variants | full | **rejected** | best `1h_ema` mean edge −255%; near-flat (~2 tpy); no variant beat BH on ≥2/3 instruments | 48 |
+| 50 | 2026-11-03 | S-50 | Bollinger midline pullback: close > `bb_mid_24` (fresh), 8 flag-variants | full | **rejected** | best `1h_ema_guard` mean edge −164%; 5m ~63 tpy; no variant beat BH on ≥2/3 instruments | 49 |
+| 51 | 2026-11-03 | S-51 | Low upper-wick: `bar_upper_wick_ratio` < k_in (fresh), 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −291%; 5m ~784 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 50 |
+| 52 | 2026-11-03 | S-52 | Close-location: `bar_clv` up-cross > k_in (fresh), 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −323%; 5m ~1,294 tpy (cost × frequency); no variant beat BH on ≥2/3 instruments | 51 |
+| 53 | 2026-11-03 | S-53 | Fast MACD histogram: `macd_hist_atr_6_24` up-cross > k_in (fresh), 8-variant incl. 1h | full | **rejected** | best `1h` mean edge −178%; 5m ~313 tpy; no variant beat BH on ≥2/3 instruments | 52 |
+| 54 | 2026-11-03 | S-54 | 1h ADX regime: `h1_adx_24` up-cross > k_in and close > ema, 8-variant | full | **rejected** | best `entry_ema` mean edge −113%; 5m ~20 tpy; no variant beat BH on ≥2/3 instruments | 53 |
+| 55 | 2026-11-03 | S-55 | 1h RSI momentum: `h1_rsi_24` up-cross > k_in (fresh), 8-variant | full | **parked** | **in-sample finalist candidate**: `looser` (k_in=33/k_exit=27) beats BH at 2 bps on **BTC & XAU, both `full` and `last_12m`** (~11 tpy, 98% exposure) — clears the in-sample bar; S1 forces a terminal status because the `base` variant hits 360 full-window trades (EUR), so held `parked` for the human-nominated one-shot OOS gate (NOT consumed) | 54 |
+| 56 | 2026-11-03 | S-56 | 1h efficiency-ratio regime: `h1_er_24` up-cross > k_in (fresh), 8-variant | full | **rejected** | best `looser` mean edge −178%; 5m ~247 tpy; no variant beat BH on ≥2/3 instruments | 55 |
+| 57 | 2026-11-03 | S-57 | 1h EMA-distance pullback: `h1_ema_dist_24` enters 0..k_in band, 8-variant | full | **rejected** | best `entry_guard` mean edge −31%; 5m ~141 tpy; no variant beat BH on ≥2/3 instruments | 56 |
 
 ## Configuration tally (multiple-testing burden)
 
@@ -60,13 +90,13 @@
 
 | Quantity | Count | Basis |
 |---|---:|---|
-| **Strategies tried** (S-01 … S-27) | **27** | rows 1–27 above |
-| **Configurations tried** (distinct `(strategy, variant)` pairs) | **127** | 7 hand-run configs (S-01…S-07, one rule each — S-02 is S-01's rule on 1h) + **120** distinct `(strategy, variant)` pairs in `strategy/results/iterations_2026-10-30.csv` and `iterations_2026-11-01.csv` (S-08…S-27 × 6 variants each) |
+| **Strategies tried** (S-01 … S-57) | **57** | rows 1–57 above |
+| **Configurations tried** (distinct `(strategy, variant)` pairs) | **367** | 7 hand-run configs (S-01…S-07, one rule each — S-02 is S-01's rule on 1h) + **120** distinct `(strategy, variant)` pairs in `strategy/results/iterations_2026-10-30.csv` and `iterations_2026-11-01.csv` (S-08…S-27 × 6 variants each) + **120** distinct pairs in `strategy/results/iterations_2026-11-02.csv` (S-28…S-42 × 8 variants each) + **120** distinct pairs in `strategy/results/iterations_2026-11-03.csv` (S-43…S-57 × 8 variants each) |
 | **Cells per configuration** | 18 | 3 instruments × 2 windows × 3 cost tiers |
-| **Total cells evaluated** | **≥ 2,286** | 127 × 18 |
+| **Total cells evaluated** | **≥ 6,606** | 367 × 18 |
 
 **The finalist bar is *not* corrected for multiple testing.** A configuration
-that "beats" the in-sample bar may have done so by chance among ~127
+that "beats" the in-sample bar may have done so by chance among ~367
 independent tries (the bar itself, `oos.pass_criteria`, is a single unadjusted
 threshold). The single OOS holdout (`oos.usage = finalist_only_once`) is the
 one unadjusted check that survives, which is exactly why it is reserved for a

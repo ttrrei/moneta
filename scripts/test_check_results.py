@@ -73,9 +73,10 @@ def build_fixture(dest: Path) -> None:
             shutil.copytree(src, s / "results" / d)
 
     # The sweep CSVs are the committed evidence for the strategies that have no
-    # results directory (S-08 … S-27); C5 validates them and evaluates S1–S3
+    # results directory (S-08 … S-57); C5 validates them and evaluates S1–S3
     # from the `full`-window rows, so the fixture must carry them too.
-    for name in ("iterations_2026-10-30.csv", "iterations_2026-11-01.csv"):
+    for name in ("iterations_2026-10-30.csv", "iterations_2026-11-01.csv",
+                 "iterations_2026-11-02.csv", "iterations_2026-11-03.csv"):
         src = REPO / "strategy" / "results" / name
         if src.exists():
             shutil.copy(src, s / "results" / name)
@@ -138,7 +139,7 @@ S05_ROW = ("| S-05 | SuperTrend-24 direction follower | 5m | `st_dir_24_2` | "
 #: A synthetic OOS strategy used by the X13 mutation cases. It is registered
 #: (config + registry + trial log) but has NO in-sample results directory, so
 #: only its `<ID>_oos` directory is present — exactly what Phase 2.4 commits.
-#: The id must NOT collide with a real registry row (S-01 … S-27): the real
+#: The id must NOT collide with a real registry row (S-01 … S-57): the real
 #: registry row would shadow the synthetic one and the X13 verdict check would
 #: be skipped.
 OOS_SID = "S-99"

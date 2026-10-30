@@ -45,6 +45,20 @@ from strategy.strategy_atr_band_lib import AtrBandState
 from strategy.strategy_chop_lib import ChopReversionState
 from strategy.strategy_spread_lib import EmaSpread12State
 from strategy.strategy_volmom_lib import VolMomState
+# Batch 3 (S-28 .. S-40)
+from strategy.strategy_candle_lib import CandleClvState
+from strategy.strategy_volconverge_lib import VolConvergeState
+from strategy.strategy_atrbandpct_lib import AtrBandPctState
+from strategy.strategy_stdist_lib import StDistTrendState
+from strategy.strategy_psardist_lib import PsarDistState
+from strategy.strategy_kcbreak_lib import KcBreakState
+from strategy.strategy_bb_pctb_lib import BbPctbTurnState
+from strategy.strategy_bb_width_lib import BbWidthTurnState
+from strategy.strategy_dcpos_lib import DcPosState
+from strategy.strategy_dcmid_lib import DcMidState
+from strategy.strategy_distlow_lib import DistLowState
+from strategy.strategy_dcwidth_lib import DcWidthState
+from strategy.strategy_stdist_hyst_lib import StDistHystState
 
 
 # ---------------------------------------------------------------------------
@@ -1272,3 +1286,657 @@ def test_volmom_nan_safe():
     assert s.desired_position(1) == 0
     assert s.desired_position(2) == 1
     assert s.desired_position(3) == 0
+
+
+# ===========================================================================
+# Batch 3 (S-28 .. S-40): deterministic rule tests
+# ===========================================================================
+
+# --- S-28 CandleClvState: fresh up-cross of bar_clv above k_in -------------
+
+def test_candle_flat_on_bar_zero():
+    s = CandleClvState(np.array([0.9]))
+    assert s.desired_position(0) == 0
+
+
+def test_candle_enters_on_fresh_upcross_and_exits_below_k_exit():
+    clv = np.array([-0.5, 0.5, 0.5, 0.5, 0.0])
+    s = CandleClvState(clv, k_in=0.4, k_exit=0.1)
+    assert s.desired_position(1) == 0   # bar0 -0.5 (prev flat)
+    assert s.desired_position(2) == 1   # bar1 0.5 > k_in, prev -0.5 -> fresh cross
+    assert s.desired_position(3) == 1   # bar2 0.5 still >= k_exit
+    assert s.desired_position(4) == 1   # bar3 0.5 still >= k_exit
+    assert s.desired_position(5) == 0   # bar4 0.0 < k_exit 0.1 -> exit
+
+
+def test_candle_requires_fresh_cross():
+    clv = np.array([0.6, 0.6])
+    s = CandleClvState(clv, k_in=0.4, k_exit=0.1)
+    assert s.desired_position(2) == 0   # already above at bar0 -> no fresh cross
+
+
+def test_candle_nan_safe():
+    clv = np.array([np.nan, 0.5, 0.5, 0.0])
+    s = CandleClvState(clv, k_in=0.4, k_exit=0.1)
+    assert s.desired_position(1) == 0   # bar0 NaN -> flat preserved
+    assert s.desired_position(2) == 1   # bar1 0.5, prev NaN -> enter
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0   # exit below k_exit
+
+
+# --- S-29 VolConvergeState: vol_rel below vmin and close>ema ---------------
+
+def test_volconverge_enters_on_contraction_in_uptrend():
+    volr = np.array([1.5, 0.9, 0.9, 1.8])
+    close = np.array([1.0, 1.1, 1.1, 1.1])
+    ema = np.array([1.0, 1.0, 1.0, 1.0])
+    s = VolConvergeState(volr, close, ema, vmin=1.0, vmax=1.5)
+    assert s.desired_position(1) == 0   # bar0 volr 1.5 not < vmin
+    assert s.desired_position(2) == 1   # bar1 volr 0.9<1.0, close>ema
+    assert s.desired_position(3) == 1   # still volr<1.5
+    assert s.desired_position(4) == 0   # bar3 volr 1.8>1.5 -> exit
+
+
+def test_volconverge_blocked_when_close_below_ema():
+    volr = np.array([1.5, 0.9])
+    close = np.array([1.0, 0.9])
+    ema = np.array([1.0, 1.0])
+    s = VolConvergeState(volr, close, ema, vmin=1.0, vmax=1.5)
+    assert s.desired_position(2) == 0   # close<ema -> no entry
+
+
+def test_volconverge_nan_safe():
+    volr = np.array([np.nan, 0.9, 0.9])
+    close = np.array([1.0, 1.1, 1.1])
+    ema = np.array([1.0, 1.0, 1.0])
+    s = VolConvergeState(volr, close, ema, vmin=1.0, vmax=1.5)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+
+
+# --- S-30 AtrBandPctState: fresh up-cross of ema_dist --------------------
+
+def test_atrbandpct_fresh_cross_entry_and_hysteresis_exit():
+    dist = np.array([-1.0, 1.5, 1.5, -0.5])
+    s = AtrBandPctState(dist, k_in=1.0, k_exit=0.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # fresh cross above 1.0
+    assert s.desired_position(3) == 1   # 1.5 >= k_exit
+    assert s.desired_position(4) == 0   # -0.5 < k_exit -> exit
+
+
+def test_atrbandpct_requires_fresh_cross():
+    dist = np.array([1.5, 1.5])
+    s = AtrBandPctState(dist, k_in=1.0, k_exit=0.0)
+    assert s.desired_position(2) == 0
+
+
+# --- S-31 StDistTrendState: hold while st_dist > th_in ---------------------
+
+def test_stdist_hold_and_hysteresis_exit():
+    st = np.array([-1.0, 1.0, 0.0, -2.0])
+    s = StDistTrendState(st, th_in=0.5, th_exit=-0.5)
+    assert s.desired_position(1) == 0   # bar0 below th_in
+    assert s.desired_position(2) == 1   # bar1 1.0 > 0.5
+    assert s.desired_position(3) == 1   # bar2 0.0: not < -0.5, still long
+    assert s.desired_position(4) == 0   # bar3 -2.0 < -0.5 -> exit
+
+
+# --- S-32 PsarDistState: same shape as S-31 -------------------------------
+
+def test_psardist_hold_and_hysteresis_exit():
+    pd = np.array([-1.0, 1.0, 0.0, -2.0])
+    s = PsarDistState(pd, th_in=0.5, th_exit=-0.5)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+# --- S-33 KcBreakState: fresh close up-cross of kc_upper ------------------
+
+def test_kcbreak_fresh_cross_entry_exit_at_mid():
+    close = np.array([1.0, 2.0, 2.0, 0.9])
+    upper = np.array([1.5, 1.5, 1.5, 1.5])
+    mid = np.array([1.2, 1.2, 1.2, 1.2])
+    s = KcBreakState(close, upper, mid)
+    assert s.desired_position(1) == 0   # bar0 close 1.0 < upper 1.5
+    assert s.desired_position(2) == 1   # bar1 close 2.0 > upper, prev 1.0 <= upper
+    assert s.desired_position(3) == 1   # still above mid
+    assert s.desired_position(4) == 0   # bar3 close 0.9 <= mid -> exit
+
+
+def test_kcbreak_no_entry_without_fresh_cross():
+    close = np.array([2.0, 2.0])
+    upper = np.array([1.5, 1.5])
+    mid = np.array([1.2, 1.2])
+    s = KcBreakState(close, upper, mid)
+    assert s.desired_position(2) == 0   # already above at bar0 -> no fresh cross
+
+
+# --- S-34 BbPctbTurnState: fresh down-cross of %B -------------------------
+
+def test_bbpctb_fresh_downcross_entry_exit():
+    pctb = np.array([0.9, 0.1, 0.1, 0.6])
+    s = BbPctbTurnState(pctb, k_in=0.2, k_exit=0.5)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # fresh down-cross below 0.2
+    assert s.desired_position(3) == 1   # 0.1 < k_exit
+    assert s.desired_position(4) == 0   # 0.6 >= 0.5 -> exit
+
+
+# --- S-35 BbWidthTurnState: fresh compression, exit on expansion ----------
+
+def test_bbwidth_compression_entry_exit():
+    width = np.array([0.10, 0.02, 0.02, 0.12])
+    pctb = np.array([0.5, 0.5, 0.5, 0.5])
+    s = BbWidthTurnState(width, pctb, low=0.03, high=0.10)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # fresh compression below 0.03, pctb>0
+    assert s.desired_position(3) == 1   # 0.02 < 0.10
+    assert s.desired_position(4) == 0   # 0.12 > 0.10 -> exit
+
+
+def test_bbwidth_blocked_when_pctb_nonpositive():
+    width = np.array([0.10, 0.02])
+    pctb = np.array([0.5, -0.1])
+    s = BbWidthTurnState(width, pctb, low=0.03, high=0.10)
+    assert s.desired_position(2) == 0   # pctb <= 0 -> no entry
+
+
+# --- S-36 DcPosState: fresh up-cross of dc_pos ----------------------------
+
+def test_dcpos_fresh_cross_entry_exit():
+    pos = np.array([0.3, 0.85, 0.85, 0.3])
+    s = DcPosState(pos, k_in=0.8, k_exit=0.4)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # fresh cross above 0.8
+    assert s.desired_position(3) == 1   # 0.85 >= 0.4
+    assert s.desired_position(4) == 0   # 0.3 < 0.4 -> exit
+
+
+# --- S-37 DcMidState: fresh close up-cross of dc_mid ----------------------
+
+def test_dcmid_fresh_cross_entry_exit():
+    close = np.array([1.0, 1.2, 1.2, 1.0])
+    mid = np.array([1.1, 1.1, 1.1, 1.1])
+    s = DcMidState(close, mid)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # fresh up-cross
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0   # close <= mid -> exit
+
+
+def test_dcmid_no_entry_without_fresh_cross():
+    close = np.array([1.2, 1.2])
+    mid = np.array([1.1, 1.1])
+    s = DcMidState(close, mid)
+    assert s.desired_position(2) == 0
+
+
+# --- S-38 DistLowState: fresh up-cross of dist_low ------------------------
+
+def test_distlow_fresh_cross_entry_exit():
+    dl = np.array([0.1, 1.5, 1.5, 0.1])
+    s = DistLowState(dl, k_in=1.0, k_exit=0.2)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0
+
+
+# --- S-39 DcWidthState: fresh channel compression -------------------------
+
+def test_dcwidth_fresh_compression_entry_exit():
+    upper = np.array([12.0, 10.5, 10.5, 14.0])
+    lower = np.array([10.0, 10.0, 10.0, 10.0])
+    atr = np.array([1.0, 1.0, 1.0, 1.0])
+    s = DcWidthState(upper, lower, atr, w_in=2.0, w_exit=4.0)
+    assert s.desired_position(1) == 0   # bar0 width 2.0 not < 2.0
+    assert s.desired_position(2) == 1   # bar1 width 0.5 < 2.0, prev 2.0 >= 2.0
+    assert s.desired_position(3) == 1   # bar2 width 0.5 < 4.0, still long
+    assert s.desired_position(4) == 1   # bar3 width 4.0 not > 4.0 -> still long
+
+
+def test_dcwidth_nan_safe():
+    # bar0 NaN in the width series; entry at bar2 requires bar1 (finite)
+    upper = np.array([np.nan, 12.0, 10.5, 15.0])
+    lower = np.array([10.0, 10.0, 10.0, 10.0])
+    atr = np.array([1.0, 1.0, 1.0, 1.0])
+    s = DcWidthState(upper, lower, atr, w_in=2.0, w_exit=4.0)
+    assert s.desired_position(1) == 0   # bar0 NaN -> flat
+    assert s.desired_position(2) == 0   # bar1 width 2.0 not < 2.0 -> still flat
+    assert s.desired_position(3) == 1   # bar2 width 0.5 < 2.0, bar1 2.0 >= 2.0 -> entry
+    assert s.desired_position(4) == 0   # bar3 width 5.0 > 4.0 -> exit
+
+
+# --- S-40 StDistHystState: side + distance hysteresis --------------------
+
+def test_stdisthyst_entry_requires_side_up_and_dist_above_th_in():
+    side = np.array([-1.0, 1.0, 1.0, -1.0])
+    dist = np.array([0.5, 1.5, 0.3, 0.3])
+    s = StDistHystState(side, dist, th_in=1.0, th_exit=0.2)
+    assert s.desired_position(1) == 0   # bar0 side down
+    assert s.desired_position(2) == 1   # bar1 side up, dist 1.5 > 1.0 (fresh)
+    assert s.desired_position(3) == 1   # bar2 dist 0.3 >= th_exit 0.2
+    assert s.desired_position(4) == 0   # bar3 side down -> exit
+
+
+def test_stdisthyst_no_entry_when_dist_below_th_in():
+    side = np.array([-1.0, 1.0])
+    dist = np.array([0.5, 0.8])
+    s = StDistHystState(side, dist, th_in=1.0, th_exit=0.2)
+    assert s.desired_position(2) == 0   # dist 0.8 < th_in 1.0 -> no entry
+
+
+def test_stdisthyst_reentry_needs_dist_above_th_in_again():
+    # after exit, dist must rise above th_in again for a fresh entry
+    side = np.array([-1.0, 1.0, -1.0, 1.0])
+    dist = np.array([0.5, 1.5, 0.1, 0.3])
+    s = StDistHystState(side, dist, th_in=1.0, th_exit=0.2)
+    assert s.desired_position(2) == 1   # entry at bar1
+    assert s.desired_position(3) == 0   # side down -> exit
+    assert s.desired_position(4) == 0   # side up again but dist 0.3 < th_in -> no fresh entry
+
+from strategy.strategy_hvconverge_lib import HvConvergeState
+from strategy.strategy_barbody_lib import BarBodyState
+
+
+# --- S-41 HvConvergeState: hold while hv below k_in -----------------------
+
+def test_hvconverge_hold_when_realized_vol_low():
+    hv = np.array([0.001, 0.0002, 0.0002, 0.002])
+    s = HvConvergeState(hv, k_in=0.0003, k_exit=0.0006)
+    assert s.desired_position(1) == 0   # bar0 hv 0.001 not < k_in
+    assert s.desired_position(2) == 1   # bar1 0.0002 < 0.0003
+    assert s.desired_position(3) == 1   # bar2 0.0002 < k_exit 0.0006
+    assert s.desired_position(4) == 0   # bar3 0.002 > 0.0006 -> exit
+
+
+def test_hvconverge_nan_safe():
+    hv = np.array([np.nan, 0.0002, 0.0002])
+    s = HvConvergeState(hv, k_in=0.0003, k_exit=0.0006)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+    assert s.desired_position(3) == 1
+
+
+# --- S-42 BarBodyState: fresh up-cross of bar_body_ratio ------------------
+
+def test_barbody_fresh_cross_entry_exit():
+    body = np.array([0.2, 0.7, 0.7, 0.2])
+    s = BarBodyState(body, k_in=0.6, k_exit=0.3)
+    assert s.desired_position(1) == 0   # bar0 0.2 not above k_in
+    assert s.desired_position(2) == 1   # bar1 0.7 > 0.6 fresh cross
+    assert s.desired_position(3) == 1   # 0.7 >= k_exit 0.3
+    assert s.desired_position(4) == 0   # 0.2 < 0.3 -> exit
+
+
+def test_barbody_requires_fresh_cross():
+    body = np.array([0.8, 0.8])
+    s = BarBodyState(body, k_in=0.6, k_exit=0.3)
+    assert s.desired_position(2) == 0   # already above at bar0 -> no fresh cross
+
+
+def test_barbody_nan_safe():
+    body = np.array([np.nan, 0.7, 0.7, 0.2])
+    s = BarBodyState(body, k_in=0.6, k_exit=0.3)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # bar1 0.7 fresh (prev NaN)
+    assert s.desired_position(3) == 1
+    assert s.desired_position(4) == 0   # exit below k_exit
+
+
+# =====================================================================
+# Batch 4 (S-43 .. S-57)
+# =====================================================================
+
+from strategy.strategy_dispread_lib import DiSpreadState
+from strategy.strategy_dualsma_lib import DualSmaState
+from strategy.strategy_macdsig_lib import MacdSigState
+from strategy.strategy_atrpct_lib import AtrPctState
+from strategy.strategy_disthigh_lib import DistHighState
+from strategy.strategy_volratio_lib import VolRatioState
+from strategy.strategy_kclower_lib import KcLowerState
+from strategy.strategy_bbmid_lib import BbMidState
+from strategy.strategy_upwick_lib import UpWickState
+from strategy.strategy_clv_lib import ClvState
+from strategy.strategy_macdhist6_lib import MacdHist6State
+from strategy.strategy_h1adx_lib import H1AdxState
+from strategy.strategy_h1rsi_lib import H1RsiState
+from strategy.strategy_h1er_lib import H1ErState
+from strategy.strategy_h1edist_lib import H1EdistState
+
+
+# --- S-43 DiSpreadState: fresh up-cross of (plus_di - minus_di) -----------
+
+def test_dispread_entry_exit():
+    pdi = np.array([10.0, 20.0, 25.0, 15.0, 10.0])
+    mdi = np.array([15.0, 12.0, 10.0, 20.0, 30.0])
+    # spread: -5, +8, +15, -5, -20
+    s = DiSpreadState(pdi, mdi, k_in=5.0, k_exit=2.0)
+    assert s.desired_position(1) == 0   # bar0 spread -5 not fresh > 5
+    assert s.desired_position(2) == 1   # bar1 spread +8 fresh > 5
+    assert s.desired_position(3) == 1   # +15 still > -2 exit level
+    assert s.desired_position(4) == 0   # -5 < -2 -> exit
+    assert s.desired_position(5) == 0   # -20 no fresh entry
+
+
+def test_dispread_nan_safe():
+    pdi = np.array([np.nan, 20.0, 25.0, 15.0])
+    mdi = np.array([15.0, 12.0, 10.0, 20.0])
+    s = DiSpreadState(pdi, mdi, k_in=5.0, k_exit=2.0)
+    assert s.desired_position(1) == 0
+    # NaN warmup bar: the prev-spread finite guard suppresses the fresh cross
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 0   # not entered, so no position
+
+
+# --- S-44 DualSmaState: fresh (close > fast > slow) alignment -------------
+
+def test_dualsma_entry_exit():
+    close = np.array([100.0, 110.0, 115.0, 90.0])
+    fast = np.array([100.0, 105.0, 110.0, 108.0])
+    slow = np.array([100.0, 100.0, 102.0, 100.0])
+    s = DualSmaState(close, fast, slow)
+    assert s.desired_position(1) == 0   # bar0 not aligned
+    assert s.desired_position(2) == 1   # bar1 110>105>100 fresh
+    assert s.desired_position(3) == 1   # 115>110>102 holds
+    assert s.desired_position(4) == 0   # 90 < slow 100 -> exit
+
+
+def test_dualsma_requires_alignment():
+    close = np.array([110.0, 110.0])
+    fast = np.array([105.0, 105.0])
+    slow = np.array([100.0, 115.0])
+    s = DualSmaState(close, fast, slow)
+    assert s.desired_position(2) == 0   # 110>105 but 105 < 115 -> not aligned
+
+
+def test_dualsma_nan_safe():
+    close = np.array([np.nan, 110.0, 115.0, 90.0])
+    fast = np.array([100.0, 105.0, 110.0, 108.0])
+    slow = np.array([100.0, 100.0, 102.0, 100.0])
+    s = DualSmaState(close, fast, slow)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+# --- S-45 MacdSigState: fresh macd > signal --------------------------------
+
+def test_macdsig_entry_exit():
+    macd = np.array([-2.0, 1.0, 3.0, -5.0, 2.0])
+    sig = np.array([-1.0, 0.5, 1.0, -2.0, 0.5])
+    s = MacdSigState(macd, sig)
+    assert s.desired_position(1) == 0   # bar0 macd < sig
+    assert s.desired_position(2) == 1   # bar1 1 > 0.5 fresh
+    assert s.desired_position(3) == 1   # 3 > 1 holds
+    assert s.desired_position(4) == 0   # -5 < -2 -> exit
+    assert s.desired_position(5) == 1   # 2 > 0.5, prev -5 < -2 -> fresh re-entry
+
+
+def test_macdsig_fresh_cross_only():
+    # after exit, must up-cross signal again for a fresh entry
+    macd = np.array([-2.0, 1.0, -5.0, 3.0])
+    sig = np.array([-1.0, 0.5, -2.0, 1.0])
+    s = MacdSigState(macd, sig)
+    assert s.desired_position(2) == 1   # bar1 1 > 0.5 fresh
+    assert s.desired_position(3) == 0   # -5 < -2 -> exit
+    assert s.desired_position(4) == 1   # 3 > 1 fresh (prev -5 < -2)
+
+
+def test_macdsig_nan_safe():
+    macd = np.array([np.nan, 1.0, 3.0, -5.0])
+    sig = np.array([0.5, 0.5, 1.0, -2.0])
+    s = MacdSigState(macd, sig)
+    assert s.desired_position(1) == 0
+    # NaN warmup bar: the prev finite guard suppresses the fresh cross
+    assert s.desired_position(2) == 0
+    assert s.desired_position(3) == 0
+
+
+# --- S-46 AtrPctState: low atr_pct with close > ema ------------------------
+
+def test_atrpct_entry_exit():
+    apct = np.array([0.005, 0.002, 0.002, 0.006])
+    close = np.array([100.0, 101.0, 102.0, 103.0])
+    ema = np.array([99.0, 100.0, 101.0, 102.0])
+    s = AtrPctState(apct, close, ema, k_in=0.0025, k_exit=0.0045)
+    assert s.desired_position(1) == 0   # bar0 0.005 > k_in
+    assert s.desired_position(2) == 1   # bar1 0.002 < 0.0025, close 101 > ema 100 fresh
+    assert s.desired_position(3) == 1   # 0.002 < k_exit 0.0045 holds
+    assert s.desired_position(4) == 0   # 0.006 > 0.0045 -> exit
+
+
+def test_atrpct_requires_close_above_ema():
+    apct = np.array([0.005, 0.002, 0.002])
+    close = np.array([100.0, 99.0, 100.0])
+    ema = np.array([99.0, 100.0, 101.0])
+    s = AtrPctState(apct, close, ema, k_in=0.0025, k_exit=0.0045)
+    assert s.desired_position(2) == 0   # close 99 < ema 100 -> no entry
+
+
+def test_atrpct_nan_safe():
+    apct = np.array([np.nan, 0.002, 0.002, 0.006])
+    close = np.array([100.0, 101.0, 102.0, 103.0])
+    ema = np.array([99.0, 100.0, 101.0, 102.0])
+    s = AtrPctState(apct, close, ema, k_in=0.0025, k_exit=0.0045)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+# --- S-47 DistHighState: fresh up-cross of dist_high -----------------------
+
+def test_disthigh_entry_exit():
+    dh = np.array([0.5, 2.0, 2.5, 0.3])
+    s = DistHighState(dh, k_in=1.5, k_exit=0.5)
+    assert s.desired_position(1) == 0   # 0.5 not > 1.5
+    assert s.desired_position(2) == 1   # 2.0 fresh > 1.5
+    assert s.desired_position(3) == 1   # 2.5 > 0.5 holds
+    assert s.desired_position(4) == 0   # 0.3 < 0.5 -> exit
+
+
+def test_disthigh_nan_safe():
+    dh = np.array([np.nan, 2.0, 2.5, 0.3])
+    s = DistHighState(dh, k_in=1.5, k_exit=0.5)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # fresh (prev NaN)
+
+
+# --- S-48 VolRatioState: fresh up-cross of vol_ratio -----------------------
+
+def test_volratio_entry_exit():
+    vr = np.array([0.8, 1.2, 1.4, 0.7])
+    s = VolRatioState(vr, k_in=1.05, k_exit=0.85)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # 1.2 fresh > 1.05
+    assert s.desired_position(3) == 1   # 1.4 > 0.85
+    assert s.desired_position(4) == 0   # 0.7 < 0.85
+
+
+def test_volratio_nan_safe():
+    vr = np.array([np.nan, 1.2, 1.4, 0.7])
+    s = VolRatioState(vr, k_in=1.05, k_exit=0.85)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+# --- S-49 KcLowerState: fresh close > kc_lower ------------------------------
+
+def test_kclower_entry_exit():
+    close = np.array([99.0, 98.0, 105.0, 102.0])
+    lo = np.array([100.0, 99.0, 101.0, 103.0])
+    mid = np.array([102.0, 101.0, 103.0, 104.0])
+    s = KcLowerState(close, lo, mid)
+    assert s.desired_position(1) == 0   # bar0 99 < lo 100 -> below
+    assert s.desired_position(2) == 0   # 98 < 99 -> below
+    assert s.desired_position(3) == 1   # 105 > 101 fresh (prev below)
+    assert s.desired_position(4) == 0   # 102 < mid 104 -> exit
+
+
+def test_kclower_nan_safe():
+    close = np.array([np.nan, 98.0, 105.0, 102.0])
+    lo = np.array([100.0, 99.0, 101.0, 103.0])
+    mid = np.array([102.0, 101.0, 103.0, 104.0])
+    s = KcLowerState(close, lo, mid)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(3) == 1   # bar2 105 > 101 fresh
+
+
+# --- S-50 BbMidState: fresh close > bb_mid (above lower) -------------------
+
+def test_bbmid_entry_exit():
+    close = np.array([99.0, 98.0, 105.0, 102.0])
+    mid = np.array([100.0, 99.0, 101.0, 103.0])
+    lo = np.array([98.0, 97.0, 99.0, 101.0])
+    s = BbMidState(close, mid, lo)
+    assert s.desired_position(1) == 0   # bar0 99 < mid 100
+    assert s.desired_position(2) == 0   # 98 < 99
+    assert s.desired_position(3) == 1   # 105 > 101 and > 99 fresh
+    assert s.desired_position(4) == 1   # 102 > 103? no: 102 < 103 -> wait, holds because exit is close < lo 101; 102 > 101 -> hold
+
+
+def test_bbmid_nan_safe():
+    close = np.array([np.nan, 98.0, 105.0, 102.0])
+    mid = np.array([100.0, 99.0, 101.0, 103.0])
+    lo = np.array([98.0, 97.0, 99.0, 101.0])
+    s = BbMidState(close, mid, lo)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(3) == 1   # bar2 105 > 101 fresh
+
+
+# --- S-51 UpWickState: fresh down-cross of bar_upper_wick ------------------
+
+def test_upwick_entry_exit():
+    uw = np.array([0.5, 0.1, 0.1, 0.6])
+    s = UpWickState(uw, k_in=0.15, k_exit=0.45)
+    assert s.desired_position(1) == 0   # bar0 0.5 > k_in 0.15
+    assert s.desired_position(2) == 1   # 0.1 < 0.15 fresh
+    assert s.desired_position(3) == 1   # 0.1 < k_exit 0.45 holds
+    assert s.desired_position(4) == 0   # 0.6 > 0.45 -> exit
+
+
+def test_upwick_nan_safe():
+    uw = np.array([np.nan, 0.1, 0.1, 0.6])
+    s = UpWickState(uw, k_in=0.15, k_exit=0.45)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # fresh (prev NaN)
+
+
+# --- S-52 ClvState: fresh up-cross of bar_clv -------------------------------
+
+def test_clv_entry_exit():
+    clv = np.array([-0.5, 0.4, 0.5, -0.3])
+    s = ClvState(clv, k_in=0.3, k_exit=-0.1)
+    assert s.desired_position(1) == 0   # bar0 -0.5 < 0.3
+    assert s.desired_position(2) == 1   # 0.4 > 0.3 fresh
+    assert s.desired_position(3) == 1   # 0.5 > -0.1 holds
+    assert s.desired_position(4) == 0   # -0.3 < -0.1 -> exit
+
+
+def test_clv_nan_safe():
+    clv = np.array([np.nan, 0.4, 0.5, -0.3])
+    s = ClvState(clv, k_in=0.3, k_exit=-0.1)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+# --- S-53 MacdHist6State: fresh up-cross of macd_hist_atr -------------------
+
+def test_macdhist6_entry_exit():
+    h = np.array([-0.1, 0.1, 0.2, -0.2])
+    s = MacdHist6State(h, k_in=0.0, k_exit=-0.05)
+    assert s.desired_position(1) == 0   # bar0 -0.1 < 0.0
+    assert s.desired_position(2) == 1   # 0.1 > 0.0 fresh
+    assert s.desired_position(3) == 1   # 0.2 > -0.05 holds
+    assert s.desired_position(4) == 0   # -0.2 < -0.05 -> exit
+
+
+def test_macdhist6_nan_safe():
+    h = np.array([np.nan, 0.1, 0.2, -0.2])
+    s = MacdHist6State(h, k_in=0.0, k_exit=-0.05)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+# --- S-54 H1AdxState: h1_adx up-cross with close > ema ----------------------
+
+def test_h1adx_entry_exit():
+    a = np.array([20.0, 28.0, 30.0, 18.0])
+    close = np.array([100.0, 101.0, 102.0, 103.0])
+    ema = np.array([99.0, 100.0, 101.0, 102.0])
+    s = H1AdxState(a, close, ema, k_in=25.0, k_exit=20.0)
+    assert s.desired_position(1) == 0   # bar0 20 < 25
+    assert s.desired_position(2) == 1   # 28 > 25, close 101 > ema 100 fresh
+    assert s.desired_position(3) == 1   # 30 > 20 holds
+    assert s.desired_position(4) == 0   # 18 < 20 -> exit
+
+
+def test_h1adx_requires_close_above_ema():
+    a = np.array([20.0, 28.0, 30.0])
+    close = np.array([100.0, 99.0, 100.0])
+    ema = np.array([99.0, 100.0, 101.0])
+    s = H1AdxState(a, close, ema, k_in=25.0, k_exit=20.0)
+    assert s.desired_position(2) == 0   # close 99 < ema 100 -> no entry
+
+
+def test_h1adx_nan_safe():
+    a = np.array([np.nan, 28.0, 30.0, 18.0])
+    close = np.array([100.0, 101.0, 102.0, 103.0])
+    ema = np.array([99.0, 100.0, 101.0, 102.0])
+    s = H1AdxState(a, close, ema, k_in=25.0, k_exit=20.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+# --- S-55 H1RsiState: fresh h1_rsi up-cross ---------------------------------
+
+def test_h1rsi_entry_exit():
+    r = np.array([50.0, 58.0, 60.0, 42.0])
+    s = H1RsiState(r, k_in=55.0, k_exit=45.0)
+    assert s.desired_position(1) == 0   # bar0 50 < 55
+    assert s.desired_position(2) == 1   # 58 > 55 fresh
+    assert s.desired_position(3) == 1   # 60 > 45 holds
+    assert s.desired_position(4) == 0   # 42 < 45 -> exit
+
+
+def test_h1rsi_nan_safe():
+    r = np.array([np.nan, 58.0, 60.0, 42.0])
+    s = H1RsiState(r, k_in=55.0, k_exit=45.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+# --- S-56 H1ErState: fresh h1_er up-cross -----------------------------------
+
+def test_h1er_entry_exit():
+    e = np.array([0.1, 0.4, 0.5, 0.15])
+    s = H1ErState(e, k_in=0.35, k_exit=0.2)
+    assert s.desired_position(1) == 0   # bar0 0.1 < 0.35
+    assert s.desired_position(2) == 1   # 0.4 > 0.35 fresh
+    assert s.desired_position(3) == 1   # 0.5 > 0.2 holds
+    assert s.desired_position(4) == 0   # 0.15 < 0.2 -> exit
+
+
+def test_h1er_nan_safe():
+    e = np.array([np.nan, 0.4, 0.5, 0.15])
+    s = H1ErState(e, k_in=0.35, k_exit=0.2)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1
+
+
+# --- S-57 H1EdistState: h1_ema_dist enters 0..k_in band ---------------------
+
+def test_h1edist_entry_exit():
+    ed = np.array([3.0, 1.5, 1.0, -1.5])
+    s = H1EdistState(ed, k_in=2.0, k_exit=1.0)
+    assert s.desired_position(1) == 0   # bar0 3.0 > k_in 2.0 -> out of band
+    assert s.desired_position(2) == 1   # 1.5 in (0,2.0) fresh (prev 3.0 out)
+    assert s.desired_position(3) == 1   # 1.0 in band holds (exit needs < -1.0)
+    assert s.desired_position(4) == 0   # -1.5 < -1.0 -> exit
+
+
+def test_h1edist_nan_safe():
+    ed = np.array([np.nan, 1.5, 1.0, -1.5])
+    s = H1EdistState(ed, k_in=2.0, k_exit=1.0)
+    assert s.desired_position(1) == 0
+    assert s.desired_position(2) == 1   # bar1 in band, prev NaN -> not in band -> fresh
