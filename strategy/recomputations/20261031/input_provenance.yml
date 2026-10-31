@@ -1,0 +1,57 @@
+development_filter: time < 2025-08-01T00:00:00Z
+gate_input_inventory:
+  1h:
+  - instrument: BTC_USD
+    invalid_adx_24: 0
+    invalid_bb_pctb_24: 12
+    invalid_close: 0
+    invalid_ema_24: 0
+    invalid_st_dir_120_3: 0
+    rows: 33841
+  - instrument: EUR_USD
+    invalid_adx_24: 0
+    invalid_bb_pctb_24: 0
+    invalid_close: 0
+    invalid_ema_24: 0
+    invalid_st_dir_120_3: 0
+    rows: 34410
+  - instrument: XAU_USD
+    invalid_adx_24: 0
+    invalid_bb_pctb_24: 0
+    invalid_close: 0
+    invalid_ema_24: 0
+    invalid_st_dir_120_3: 0
+    rows: 32655
+  5m:
+  - instrument: BTC_USD
+    invalid_adx_24: 0
+    invalid_bb_pctb_24: 12
+    invalid_close: 0
+    invalid_ema_24: 0
+    invalid_st_dir_120_3: 0
+    rows: 409018
+  - instrument: EUR_USD
+    invalid_adx_24: 0
+    invalid_bb_pctb_24: 0
+    invalid_close: 0
+    invalid_ema_24: 0
+    invalid_st_dir_120_3: 0
+    rows: 416107
+  - instrument: XAU_USD
+    invalid_adx_24: 0
+    invalid_bb_pctb_24: 0
+    invalid_close: 0
+    invalid_ema_24: 0
+    invalid_st_dir_120_3: 0
+    rows: 395556
+recorded_at_utc: '2026-10-31T05:02:48.058119+00:00'
+source_tables:
+  data/ohlcv_1h_features/ohlcv_1h_features.parquet:
+    mtime_ns: 1793181791602599480
+    sha256: a449528bf57de2c4fe41a0defb0a76215d1b4bb033e4e290ac9bc65d9bc39863
+    size_bytes: 1037325789
+  data/ohlcv_5m_features/ohlcv_5m_features.parquet:
+    mtime_ns: 1793181791575942113
+    sha256: f02f24b19fc64bfc06b0066151df22d5f3c63c4a0c576617d3ed8650dd2d6144
+    size_bytes: 11849064176
+timing: Opaque file hashes recorded after the replay; not claimed as a pre-run capture.

@@ -5,9 +5,11 @@
 > document relevant to your task. The goal is that you can complete a task by
 > reading documentation, without scanning the whole codebase.
 
-Latest independent review: [verification of all three legacy reviews](review_verification_20261031.md).
-It distinguishes confirmed repairs, incorrect claims and deferred research work;
-its [audit](research_audit_20261031.json) is reproducible without market data.
+Latest follow-up: [verification of repo_review_20261031_initial.md](repo_review_20261031_verification.md),
+including full-day boundaries, implementation/data freezes and versioned replays.
+The earlier [verification of all three legacy reviews](review_verification_20261031.md)
+records the first hardening pass. Its [audit](research_audit_20261031.json), now
+extended with gross/net diagnostics, is reproducible without market data.
 
 ## What is this project?
 

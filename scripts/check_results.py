@@ -966,6 +966,9 @@ def check_cross_artifacts(root: Path, cfg: dict, registry: dict, trials: list[di
             # (a) the OOS pass/fail columns must actually be present.
             need = schema.OOS_FIELDS_REQUIRED_FOR_PASS
             oos_rows = [r for r in res.rows if (r.get("window") or "").strip().lower() == "oos"]
+            if computed["invalid_data"]:
+                rep.fail("X13", f"registry {canon_id}",
+                         "OOS matrix is incomplete or contains invalid required numeric data")
             if oos_rows:
                 for f in need:
                     if all((r.get(f) in (None, "")) for r in oos_rows):
@@ -1550,6 +1553,10 @@ def check_finalist_pins(cfg: dict, registry: dict, rep: Report) -> None:
                 or re.fullmatch(r"[0-9a-f]{64}", pin) is None:
             rep.fail("X16", f"registry {sid}",
                      "finalist requires oos_variant and a valid oos_config_hash in config/strategies.yml")
+            continue
+        from strategy.provenance import freeze_shape_error
+        if problem := freeze_shape_error(spec):
+            rep.fail("X16", f"registry {sid}", problem)
 
 
 def check_rejection_records(root: Path, registry: dict, rep: Report) -> None:

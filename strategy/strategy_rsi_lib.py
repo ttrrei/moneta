@@ -73,40 +73,10 @@ def load_bars(
     committed ledger reservation. A direct ``load_bars(until=None)`` call
     cannot read the holdout.
     """
-    import duckdb
-
-    from strategy import oos_token as _oos
-    _oos.assert_access(until, oos_token)
-    _since = _oos.normalize_bound(since) if since else None
-    _until = _oos.normalize_bound(until) if until else None
-
-    conn = duckdb.connect()
-    try:
-        # Pin the session timezone so the ``until`` date bound is interpreted
-        # identically on every machine (review 2026-10-28 §4.1).
-        conn.execute("SET TimeZone = 'UTC'")
-        where = ["instrument = ?", RSI_COL + " IS NOT NULL"]
-        params: list = [parquet, instrument]
-        if _since:
-            where.append("time >= ?")
-            params.append(_since)
-        if _until:
-            if _oos.is_holdout_until(until):
-                # OOS/holdout read: exclusive end (first day after the
-                # holdout) → ``time < until`` excludes that day's first bar.
-                where.append("time < ?")
-            else:
-                # In-sample read: ``until`` is the *inclusive* last bar's date.
-                where.append("time <= ?")
-            params.append(_until)
-        sql = (
-            "SELECT time, open, close, is_gap_bar, is_near_market_close, " + RSI_COL +
-            " FROM read_parquet(?) WHERE " + " AND ".join(where) +
-            " ORDER BY time"
-        )
-        return conn.execute(sql, params).fetch_df()
-    finally:
-        conn.close()
+    # Share only the data layer. Each run still constructs a fresh RsiState.
+    from strategy import strategy_lib
+    return strategy_lib.load_bars(parquet, instrument, [RSI_COL], [RSI_COL],
+                                  since=since, until=until, oos_token=oos_token)
 
 
 def detect_bar_seconds(df: pd.DataFrame) -> int:

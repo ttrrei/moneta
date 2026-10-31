@@ -58,8 +58,8 @@ from strategy.variants import STRATEGIES as _SWEEP_MODULES, get_runner, resolve
 
 CONFIG_PATH = _REPO_ROOT / "config" / "strategies.yml"
 TRIAL_LOG = _REPO_ROOT / "strategy" / "trial_log.md"
-INSTRUMENTS = ["EUR_USD", "BTC_USD", "XAU_USD"]
-COST_TIERS = [0.0, 2.0, 5.0]
+INSTRUMENTS = list(schema.OOS_INSTRUMENTS)
+COST_TIERS = list(schema.OOS_COST_TIERS)
 
 # Strategy registry for runners: strategy id -> (label, callable signature).
 # Adding a strategy = add one entry here (the callable must take the same
@@ -323,10 +323,14 @@ def _window_bounds(cfg: dict, window: str) -> tuple[str | None, str | None]:
         raise SystemExit(
             f"Window {window!r} has no `until` cap in config/strategies.yml; "
             f"in-sample windows must stop before oos.holdout_start.")
-    if since is not None and until is not None and str(since) >= str(until):
-        raise SystemExit(
-            f"Window {window!r} is empty (since {since} >= until {until}). "
-            f"Re-anchor the window in config/strategies.yml before running it.")
+    if since is not None and until is not None:
+        lower = datetime.fromisoformat(_oos_token_mod.normalize_bound(since))
+        upper_text, exclusive = _oos_token_mod.query_until(until)
+        upper = datetime.fromisoformat(upper_text)
+        if lower > upper or (exclusive and lower == upper):
+            raise SystemExit(
+                f"Window {window!r} is empty (since {since}, until {until}). "
+                "Re-anchor the window in config/strategies.yml before running it.")
     return (None if since is None else str(since),
             None if until is None else str(until))
 
@@ -434,7 +438,7 @@ def _data_fingerprint(parquet: str, window: str = "oos") -> dict:
     else:
         _oos_token_mod.assert_access(holdout_until)
     lower = _oos_token_mod.normalize_bound(holdout_start) if holdout_start else None
-    upper = _oos_token_mod.normalize_bound(holdout_until) if holdout_until else None
+    upper, exclusive = _oos_token_mod.query_until(holdout_until)
 
     cols = _parquet_columns(str(p))
     if "open" not in cols or "close" not in cols:
@@ -457,7 +461,7 @@ def _data_fingerprint(parquet: str, window: str = "oos") -> dict:
         # Exclusive end: the OOS ``until`` is the first day *after* the
         # holdout; ``time < until`` counts exactly the bars the holdout read
         # serves (consistent with the loader's half-open holdout bound).
-        where.append("time < ?" if window == "oos" else "time <= ?")
+        where.append("time < ?" if exclusive else "time <= ?")
         params.append(upper)
     where_sql = " AND ".join(where)
 
@@ -1087,6 +1091,13 @@ def run_matrix(
         _check_config_pin(cfg, strategy, manifest)
         # Gate before fingerprinting: a fingerprint also reads protected data.
         _check_oos_once(strategy, None, manifest)
+        from strategy.provenance import verify_freeze
+        try:
+            spec = cfg["strategies"][_registered_id(cfg, strategy)]
+            manifest["nomination_freeze"] = verify_freeze(_REPO_ROOT, cfg, spec, Path(parquet))
+            frozen_data_stat = Path(parquet).stat()
+        except (ValueError, OSError) as exc:
+            raise SystemExit(f"OOS freeze verification failed: {exc}") from exc
     fingerprint = _data_fingerprint(parquet, "oos" if is_oos else "full")
     if is_oos:
         # (1) Finalist gate + once-per-(strategy,holdout) lock + D1 cap +
@@ -1103,6 +1114,14 @@ def run_matrix(
         #     and the holdout stays unspent. A genuine crash is still
         #     invalidated by the human "voided" ledger flow (WORKFLOW Step 7.5).
         _preflight(strategy, run, parquet, timeframe, entry_guard, cfg, resolved.run_kwargs)
+        # Preflight may take time. Recheck source and file identity before
+        # touching the one-shot ledger; the full data SHA was verified above.
+        from strategy.provenance import git_state, code_fingerprint
+        current_stat = Path(parquet).stat()
+        identity = ("st_dev", "st_ino", "st_size", "st_mtime_ns", "st_ctime_ns")
+        if git_state(_REPO_ROOT)["dirty"] or code_fingerprint(_REPO_ROOT, cfg) != spec["oos_code_hash"] \
+                or any(getattr(current_stat, key) != getattr(frozen_data_stat, key) for key in identity):
+            raise SystemExit("OOS source/data changed during preflight; no reservation was made.")
         # (2) Reserve the attempt BEFORE the holdout is loaded, so a crash
         #     mid-run still counts as consumed (a `reserved` record blocks re-runs).
         _reserve_oos(strategy, fingerprint, manifest)
@@ -1215,6 +1234,7 @@ def run_matrix(
     manifest = {
         "schema_version": 1, "strategy": strategy, "variant": variant,
         "timeframe": timeframe, "entry_guard": entry_guard,
+        "window_semantics": "utc-full-day-date-until-v2",
         "rule_params": resolved.rule_params, "config_hash": run_hash,
         "instruments": instruments, "windows": bounds, "cost_tiers": cost_tiers,
         "data_fingerprint": fingerprint, "source": source_state,
@@ -1222,6 +1242,9 @@ def run_matrix(
         "started_at_utc": started_at, "finished_at_utc": datetime.now(timezone.utc).isoformat(),
         "cells_completed": len(cells), "failures": failures,
     }
+    if is_oos:
+        manifest["nomination_freeze"] = {field: spec[field] for field in
+                                         ("oos_code_commit", "oos_code_hash", "oos_dirty", "oos_data_fingerprint")}
     (out_dir / "manifest.yml").write_text(yaml.safe_dump(manifest, sort_keys=True), encoding="utf-8")
 
     return cells

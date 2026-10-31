@@ -1,0 +1,36 @@
+cells: 540
+dirty: true
+finished_at_utc: '2026-10-31T05:00:02.921522+00:00'
+historical_implementation: 936f7b9
+implementation_sha256:
+  scripts/recompute_repairs.py: d9789b48ddfa7d3ee9f613f770bcf791ae5ff5bc25e5b14b5ef045f2675d2b47
+  strategy/engine.py: 44c928b28e8fd8d22ae044085c3e6d6a31f4035adfa5fbe7a2ded010c77e4be2
+  strategy/oos_token.py: 0b0f86d43a3337fdf47045f9901fe410d842209c400f0edddf71b47070f44ab3
+  strategy/strategy_dcmid_lib.py: 5c5ff04fa6803957925ed7a03c449141a8215d985f465bec197128e5c237623c
+  strategy/strategy_dcwidth_lib.py: d927249572f42fc531b04e601e013d22e5cda0d1ea29504be4b53fabd263ace1
+  strategy/strategy_kcbreak_lib.py: 0a5f070b84fd85bb08d9ab176107f156449b79a7eb7750bb3b3aa9cef3610468
+  strategy/strategy_lib.py: 11089925148456a01372844861507fa4fcd68459df8b5024eda8aabbc5857ea7
+  strategy/strategy_vwap_stretch_lib.py: 379d76515d7ec94788478be370357dccfb609f0cbed392026209c21ad3977b9e
+  strategy/variants.py: 8fc97ad5aad7d69350dedd8d840d5c57cb7c14de2f065194cdd7035ac2c67754
+legacy_2bps_cells_reproduced: 180
+metric_changed_cells: 540
+original_csv_sha256:
+  strategy/results/iterations_2026-10-30.csv: 922d6b887ad40ce62a992b01b83361b042c052059d79c969f8646b7d86a77a4c
+  strategy/results/iterations_2026-11-01.csv: d7caf48d1b669e0cd2b80d232d5a7fe2bcf8834a38d481c4b9288a92cb524154
+  strategy/results/iterations_2026-11-02.csv: f9f68449e6423cf3f3e2297f41c9ec1b3ed5017d76be0080ec5fcab00bc7d421
+  strategy/results/iterations_2026-11-03.csv: a638a5318212323d4f75c04379870e2447be48deb7aa0d19390c69867efa5d48
+  strategy/results/iterations_2026-11-04.csv: cb1a889b49975a061b134def8131a52924003d3b101d34473bfa091074f40525
+  strategy/results/iterations_2026-11-05.csv: e6eab0fbb25bd4733761753fbb262ae3d8b841af4212ca4b394bdb9d4e67e96b
+  strategy/results/iterations_2026-11-06.csv: c9ab152f0c0fdffa2c25de6426ff16fbcd0a86f97c1db2721e73ea9f107301e7
+  strategy/results/iterations_2026-11-07.csv: f07d9cdcd9afe79c5981cf477c06cce9ac40cb3f0750e5e136f38ef9425657c8
+schema_version: 1
+scope: existing configurations; in-sample only
+source_commit: cc63ac075bb2cf5d09a0e5faf75c1f91bda4cf19
+started_at_utc: '2026-10-31T04:54:34.328786+00:00'
+status_policy: historical statuses retained; no finalist nomination
+strategies:
+- s18
+- s33
+- s37
+- s39
+trade_changes_at_2bps: 1579

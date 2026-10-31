@@ -50,9 +50,11 @@ windows:
   # and everything after it. This is the exact "include the last fully-closed
   # day, exclude the partial day" intent — with no extra boundary bar the
   # engine could act on at the next open (follow-up review issue 5 / §1.2).
-  # In-sample windows (`full`, `last_12m`) still use the inclusive `time <= until`
-  # because their `until` (2025-07-31) is the *last bar's own date*, not the
-  # day after it.
+  # In-sample date-only `until` includes the whole named UTC day: 2025-07-31
+  # becomes `time < 2025-08-01 00:00 UTC`. An explicit in-sample datetime
+  # retains its exact inclusive `time <= until` semantics. normalize_bound()
+  # itself still maps a date to midnight; query_until() selects the operator
+  # and full-day boundary. Loaders and fingerprints share this definition.
   # Since bound: `time >= 2025-08-01` includes every bar from 2025-08-01 00:00.
   # New market data arriving after 2026-10-22 therefore never enters this
   # holdout — it belongs to a future `oos2` window under a new holdout id.

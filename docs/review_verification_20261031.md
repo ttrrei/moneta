@@ -1,5 +1,10 @@
 # Independent verification of the three legacy reviews — 2026-10-31
 
+Follow-up: [verification of the next review](repo_review_20261031_verification.md)
+corrects final-day window semantics, adds code/data nomination freezes and
+publishes the affected historical replays. The account below records the first
+hardening pass; later behavior and validation are described in that follow-up.
+
 The reviews are useful starting points, but they are not a safe execution plan
 without corrections. Their strongest recommendations concern reproducibility,
 configuration binding, data reuse and research discipline. Several statistics

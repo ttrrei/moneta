@@ -332,6 +332,19 @@ def _void_with_output(w: Path) -> None:
 CASES = [
     ("baseline: a legal repo must PASS", set(), 0, None, lambda w: None),
 
+    ("finalist with parameters pinned but no implementation freeze -> X16", {"X16"}, 1, None,
+     lambda w: (
+         replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
+                    S05_ROW.replace("**rejected**", "**finalist**")),
+         replace_in(w / "config/strategies.yml", "  S-05:\n",
+                    '  S-05:\n    oos_variant: "base"\n    oos_config_hash: "' + "a" * 64 + '"\n'))),
+
+    ("OOS NaN frequency cannot pass -> X13", {"X13"}, 1, None,
+     lambda w: (
+         write_oos_dir(w),
+         edit_csv(w / f"strategy/results/{OOS_SID}_oos/summary.csv",
+                  lambda row: {**row, "trades_per_year": "NaN"}))),
+
     ("rejected strategy missing from no-repeat table -> X17", {"X17"}, 1, None,
      lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md",
                           "5m SuperTrend 24/2 follower (S-05)",

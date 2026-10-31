@@ -159,7 +159,9 @@ def test_finalist_pin_checker():
     assert [finding.code for finding in rep.failures] == ["X16"]
     rep = Report()
     check_finalist_pins({"strategies": {"S-55": {
-        "oos_variant": "looser", "oos_config_hash": "a" * 64}}}, reg, rep)
+        "oos_variant": "looser", "oos_config_hash": "a" * 64,
+        "oos_code_commit": "b" * 40, "oos_code_hash": "c" * 64, "oos_dirty": False,
+        "oos_data_fingerprint": {"sha256": "d" * 64, "size_bytes": 1}}}}, reg, rep)
     assert not rep.failures
 
 

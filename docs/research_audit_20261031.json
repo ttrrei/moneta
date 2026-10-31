@@ -18,6 +18,24 @@
   },
   "diverse_batch_cells_at_2bps": 120,
   "diverse_batch_winning_cells_at_2bps": 0,
+  "gross_vs_net": {
+    "cells_with_cost_erased_benchmark_edge": 446,
+    "cells_with_cost_erased_positive_return": 2048,
+    "group_buckets": {
+      "empty_signal": 15,
+      "gross_benchmark_win_erased_at_2bps": 374,
+      "no_positive_gross_return": 77,
+      "one_net_benchmark_win": 62,
+      "some_positive_gross_return_without_net_benchmark_wins": 1062,
+      "two_or_more_net_benchmark_wins": 10
+    },
+    "interpretation": "rounded historical transaction-cost sensitivity; no beta or statistical-skill inference",
+    "paired_cells": 4800,
+    "positive_gross_bucket_net_outcomes": {
+      "any_positive_net_return": 479,
+      "no_positive_net_return": 583
+    }
+  },
   "ledger_sha256": "3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6",
   "registered_strategies": 132,
   "s109_ema_gate_at_2bps": [

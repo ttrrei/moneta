@@ -14,6 +14,9 @@ from __future__ import annotations
 from itertools import product
 from math import isfinite
 
+OOS_INSTRUMENTS = ("EUR_USD", "BTC_USD", "XAU_USD")
+OOS_COST_TIERS = (0., 2., 5.)
+
 __all__ = [
     "SUMMARY_FIELDS",
     "OOS_FIELDS",
@@ -125,7 +128,8 @@ def _f(x):
             return None
         if isinstance(x, str) and x.strip() == "":
             return None
-        return float(x)
+        value = float(x)
+        return value if isfinite(value) else None
     except (TypeError, ValueError):
         return None
 
@@ -208,7 +212,18 @@ def oos_pass_fields(rows: list[dict], min_instruments: int = 2,
             "trade_ceiling_breached": False,
             "pass": False,
             "mean_net_position_pct": 0.0,
+            "invalid_data": True,
         }
+
+    invalid = False
+    try:
+        validate_cell_grid(oos, OOS_INSTRUMENTS, ("oos",), OOS_COST_TIERS)
+        invalid = any(float(r["trades_per_year"]) < 0 or float(r["n_trades"]) < 0
+                      or not float(r["n_trades"]).is_integer() for r in oos)
+        invalid = invalid or not isfinite(float(max_trades_per_year)) or max_trades_per_year < 0 \
+            or type(min_instruments) is not int or not 1 <= min_instruments <= len(OOS_INSTRUMENTS)
+    except (ValueError, TypeError):
+        invalid = True
 
     beat_instruments: set[str] = set()
     beat_cells = 0
@@ -232,8 +247,9 @@ def oos_pass_fields(rows: list[dict], min_instruments: int = 2,
             beat_cells += 1
 
     instruments_beating = len(beat_instruments)
-    trade_ceiling_breached = tpy_max > max_trades_per_year + 1e-9
-    passes = (instruments_beating >= min_instruments
+    ceiling = _f(max_trades_per_year)
+    trade_ceiling_breached = ceiling is None or tpy_max > ceiling + 1e-9
+    passes = (not invalid and instruments_beating >= min_instruments
               and not trade_ceiling_breached)
 
     return {
@@ -243,4 +259,5 @@ def oos_pass_fields(rows: list[dict], min_instruments: int = 2,
         "trade_ceiling_breached": trade_ceiling_breached,
         "pass": passes,
         "mean_net_position_pct": round(sum(pos) / len(pos), 2) if pos else 0.0,
+        "invalid_data": invalid,
     }

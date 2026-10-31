@@ -19,6 +19,66 @@ from strategy.registry import parse_registry, parse_trial_log
 from strategy.schema import validate_cell_grid
 
 
+def cost_diagnostics(rows: list[dict]) -> tuple[dict, list[dict]]:
+    """Pair identical cells at zero/two bps; avoid inferring beta or causation.
+
+    Gross/net refers only to this engine's transaction-cost tiers. Financing
+    and live execution costs are not present in the historical results.
+    """
+    paired = defaultdict(dict)
+    for row in rows:
+        cost = float(row["cost_bps"])
+        if cost in (0., 2.):
+            key = tuple(row[name] for name in ("strategy", "variant", "instrument", "window"))
+            if cost in paired[key]:
+                raise ValueError(f"duplicate cost cell: {key}/{cost}")
+            paired[key][cost] = row
+    cells, groups = [], defaultdict(list)
+    for key, costs in sorted(paired.items()):
+        if set(costs) != {0., 2.}:
+            raise ValueError(f"missing zero/two-bps pair: {key}")
+        gross, net = costs[0.], costs[2.]
+        bh = float(gross["buyhold_return_pct"])
+        if bh != float(net["buyhold_return_pct"]):
+            raise ValueError(f"cost tiers have different benchmarks: {key}")
+        gr, nr = float(gross["total_return_pct"]), float(net["total_return_pct"])
+        ge, ne = round(gr - bh, 2), round(nr - bh, 2)
+        cell = dict(zip(("strategy", "variant", "instrument", "window"), key))
+        cell.update(gross_return_pct=gr, net_return_pct=nr, buyhold_return_pct=bh,
+                    gross_edge_pct=ge, net_edge_pct=ne,
+                    transaction_cost_drag_pp=round(gr - nr, 2),
+                    cost_erased_benchmark_edge=ge > 0 and ne <= 0,
+                    cost_erased_positive_return=gr > 0 and nr <= 0,
+                    n_trades=int(float(net["n_trades"])))
+        cells.append(cell)
+        groups[key[0], key[1], key[3]].append(cell)
+    buckets = Counter()
+    e_details = Counter()
+    for group in groups.values():
+        wins = sum(c["net_edge_pct"] > 0 for c in group)
+        if wins >= 2:
+            bucket = "two_or_more_net_benchmark_wins"
+        elif wins:
+            bucket = "one_net_benchmark_win"
+        elif not sum(c["n_trades"] for c in group):
+            bucket = "empty_signal"
+        elif any(c["gross_edge_pct"] > 0 for c in group):
+            bucket = "gross_benchmark_win_erased_at_2bps"
+        elif any(c["gross_return_pct"] > 0 for c in group):
+            bucket = "some_positive_gross_return_without_net_benchmark_wins"
+            e_details["any_positive_net_return" if any(c["net_return_pct"] > 0 for c in group)
+                      else "no_positive_net_return"] += 1
+        else:
+            bucket = "no_positive_gross_return"
+        buckets[bucket] += 1
+    return {"group_buckets": dict(sorted(buckets.items())),
+            "positive_gross_bucket_net_outcomes": dict(sorted(e_details.items())),
+            "paired_cells": len(cells),
+            "cells_with_cost_erased_benchmark_edge": sum(c["cost_erased_benchmark_edge"] for c in cells),
+            "cells_with_cost_erased_positive_return": sum(c["cost_erased_positive_return"] for c in cells),
+            "interpretation": "rounded historical transaction-cost sensitivity; no beta or statistical-skill inference"}, cells
+
+
 def audit(root: Path) -> dict:
     files = sorted((root / "strategy/results").glob("iterations_*.csv"))
     merged = {}
@@ -85,6 +145,7 @@ def audit(root: Path) -> dict:
         "sweep_cells_at_2bps": len(at_two),
         "sweep_groups_at_2bps": len(groups),
         "descriptive_failure_buckets": dict(sorted(categories.items())),
+        "gross_vs_net": cost_diagnostics(rows)[0],
         "winning_cells_at_2bps": len(winners),
         "winning_cells_with_at_most_two_trades": sum(int(float(row["n_trades"])) <= 2 for row in winners),
         "cross_market_configs_in_both_overlapping_windows": [
@@ -102,7 +163,22 @@ def audit(root: Path) -> dict:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--root", type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument("--cost-csv", type=Path, help="also write per-cell paired cost diagnostics")
     args = parser.parse_args()
+    if args.cost_csv:
+        merged = {}
+        for path in sorted((args.root / "strategy/results").glob("iterations_*.csv")):
+            with path.open(newline="") as fh:
+                for row in csv.DictReader(fh):
+                    key = tuple(row[k] for k in ("strategy", "variant", "instrument", "window", "cost_bps"))
+                    if key in merged and merged[key] != row:
+                        raise ValueError(f"conflicting repeated cell: {key}")
+                    merged[key] = row
+        _, cells = cost_diagnostics(list(merged.values()))
+        with args.cost_csv.open("w", newline="") as fh:
+            writer = csv.DictWriter(fh, fieldnames=list(cells[0]))
+            writer.writeheader()
+            writer.writerows(cells)
     print(json.dumps(audit(args.root.resolve()), indent=2, sort_keys=True))
 
 

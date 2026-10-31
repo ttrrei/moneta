@@ -137,7 +137,7 @@ def load_bars(
     # is converted to a UTC instant, so the gate and the query can never
     # disagree about the window.
     _since = _oos.normalize_bound(since) if since else None
-    _until = _oos.normalize_bound(until) if until else None
+    _until, exclusive = _oos.query_until(until)
 
     cache = _BAR_CACHE.get() if not _oos.is_holdout_until(until) else None
     key = None
@@ -147,7 +147,7 @@ def load_bars(
             stat = path.stat()
             key = (str(path), stat.st_dev, stat.st_ino, stat.st_size,
                    stat.st_mtime_ns, stat.st_ctime_ns, instrument,
-                   tuple(feature_cols), tuple(not_null_cols or ()), _since, _until)
+                   tuple(feature_cols), tuple(not_null_cols or ()), _since, _until, exclusive)
         except OSError:
             pass  # Globs/remote paths remain normal uncached DuckDB reads.
         if key in cache["frames"]:
@@ -170,16 +170,7 @@ def load_bars(
             where.append("time >= ?")
             params.append(_since)
         if _until:
-            if _oos.is_holdout_until(until):
-                # OOS/holdout read: ``until`` is the *exclusive* end (the first
-                # day after the holdout), so use ``time < until`` — this
-                # excludes the first bar of that day (review follow-up2 §1.2:
-                # ``time <= until`` would include one bar at the holdout's end
-                # boundary, which the engine acts on at the next bar's open).
-                where.append("time < ?")
-            else:
-                # In-sample read: ``until`` is the *inclusive* last bar's date.
-                where.append("time <= ?")
+            where.append("time < ?" if exclusive else "time <= ?")
             params.append(_until)
         sql = (
             "SELECT " + ", ".join(cols) +

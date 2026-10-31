@@ -216,6 +216,26 @@ def is_holdout_until(until: str | None) -> bool:
     return _window_reaches_holdout(until)
 
 
+def query_until(until: str | None) -> tuple[str | None, bool]:
+    """Resolve the SQL upper bound and whether it is exclusive.
+
+    Development date-only ends include the entire UTC day. Datetime ends
+    remain exact inclusive instants. Holdout ends retain their exclusive
+    semantics. ``normalize_bound`` itself always maps a date to midnight.
+    """
+    if until is None:
+        return None, False
+    import datetime as dt
+    import re
+    normalized = normalize_bound(until)
+    if is_holdout_until(until):
+        return normalized, True
+    if re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(until).strip()):
+        end = dt.datetime.fromisoformat(normalized) + dt.timedelta(days=1)
+        return end.isoformat(), True
+    return normalized, False
+
+
 def _load_ledger() -> dict:
     path = _ledger_path()
     if not path.exists():

@@ -207,10 +207,14 @@ count ≤ 300) — do not restate it here, reference it.
 
   The canonical resolver is `strategy/variants.py`. Run
   `python scripts/pin_finalist.py <strategy> <variant>` to print the resolved
-  configuration and its `oos_variant` / `oos_config_hash` YAML fields. This
-  command reads no market data and changes no files or statuses. Both fields
-  are mandatory before OOS; `run_matrix --variant <name>` recomputes the hash
-  from effective parameters and refuses a mismatch. New matrix runs save a
+  configuration and its parameter, implementation and data freeze YAML fields.
+  Commit reviewed implementation changes first: nomination and OOS execution
+  require a clean working tree. The command hashes opaque Parquet bytes without
+  decoding market rows; it changes no files or statuses. The implementation
+  commit may be followed by a nomination metadata commit: its content hash must
+  still match and the pinned commit must be an ancestor of HEAD. Evaluation
+  windows and criteria are also frozen. `run_matrix --variant <name>` verifies
+  the configuration, implementation and data before reservation. New matrix runs save a
   `manifest.yml` alongside their outputs. Non-base in-sample runs live below
   `<ID>/variants/<name>`; the original base evidence remains in place.
 
@@ -218,6 +222,11 @@ count ≤ 300) — do not restate it here, reference it.
   [historical signal-repair caveats](../docs/review_verification_20261031.md).
   The full/recent windows overlap and are not independent validations. Do not
   inspect holdout benchmarks to decide whether to nominate a strategy.
+
+  Date-only development `until` values include the entire UTC day; explicit
+  timestamps remain exact inclusive instants. OOS ends remain exclusive. See
+  [the follow-up verification](../docs/repo_review_20261031_verification.md)
+  and the [versioned replay evidence](recomputations/20261031/README.md).
 
 - **Cross-strategy ranking (Sharpe):** the `Sharpe` column is a *trade-rate*
   Sharpe (annualised from per-trade returns) — it is **not comparable across
