@@ -1,0 +1,2400 @@
+- entry_feature_id: EF-SR1-001
+  strategy_id: SR1-001
+  source_idea: CB-01
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: squeeze_age
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-002
+  strategy_id: SR1-002
+  source_idea: CB-01
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: squeeze_age
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-003
+  strategy_id: SR1-003
+  source_idea: CB-02
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_compression
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-004
+  strategy_id: SR1-004
+  source_idea: CB-02
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_compression
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-005
+  strategy_id: SR1-005
+  source_idea: CB-03
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: compressed_break_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-006
+  strategy_id: SR1-006
+  source_idea: CB-03
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: compressed_break_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-007
+  strategy_id: SR1-007
+  source_idea: CB-04
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_acceptance
+  source_direction: acceptance_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-008
+  strategy_id: SR1-008
+  source_idea: CB-04
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_acceptance
+  source_direction: acceptance_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-009
+  strategy_id: SR1-009
+  source_idea: CB-05
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_activity
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-010
+  strategy_id: SR1-010
+  source_idea: CB-05
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_activity
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-011
+  strategy_id: SR1-011
+  source_idea: CB-06
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_expansion
+  source_direction: body_expansion_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-012
+  strategy_id: SR1-012
+  source_idea: CB-06
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_expansion
+  source_direction: body_expansion_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-013
+  strategy_id: SR1-013
+  source_idea: CB-07
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: variance_imbalance
+  source_direction: variance_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-014
+  strategy_id: SR1-014
+  source_idea: CB-07
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: variance_imbalance
+  source_direction: variance_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-015
+  strategy_id: SR1-015
+  source_idea: CB-08
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_close_volatility
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-016
+  strategy_id: SR1-016
+  source_idea: CB-08
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_close_volatility
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-017
+  strategy_id: SR1-017
+  source_idea: CB-09
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_instability
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-018
+  strategy_id: SR1-018
+  source_idea: CB-09
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_instability
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-019
+  strategy_id: SR1-019
+  source_idea: CB-10
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_sequence_balance
+  source_direction: break_sequence_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-020
+  strategy_id: SR1-020
+  source_idea: CB-10
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_sequence_balance
+  source_direction: break_sequence_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-021
+  strategy_id: SR1-021
+  source_idea: MR-01
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: median_stretch
+  source_direction: median_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-022
+  strategy_id: SR1-022
+  source_idea: MR-01
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: median_stretch
+  source_direction: median_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-023
+  strategy_id: SR1-023
+  source_idea: MR-02
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: regression_residual
+  source_direction: regression_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-024
+  strategy_id: SR1-024
+  source_idea: MR-02
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: regression_residual
+  source_direction: regression_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-025
+  strategy_id: SR1-025
+  source_idea: MR-03
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_vwap_stretch
+  source_direction: vwap_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-026
+  strategy_id: SR1-026
+  source_idea: MR-03
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_vwap_stretch
+  source_direction: vwap_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-027
+  strategy_id: SR1-027
+  source_idea: MR-04
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_regime
+  source_direction: rsi_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-028
+  strategy_id: SR1-028
+  source_idea: MR-04
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_regime
+  source_direction: rsi_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-029
+  strategy_id: SR1-029
+  source_idea: MR-05
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-030
+  strategy_id: SR1-030
+  source_idea: MR-05
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-031
+  strategy_id: SR1-031
+  source_idea: MR-06
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: peer_residual_stretch
+  source_direction: peer_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-032
+  strategy_id: SR1-032
+  source_idea: MR-06
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: peer_residual_stretch
+  source_direction: peer_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-033
+  strategy_id: SR1-033
+  source_idea: MR-07
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: shock_decay
+  source_direction: shock_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-034
+  strategy_id: SR1-034
+  source_idea: MR-07
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: shock_decay
+  source_direction: shock_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-035
+  strategy_id: SR1-035
+  source_idea: MR-08
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: activity_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-036
+  strategy_id: SR1-036
+  source_idea: MR-08
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: activity_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-037
+  strategy_id: SR1-037
+  source_idea: MR-09
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_displacement_remaining
+  source_direction: session_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-038
+  strategy_id: SR1-038
+  source_idea: MR-09
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_displacement_remaining
+  source_direction: session_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-039
+  strategy_id: SR1-039
+  source_idea: MR-10
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: mean_reclaim_state
+  source_direction: mean_reclaim_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-040
+  strategy_id: SR1-040
+  source_idea: MR-10
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: mean_reclaim_state
+  source_direction: mean_reclaim_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-041
+  strategy_id: SR1-041
+  source_idea: PA-01
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: wick_imbalance
+  source_direction: wick_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-042
+  strategy_id: SR1-042
+  source_idea: PA-01
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: wick_imbalance
+  source_direction: wick_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-043
+  strategy_id: SR1-043
+  source_idea: PA-02
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: engulfing_state
+  source_direction: body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-044
+  strategy_id: SR1-044
+  source_idea: PA-02
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: engulfing_state
+  source_direction: body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-045
+  strategy_id: SR1-045
+  source_idea: PA-03
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: containment_release_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-046
+  strategy_id: SR1-046
+  source_idea: PA-03
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: containment_release_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-047
+  strategy_id: SR1-047
+  source_idea: PA-04
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: outside_settlement
+  source_direction: outside_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-048
+  strategy_id: SR1-048
+  source_idea: PA-04
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: outside_settlement
+  source_direction: outside_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-049
+  strategy_id: SR1-049
+  source_idea: PA-05
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: boundary_tests
+  source_direction: contact_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-050
+  strategy_id: SR1-050
+  source_idea: PA-05
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: boundary_tests
+  source_direction: contact_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-051
+  strategy_id: SR1-051
+  source_idea: PA-06
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: first_revisit_state
+  source_direction: revisit_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-052
+  strategy_id: SR1-052
+  source_idea: PA-06
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: first_revisit_state
+  source_direction: revisit_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-053
+  strategy_id: SR1-053
+  source_idea: PA-07
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: close_confirmation
+  source_direction: prior_clv_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-054
+  strategy_id: SR1-054
+  source_idea: PA-07
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: close_confirmation
+  source_direction: prior_clv_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-055
+  strategy_id: SR1-055
+  source_idea: PA-08
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_share_transition
+  source_direction: recent_body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-056
+  strategy_id: SR1-056
+  source_idea: PA-08
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_share_transition
+  source_direction: recent_body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-057
+  strategy_id: SR1-057
+  source_idea: PA-09
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sweep_state
+  source_direction: rejection_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-058
+  strategy_id: SR1-058
+  source_idea: PA-09
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sweep_state
+  source_direction: rejection_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-059
+  strategy_id: SR1-059
+  source_idea: PA-10
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: level_cluster_density
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-060
+  strategy_id: SR1-060
+  source_idea: PA-10
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: level_cluster_density
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-061
+  strategy_id: SR1-061
+  source_idea: PS-01
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sign_memory
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-062
+  strategy_id: SR1-062
+  source_idea: PS-01
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sign_memory
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-063
+  strategy_id: SR1-063
+  source_idea: PS-02
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_run_age
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-064
+  strategy_id: SR1-064
+  source_idea: PS-02
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_run_age
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-065
+  strategy_id: SR1-065
+  source_idea: PS-03
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: transition_entropy
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-066
+  strategy_id: SR1-066
+  source_idea: PS-03
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: transition_entropy
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-067
+  strategy_id: SR1-067
+  source_idea: PS-04
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: turning_intensity
+  source_direction: six_return_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-068
+  strategy_id: SR1-068
+  source_idea: PS-04
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: turning_intensity
+  source_direction: six_return_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-069
+  strategy_id: SR1-069
+  source_idea: PS-05
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: jump_concentration
+  source_direction: jump_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-070
+  strategy_id: SR1-070
+  source_idea: PS-05
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: jump_concentration
+  source_direction: jump_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-071
+  strategy_id: SR1-071
+  source_idea: PS-06
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_scaling
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-072
+  strategy_id: SR1-072
+  source_idea: PS-06
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_scaling
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-073
+  strategy_id: SR1-073
+  source_idea: PS-07
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_memory
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-074
+  strategy_id: SR1-074
+  source_idea: PS-07
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_memory
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-075
+  strategy_id: SR1-075
+  source_idea: PS-08
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_activity_surprise
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-076
+  strategy_id: SR1-076
+  source_idea: PS-08
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_activity_surprise
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-077
+  strategy_id: SR1-077
+  source_idea: PS-09
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: initial_range_usage
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-078
+  strategy_id: SR1-078
+  source_idea: PS-09
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: initial_range_usage
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-079
+  strategy_id: SR1-079
+  source_idea: PS-10
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: between_bar_share
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-080
+  strategy_id: SR1-080
+  source_idea: PS-10
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: between_bar_share
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-081
+  strategy_id: SR1-081
+  source_idea: TR-01
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_alignment
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-082
+  strategy_id: SR1-082
+  source_idea: TR-01
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_alignment
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-083
+  strategy_id: SR1-083
+  source_idea: TR-02
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: pullback_state
+  source_direction: htf_slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-084
+  strategy_id: SR1-084
+  source_idea: TR-02
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: pullback_state
+  source_direction: htf_slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-085
+  strategy_id: SR1-085
+  source_idea: TR-03
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: strength_acceleration_along_direction
+  source_direction: htf_di_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-086
+  strategy_id: SR1-086
+  source_idea: TR-03
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: strength_acceleration_along_direction
+  source_direction: htf_di_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-087
+  strategy_id: SR1-087
+  source_idea: TR-04
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_breadth
+  source_direction: breadth_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-088
+  strategy_id: SR1-088
+  source_idea: TR-04
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_breadth
+  source_direction: breadth_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-089
+  strategy_id: SR1-089
+  source_idea: TR-05
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_age
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-090
+  strategy_id: SR1-090
+  source_idea: TR-05
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_age
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-091
+  strategy_id: SR1-091
+  source_idea: TR-06
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_structure_pressure
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-092
+  strategy_id: SR1-092
+  source_idea: TR-06
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_structure_pressure
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-093
+  strategy_id: SR1-093
+  source_idea: TR-07
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oriented_trend_curvature
+  source_direction: slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-094
+  strategy_id: SR1-094
+  source_idea: TR-07
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oriented_trend_curvature
+  source_direction: slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-095
+  strategy_id: SR1-095
+  source_idea: TR-08
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: agreement_loss_state
+  source_direction: prior_alignment_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-096
+  strategy_id: SR1-096
+  source_idea: TR-08
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: agreement_loss_state
+  source_direction: prior_alignment_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-097
+  strategy_id: SR1-097
+  source_idea: TR-09
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_range_migration
+  source_direction: migration_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-098
+  strategy_id: SR1-098
+  source_idea: TR-09
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_range_migration
+  source_direction: migration_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-099
+  strategy_id: SR1-099
+  source_idea: TR-10
+  round: 1
+  entry_model: trend_alignment
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_quality_mismatch
+  source_direction: htf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR1-100
+  strategy_id: SR1-100
+  source_idea: TR-10
+  round: 1
+  entry_model: candle_confirmation
+  episode: immediate
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_quality_mismatch
+  source_direction: htf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-001
+  strategy_id: SR2-001
+  source_idea: CB-01
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: squeeze_age
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-002
+  strategy_id: SR2-002
+  source_idea: CB-01
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: squeeze_age
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-003
+  strategy_id: SR2-003
+  source_idea: CB-02
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_compression
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-004
+  strategy_id: SR2-004
+  source_idea: CB-02
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_compression
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-005
+  strategy_id: SR2-005
+  source_idea: CB-03
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: compressed_break_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-006
+  strategy_id: SR2-006
+  source_idea: CB-03
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: compressed_break_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-007
+  strategy_id: SR2-007
+  source_idea: CB-04
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_acceptance
+  source_direction: acceptance_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-008
+  strategy_id: SR2-008
+  source_idea: CB-04
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_acceptance
+  source_direction: acceptance_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-009
+  strategy_id: SR2-009
+  source_idea: CB-05
+  round: 2
+  entry_model: trend_alignment
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_activity
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-010
+  strategy_id: SR2-010
+  source_idea: CB-05
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_activity
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-011
+  strategy_id: SR2-011
+  source_idea: CB-06
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_expansion
+  source_direction: body_expansion_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-012
+  strategy_id: SR2-012
+  source_idea: CB-06
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_expansion
+  source_direction: body_expansion_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-013
+  strategy_id: SR2-013
+  source_idea: CB-07
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: variance_imbalance
+  source_direction: variance_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-014
+  strategy_id: SR2-014
+  source_idea: CB-07
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: variance_imbalance
+  source_direction: variance_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-015
+  strategy_id: SR2-015
+  source_idea: CB-08
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_close_volatility
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-016
+  strategy_id: SR2-016
+  source_idea: CB-08
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: range_close_volatility
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-017
+  strategy_id: SR2-017
+  source_idea: CB-09
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_instability
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-018
+  strategy_id: SR2-018
+  source_idea: CB-09
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_instability
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-019
+  strategy_id: SR2-019
+  source_idea: CB-10
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_sequence_balance
+  source_direction: break_sequence_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-020
+  strategy_id: SR2-020
+  source_idea: CB-10
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: break_sequence_balance
+  source_direction: break_sequence_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-021
+  strategy_id: SR2-021
+  source_idea: MR-01
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: median_stretch
+  source_direction: median_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-022
+  strategy_id: SR2-022
+  source_idea: MR-01
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: median_stretch
+  source_direction: median_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-023
+  strategy_id: SR2-023
+  source_idea: MR-02
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: regression_residual
+  source_direction: regression_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-024
+  strategy_id: SR2-024
+  source_idea: MR-02
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: regression_residual
+  source_direction: regression_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-025
+  strategy_id: SR2-025
+  source_idea: MR-03
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_vwap_stretch
+  source_direction: vwap_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-026
+  strategy_id: SR2-026
+  source_idea: MR-03
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_vwap_stretch
+  source_direction: vwap_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-027
+  strategy_id: SR2-027
+  source_idea: MR-04
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_regime
+  source_direction: rsi_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-028
+  strategy_id: SR2-028
+  source_idea: MR-04
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_regime
+  source_direction: rsi_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-029
+  strategy_id: SR2-029
+  source_idea: MR-05
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-030
+  strategy_id: SR2-030
+  source_idea: MR-05
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oscillator_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-031
+  strategy_id: SR2-031
+  source_idea: MR-06
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: peer_residual_stretch
+  source_direction: peer_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-032
+  strategy_id: SR2-032
+  source_idea: MR-06
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: peer_residual_stretch
+  source_direction: peer_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-033
+  strategy_id: SR2-033
+  source_idea: MR-07
+  round: 2
+  entry_model: trend_alignment
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: shock_decay
+  source_direction: shock_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-034
+  strategy_id: SR2-034
+  source_idea: MR-07
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: shock_decay
+  source_direction: shock_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-035
+  strategy_id: SR2-035
+  source_idea: MR-08
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: activity_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-036
+  strategy_id: SR2-036
+  source_idea: MR-08
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: activity_disagreement
+  source_direction: price_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-037
+  strategy_id: SR2-037
+  source_idea: MR-09
+  round: 2
+  entry_model: trend_alignment
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_displacement_remaining
+  source_direction: session_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-038
+  strategy_id: SR2-038
+  source_idea: MR-09
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_displacement_remaining
+  source_direction: session_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-039
+  strategy_id: SR2-039
+  source_idea: MR-10
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: mean_reclaim_state
+  source_direction: mean_reclaim_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-040
+  strategy_id: SR2-040
+  source_idea: MR-10
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: mean_reclaim_state
+  source_direction: mean_reclaim_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-041
+  strategy_id: SR2-041
+  source_idea: PA-01
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: wick_imbalance
+  source_direction: wick_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-042
+  strategy_id: SR2-042
+  source_idea: PA-01
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: wick_imbalance
+  source_direction: wick_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-043
+  strategy_id: SR2-043
+  source_idea: PA-02
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: engulfing_state
+  source_direction: body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-044
+  strategy_id: SR2-044
+  source_idea: PA-02
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: engulfing_state
+  source_direction: body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-045
+  strategy_id: SR2-045
+  source_idea: PA-03
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: containment_release_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-046
+  strategy_id: SR2-046
+  source_idea: PA-03
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: containment_release_state
+  source_direction: range_break_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-047
+  strategy_id: SR2-047
+  source_idea: PA-04
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: outside_settlement
+  source_direction: outside_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-048
+  strategy_id: SR2-048
+  source_idea: PA-04
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: outside_settlement
+  source_direction: outside_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-049
+  strategy_id: SR2-049
+  source_idea: PA-05
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: boundary_tests
+  source_direction: contact_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-050
+  strategy_id: SR2-050
+  source_idea: PA-05
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: boundary_tests
+  source_direction: contact_reversal_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-051
+  strategy_id: SR2-051
+  source_idea: PA-06
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: first_revisit_state
+  source_direction: revisit_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-052
+  strategy_id: SR2-052
+  source_idea: PA-06
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: first_revisit_state
+  source_direction: revisit_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-053
+  strategy_id: SR2-053
+  source_idea: PA-07
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: close_confirmation
+  source_direction: prior_clv_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-054
+  strategy_id: SR2-054
+  source_idea: PA-07
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: close_confirmation
+  source_direction: prior_clv_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-055
+  strategy_id: SR2-055
+  source_idea: PA-08
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_share_transition
+  source_direction: recent_body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-056
+  strategy_id: SR2-056
+  source_idea: PA-08
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: body_share_transition
+  source_direction: recent_body_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-057
+  strategy_id: SR2-057
+  source_idea: PA-09
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sweep_state
+  source_direction: rejection_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-058
+  strategy_id: SR2-058
+  source_idea: PA-09
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sweep_state
+  source_direction: rejection_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-059
+  strategy_id: SR2-059
+  source_idea: PA-10
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: level_cluster_density
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-060
+  strategy_id: SR2-060
+  source_idea: PA-10
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: level_cluster_density
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-061
+  strategy_id: SR2-061
+  source_idea: PS-01
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sign_memory
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-062
+  strategy_id: SR2-062
+  source_idea: PS-01
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: sign_memory
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-063
+  strategy_id: SR2-063
+  source_idea: PS-02
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_run_age
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-064
+  strategy_id: SR2-064
+  source_idea: PS-02
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_run_age
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-065
+  strategy_id: SR2-065
+  source_idea: PS-03
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: transition_entropy
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-066
+  strategy_id: SR2-066
+  source_idea: PS-03
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: transition_entropy
+  source_direction: last_return_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-067
+  strategy_id: SR2-067
+  source_idea: PS-04
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: turning_intensity
+  source_direction: six_return_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-068
+  strategy_id: SR2-068
+  source_idea: PS-04
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: turning_intensity
+  source_direction: six_return_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-069
+  strategy_id: SR2-069
+  source_idea: PS-05
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: jump_concentration
+  source_direction: jump_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-070
+  strategy_id: SR2-070
+  source_idea: PS-05
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: jump_concentration
+  source_direction: jump_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-071
+  strategy_id: SR2-071
+  source_idea: PS-06
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_scaling
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-072
+  strategy_id: SR2-072
+  source_idea: PS-06
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: return_scaling
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-073
+  strategy_id: SR2-073
+  source_idea: PS-07
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_memory
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-074
+  strategy_id: SR2-074
+  source_idea: PS-07
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: volatility_memory
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-075
+  strategy_id: SR2-075
+  source_idea: PS-08
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_activity_surprise
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-076
+  strategy_id: SR2-076
+  source_idea: PS-08
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: session_activity_surprise
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-077
+  strategy_id: SR2-077
+  source_idea: PS-09
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: initial_range_usage
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-078
+  strategy_id: SR2-078
+  source_idea: PS-09
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: initial_range_usage
+  source_direction: no_direction
+  source_role: absolute_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-079
+  strategy_id: SR2-079
+  source_idea: PS-10
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: between_bar_share
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-080
+  strategy_id: SR2-080
+  source_idea: PS-10
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: between_bar_share
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-081
+  strategy_id: SR2-081
+  source_idea: TR-01
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_alignment
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-082
+  strategy_id: SR2-082
+  source_idea: TR-01
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_alignment
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-083
+  strategy_id: SR2-083
+  source_idea: TR-02
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: pullback_state
+  source_direction: htf_slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-084
+  strategy_id: SR2-084
+  source_idea: TR-02
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: pullback_state
+  source_direction: htf_slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-085
+  strategy_id: SR2-085
+  source_idea: TR-03
+  round: 2
+  entry_model: trend_alignment
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: strength_acceleration_along_direction
+  source_direction: htf_di_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-086
+  strategy_id: SR2-086
+  source_idea: TR-03
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: strength_acceleration_along_direction
+  source_direction: htf_di_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-087
+  strategy_id: SR2-087
+  source_idea: TR-04
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_breadth
+  source_direction: breadth_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-088
+  strategy_id: SR2-088
+  source_idea: TR-04
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_breadth
+  source_direction: breadth_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-089
+  strategy_id: SR2-089
+  source_idea: TR-05
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_age
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-090
+  strategy_id: SR2-090
+  source_idea: TR-05
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_age
+  source_direction: ltf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-091
+  strategy_id: SR2-091
+  source_idea: TR-06
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_structure_pressure
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-092
+  strategy_id: SR2-092
+  source_idea: TR-06
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_structure_pressure
+  source_direction: ltf_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-093
+  strategy_id: SR2-093
+  source_idea: TR-07
+  round: 2
+  entry_model: trend_alignment
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oriented_trend_curvature
+  source_direction: slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-094
+  strategy_id: SR2-094
+  source_idea: TR-07
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: oriented_trend_curvature
+  source_direction: slope_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-095
+  strategy_id: SR2-095
+  source_idea: TR-08
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: agreement_loss_state
+  source_direction: prior_alignment_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-096
+  strategy_id: SR2-096
+  source_idea: TR-08
+  round: 2
+  entry_model: candle_confirmation
+  episode: failure_reversal
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: agreement_loss_state
+  source_direction: prior_alignment_direction
+  source_role: adverse_excursion
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-097
+  strategy_id: SR2-097
+  source_idea: TR-09
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_range_migration
+  source_direction: migration_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-098
+  strategy_id: SR2-098
+  source_idea: TR-09
+  round: 2
+  entry_model: candle_confirmation
+  episode: pullback_confirmation
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: htf_range_migration
+  source_direction: migration_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-099
+  strategy_id: SR2-099
+  source_idea: TR-10
+  round: 2
+  entry_model: trend_alignment
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_quality_mismatch
+  source_direction: htf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis
+- entry_feature_id: EF-SR2-100
+  strategy_id: SR2-100
+  source_idea: TR-10
+  round: 2
+  entry_model: candle_confirmation
+  episode: persistent_context
+  available_at: native hour close
+  output: -1 short intent / 0 withhold / +1 long intent
+  source_score: trend_quality_mismatch
+  source_direction: htf_direction
+  source_role: directed_return
+  research_status: registered_before_entry_label_analysis

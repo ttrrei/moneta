@@ -1,0 +1,1867 @@
+{
+  "root": "/home/ubuntu/work/moneta",
+  "failures": 0,
+  "warnings": 22,
+  "findings": [
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-01",
+      "message": "max trade count 813 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-01",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-02",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-02",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-03",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-03",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-04",
+      "message": "max trade count 10586 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-04",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-04",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-05",
+      "message": "max trade count 10402 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-05",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-05",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-06",
+      "message": "max trade count 2405 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-06",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-07",
+      "message": "max trade count 577 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-07",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-07",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-113",
+      "message": "max trade count 602 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-113",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-113",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-114",
+      "message": "max trade count 14657 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-114",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-114",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-115",
+      "message": "max trade count 6997 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-115",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-115",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-116",
+      "message": "max trade count 2996 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-116",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-116",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-117",
+      "message": "max trade count 17014 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-117",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-118",
+      "message": "max trade count 4690 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-118",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-118",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-119",
+      "message": "max trade count 8603 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-119",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-120",
+      "message": "max trade count 453 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-120",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-121",
+      "message": "max trade count 562 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-121",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-122",
+      "message": "max trade count 11095 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-122",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-122",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-123",
+      "message": "max trade count 4970 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-123",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-124",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-124",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-125",
+      "message": "max trade count 16236 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-125",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-126",
+      "message": "max trade count 1061 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-126",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-126",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-127",
+      "message": "max trade count 27824 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-127",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-127",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-128",
+      "message": "max trade count 4446 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-128",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-128",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-129",
+      "message": "max trade count 2236 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-129",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-129",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-130",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-130",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-131",
+      "message": "max trade count 12502 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-131",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-131",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-132",
+      "message": "max trade count 2641 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-132",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-132",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-22",
+      "message": "max trade count 10538 > 300 and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-22",
+      "message": "loses to buy-hold in every cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-22",
+      "message": "no instrument beats buy-hold at 2 bps and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-08",
+      "message": "max trade count 426 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-08",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-09",
+      "message": "max trade count 10331 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-09",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-10",
+      "message": "max trade count 22602 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-10",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-10",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-100",
+      "message": "max trade count 26502 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-100",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-101",
+      "message": "max trade count 5431 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-101",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-102",
+      "message": "max trade count 18052 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-102",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-104",
+      "message": "max trade count 4466 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-104",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-105",
+      "message": "max trade count 365 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-106",
+      "message": "max trade count 4146 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-106",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-107",
+      "message": "max trade count 661 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-107",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-107",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-108",
+      "message": "max trade count 18607 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-108",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-11",
+      "message": "max trade count 4767 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-11",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-11",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-110",
+      "message": "max trade count 4125 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-110",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-111",
+      "message": "max trade count 34257 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-111",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-112",
+      "message": "max trade count 5101 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-112",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-12",
+      "message": "max trade count 12844 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-12",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-12",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-13",
+      "message": "max trade count 11586 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-13",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-14",
+      "message": "max trade count 23076 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-14",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-15",
+      "message": "max trade count 6188 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-15",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-16",
+      "message": "max trade count 1749 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-16",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-17",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-17",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-18",
+      "message": "max trade count 13091 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-19",
+      "message": "max trade count 16632 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-19",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-20",
+      "message": "max trade count 8824 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-20",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-20",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-21",
+      "message": "max trade count 1509 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-21",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-21",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-23",
+      "message": "max trade count 6052 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-23",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-24",
+      "message": "max trade count 20257 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-24",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-24",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-25",
+      "message": "max trade count 5510 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-25",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-26",
+      "message": "max trade count 3889 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-26",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-26",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-27",
+      "message": "max trade count 17803 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-27",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-28",
+      "message": "max trade count 95766 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-28",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-28",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-29",
+      "message": "max trade count 15569 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-30",
+      "message": "max trade count 11517 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-30",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-30",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-31",
+      "message": "max trade count 10402 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-31",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-31",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-32",
+      "message": "max trade count 11509 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-32",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-32",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-33",
+      "message": "max trade count 5053 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-33",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-33",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-34",
+      "message": "max trade count 19922 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-34",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-36",
+      "message": "max trade count 8931 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-37",
+      "message": "max trade count 23075 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-37",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-38",
+      "message": "max trade count 14307 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-38",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-38",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-39",
+      "message": "max trade count 2374 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-39",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-40",
+      "message": "max trade count 12616 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-40",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-41",
+      "message": "max trade count 1394 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-42",
+      "message": "max trade count 68742 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-42",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-43",
+      "message": "max trade count 9280 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-43",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-44",
+      "message": "max trade count 6963 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-44",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-45",
+      "message": "max trade count 12667 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-47",
+      "message": "max trade count 14687 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-47",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-48",
+      "message": "max trade count 3058 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-48",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-49",
+      "message": "max trade count 10367 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-49",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-49",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-50",
+      "message": "max trade count 4167 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-50",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-51",
+      "message": "max trade count 63709 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-51",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-52",
+      "message": "max trade count 94364 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-52",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-52",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-53",
+      "message": "max trade count 23939 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-53",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-53",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-54",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-54",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-55",
+      "message": "max trade count 360 > 300 (sweep full window) and the status is 'parked' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-56",
+      "message": "max trade count 1386 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-56",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-57",
+      "message": "max trade count 1138 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-58",
+      "message": "max trade count 20574 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-58",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-59",
+      "message": "max trade count 6070 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-59",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-60",
+      "message": "max trade count 9088 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-60",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-61",
+      "message": "max trade count 20404 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-61",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-62",
+      "message": "max trade count 747 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-62",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-62",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-63",
+      "message": "max trade count 24577 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-63",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-64",
+      "message": "max trade count 1539 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-64",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-64",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-65",
+      "message": "max trade count 62224 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-65",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-65",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-66",
+      "message": "max trade count 16541 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-66",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-67",
+      "message": "max trade count 314 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-67",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-67",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-68",
+      "message": "max trade count 7935 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-68",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-68",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-69",
+      "message": "max trade count 16172 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-69",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-70",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-70",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-71",
+      "message": "max trade count 11944 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-71",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-71",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-72",
+      "message": "max trade count 9042 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-72",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-72",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-73",
+      "message": "max trade count 3565 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-73",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-74",
+      "message": "max trade count 4884 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-74",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-75",
+      "message": "max trade count 4005 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-75",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-76",
+      "message": "max trade count 5185 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-76",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-77",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-77",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-78",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-78",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-79",
+      "message": "max trade count 8941 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-79",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-80",
+      "message": "max trade count 1447 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-80",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-82",
+      "message": "max trade count 6283 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-82",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-83",
+      "message": "max trade count 18840 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-83",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-83",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-84",
+      "message": "max trade count 5759 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-84",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-84",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-85",
+      "message": "max trade count 3136 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-85",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-85",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-86",
+      "message": "max trade count 871 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-86",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-87",
+      "message": "max trade count 4534 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-87",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-88",
+      "message": "max trade count 7694 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-89",
+      "message": "max trade count 16464 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-89",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-90",
+      "message": "max trade count 15557 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-90",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-90",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-91",
+      "message": "max trade count 12219 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-91",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-92",
+      "message": "max trade count 11705 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-92",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-93",
+      "message": "max trade count 20972 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-94",
+      "message": "max trade count 27918 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-94",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-96",
+      "message": "max trade count 948 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-97",
+      "message": "max trade count 29237 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-97",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-97",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-98",
+      "message": "max trade count 21426 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-98",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-98",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S1",
+      "where": "registry S-99",
+      "message": "max trade count 11326 > 300 (sweep full window) and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S2",
+      "where": "registry S-99",
+      "message": "loses to buy-hold in every `full`-window sweep cell and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "OK",
+      "code": "S3",
+      "where": "registry S-99",
+      "message": "no instrument beats buy-hold at 2 bps in the `full`-window sweep and the status is 'rejected' \u2014 the \u00a75 stop condition is correctly reflected"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry aroon_down 5m",
+      "message": "the ('aroon_down', '5m') family already has 4 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry atr 5m",
+      "message": "the ('atr', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry bar_clv 5m",
+      "message": "the ('bar_clv', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry bb_pctb 5m",
+      "message": "the ('bb_pctb', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry close 5m",
+      "message": "the ('close', '5m') family already has 6 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry dc_pos 5m",
+      "message": "the ('dc_pos', '5m') family already has 7 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry dist_high 5m",
+      "message": "the ('dist_high', '5m') family already has 6 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry dist_low 5m",
+      "message": "the ('dist_low', '5m') family already has 6 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry ema 5m",
+      "message": "the ('ema', '5m') family already has 7 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry h1_adx 5m",
+      "message": "the ('h1_adx', '5m') family already has 7 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry h1_ema_dist 5m",
+      "message": "the ('h1_ema_dist', '5m') family already has 7 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry h1_st_dir 5m",
+      "message": "the ('h1_st_dir', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry hv 5m",
+      "message": "the ('hv', '5m') family already has 4 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry mfi 5m",
+      "message": "the ('mfi', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry roc 5m",
+      "message": "the ('roc', '5m') family already has 7 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry rsi 5m",
+      "message": "the ('rsi', '5m') family already has 6 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry sqz_on 5m",
+      "message": "the ('sqz_on', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry st_dir 5m",
+      "message": "the ('st_dir', '5m') family already has 6 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry stoch_d 5m",
+      "message": "the ('stoch_d', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry stoch_k 5m",
+      "message": "the ('stoch_k', '5m') family already has 7 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry vol_rel 5m",
+      "message": "the ('vol_rel', '5m') family already has 7 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    },
+    {
+      "level": "WARN",
+      "code": "X15",
+      "where": "registry willr 5m",
+      "message": "the ('willr', '5m') family already has 5 strategies; the next variant needs a different indicator family \u2014 see WORKFLOW.md Step 1 (registry saturation)"
+    }
+  ]
+}

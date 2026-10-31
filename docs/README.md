@@ -21,6 +21,14 @@ are now implemented and evaluated. The [results/progress report](indicator_catal
 records 2,250 comparisons, 734 passing tests, five deterministic replays and
 final decisions: 43 reject, 7 revise. No idea met the full replication rule.
 
+The follow-up [two-round strategy/feature study](../strategy/docs/strategy_research_200_20261031_results.md)
+completed 100 + 100 executable strategies and research of their 200 composite
+entry features. All 9,000 backtest cells completed; zero rules qualify for
+promotion. Event research records 199 revise / 1 reject / 0 keep, mainly due
+to inadequate matching/sample support. The [200-rule index](../strategy/docs/strategy_research_200_20261031_index.md)
+links every hypothesis, cost result and decision. This adds related rules
+from the existing fifty feature families, not 200 independent new indicators.
+
 ## What is this project?
 
 **moneta / Nova** is an early-stage, ultra-lightweight **quantitative strategy
@@ -46,6 +54,7 @@ registry that prevents duplicate work.
 | Research **P1 indicators and conditional returns** | [indicator_research_20261031_report.md](indicator_research_20261031_report.md) | [indicator_research_P1_spec.md](indicator_research_P1_spec.md), `config/indicator_research.yml` |
 | Choose **new indicator ideas across five styles** | [indicator_idea_catalogue_20261031.md](indicator_idea_catalogue_20261031.md) | Existing P1 results and `pipeline/indicators.py` |
 | Check **all-50 implementation/testing/validation progress** | [indicator_catalogue_results_20261031.md](indicator_catalogue_results_20261031.md) | [validation contract](indicator_catalogue_validation_spec_20261031.md), `research/indicators/CATALOGUE-50-20261031/idea_progress.csv` |
+| Inspect **100 + 100 executable strategies and entry-feature research** | [Combined results](../strategy/docs/strategy_research_200_20261031_results.md) | [Every rule/report](../strategy/docs/strategy_research_200_20261031_index.md), `research/strategies/SR-20261031-200/strategy_progress.csv` |
 | Understand the **data** (rows, grain, dtypes, gotchas) | [data_profile.md](data_profile.md) | `pipeline/sanity_check.py`, `pipeline/profile_check.py` |
 | Review the **roadmap** and verify external recommendations | [review_verification_20261031.md](review_verification_20261031.md) | Older `repo_review_*.md` files are historical; raw reviews live in `legacy/` (git-ignored) |
 | Ingest / backfill data | `pipeline/README.md` | `pipeline/extract_oanda.py`, `load_data.py`, `aggregate_ohlcv.py` |

@@ -1,0 +1,9 @@
+{"time_utc": "2026-10-31T08:16:00.932259+00:00", "event": "round1_registered", "strategies": 100, "prior_strategy_configurations": 827}
+{"time_utc": "2026-10-31T08:16:01.013241+00:00", "event": "round1_started"}
+{"time_utc": "2026-10-31T08:17:53.244106+00:00", "event": "round1_portfolio_analysis_complete", "matrix_cells": 4500, "legacy_bar_met": 0, "empty_assets": 7}
+{"time_utc": "2026-10-31T08:18:19.130333+00:00", "event": "round1_completed", "passed": 0, "strategy_configurations_tried": 927}
+{"time_utc": "2026-10-31T08:20:43.497273+00:00", "event": "round2_registered_after_round1_analysis", "strategies": 100, "parent_analysis_sha256": "3d2204d0bdd0f0e034c8296acde046e63a27971d9cef5e1196fc64d9c2f9f95a", "adaptation_windows": ["development_train"], "episode_counts": {"failure_reversal": 50, "persistent_context": 32, "pullback_confirmation": 18}}
+{"time_utc": "2026-10-31T08:20:43.588419+00:00", "event": "round2_started"}
+{"time_utc": "2026-10-31T08:22:18.771072+00:00", "event": "round2_portfolio_analysis_complete", "matrix_cells": 4500, "legacy_bar_met": 0, "empty_assets": 32}
+{"time_utc": "2026-10-31T08:22:40.261445+00:00", "event": "round2_completed", "passed": 0, "strategy_configurations_tried": 1027}
+{"time_utc": "2026-10-31T08:28:18.523795+00:00", "event": "scope_includes_both_feature_research_and_execution", "composite_entry_features": 200, "portfolio_strategies": 200, "additional_feature_tests": 1200, "joint_family": 6810, "source": "User clarification: both, execute and research", "timing": "Registered before entry-feature forward-label study; portfolio round outcomes already available"}

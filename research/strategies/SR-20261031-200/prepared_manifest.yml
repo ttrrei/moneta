@@ -1,0 +1,51 @@
+calibration:
+  end: '2020-07-01'
+  start: '2020-01-01'
+files:
+  BTC_USD_bars.parquet: 435c27b3f6d92500c53adce6d124d9d152283b5441e5c20160165d5a8817678a
+  BTC_USD_calibration.yml: 89681832a9d50713a67582ee0fd9b4e9b9a206d5ae3839bedfef5ea981497bb3
+  BTC_USD_cuts.yml: c2f0a2b355e9a0e94adb57fc5e1b87d73f9a50a8c4fa48a8ae1372c1fe1ad5af
+  BTC_USD_features.parquet: 605f953b16fd787c470ba3ad40b11ec5a986398d8e77a81aaa647e200cc3b517
+  EUR_USD_bars.parquet: 57e25e83ef05827569fc6f698960fb2d168aed6d95a81778c91952de8d0f1231
+  EUR_USD_calibration.yml: 9228c7d48d3d645fc6956f77325729dcb53ec205250e2b0f59380d940adf2f8e
+  EUR_USD_cuts.yml: 48d437e25afeebe2ff5c91020055f89d645cf00e1ae6c04ad8c7affa17b31b1f
+  EUR_USD_features.parquet: a98d410cebde4867ead2beab070b04c0e19d77f1ba3cda55ebc7605b6416e798
+  XAU_USD_bars.parquet: f8f4ef973e6d5f4b7dd2e78527761cb8d7dff38fc2b225b24d44209f62d2bf55
+  XAU_USD_calibration.yml: 843e0a1ed8322ab316af44476b5bf7bcb284e65a2eef96d9a171f68161010945
+  XAU_USD_cuts.yml: fcd8b62b5b2eecc83868e179ea79caece89cefe9f918013e37df35752e3b6b14
+  XAU_USD_features.parquet: 18445940c4e83efb3b0cb29003e7a634eadda065e59bd3ba0d70bae7f3aebeb0
+inputs:
+- bars: data/strategy_research/SR-20261031-200/EUR_USD_bars.parquet
+  bars_sha256: 57e25e83ef05827569fc6f698960fb2d168aed6d95a81778c91952de8d0f1231
+  features: data/strategy_research/SR-20261031-200/EUR_USD_features.parquet
+  features_sha256: a98d410cebde4867ead2beab070b04c0e19d77f1ba3cda55ebc7605b6416e798
+  first: '2020-01-22 22:00:00+00:00'
+  instrument: EUR_USD
+  last: '2025-07-31 23:00:00+00:00'
+  native_timeframe: 1h
+  rows: 34410
+  source_5m_rows: 416107
+  source_feature_timeframe: 5m
+- bars: data/strategy_research/SR-20261031-200/BTC_USD_bars.parquet
+  bars_sha256: 435c27b3f6d92500c53adce6d124d9d152283b5441e5c20160165d5a8817678a
+  features: data/strategy_research/SR-20261031-200/BTC_USD_features.parquet
+  features_sha256: 605f953b16fd787c470ba3ad40b11ec5a986398d8e77a81aaa647e200cc3b517
+  first: '2020-01-23 06:00:00+00:00'
+  instrument: BTC_USD
+  last: '2025-07-31 23:00:00+00:00'
+  native_timeframe: 1h
+  rows: 33841
+  source_5m_rows: 409018
+  source_feature_timeframe: 5m
+- bars: data/strategy_research/SR-20261031-200/XAU_USD_bars.parquet
+  bars_sha256: f8f4ef973e6d5f4b7dd2e78527761cb8d7dff38fc2b225b24d44209f62d2bf55
+  features: data/strategy_research/SR-20261031-200/XAU_USD_features.parquet
+  features_sha256: 18445940c4e83efb3b0cb29003e7a634eadda065e59bd3ba0d70bae7f3aebeb0
+  first: '2020-01-23 23:00:00+00:00'
+  instrument: XAU_USD
+  last: '2025-07-31 23:00:00+00:00'
+  native_timeframe: 1h
+  rows: 32655
+  source_5m_rows: 395556
+  source_feature_timeframe: 5m
+source_manifest_sha256: e1208d1e37bebdda69496e328705a2a9b182bd3f44bc5de188c0c623ccd46f2a

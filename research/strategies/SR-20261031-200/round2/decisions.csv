@@ -1,0 +1,201 @@
+strategy_id,status,full_benchmark_wins,recent_benchmark_wins,full_max_trades,replicated_assets,replicated_asset_names,legacy_in_sample_bar,passed_development_criteria,reason,oos_eligible
+SR1-001,rejected,0,0,1213,0,,False,False,frequency ceiling,False
+SR1-002,rejected,0,0,301,0,,False,False,frequency ceiling,False
+SR1-003,rejected,0,0,1185,0,,False,False,frequency ceiling,False
+SR1-004,rejected,0,0,342,0,,False,False,frequency ceiling,False
+SR1-005,rejected,0,0,48,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-006,rejected,0,0,43,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-007,rejected,0,0,252,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-008,rejected,0,0,195,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-009,rejected,0,0,276,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-010,rejected,0,0,219,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-011,rejected,0,0,1049,0,,False,False,frequency ceiling,False
+SR1-012,rejected,0,0,787,0,,False,False,frequency ceiling,False
+SR1-013,rejected,0,0,1210,0,,False,False,frequency ceiling,False
+SR1-014,rejected,0,0,334,0,,False,False,frequency ceiling,False
+SR1-015,rejected,0,0,1238,0,,False,False,frequency ceiling,False
+SR1-016,rejected,0,0,293,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-017,rejected,0,0,1181,0,,False,False,frequency ceiling,False
+SR1-018,rejected,0,0,268,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-019,rejected,0,0,1588,0,,False,False,frequency ceiling,False
+SR1-020,rejected,0,0,1279,0,,False,False,frequency ceiling,False
+SR1-021,rejected,0,0,1092,0,,False,False,frequency ceiling,False
+SR1-022,rejected,0,0,6,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-023,rejected,0,0,1186,0,,False,False,frequency ceiling,False
+SR1-024,rejected,0,0,440,0,,False,False,frequency ceiling,False
+SR1-025,rejected,0,0,205,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-026,rejected,0,0,256,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-027,rejected,0,0,602,0,,False,False,frequency ceiling,False
+SR1-028,rejected,0,0,5,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-029,rejected,0,0,1139,0,,False,False,frequency ceiling,False
+SR1-030,rejected,0,0,167,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-031,rejected,0,0,1116,0,,False,False,frequency ceiling,False
+SR1-032,rejected,0,0,454,0,,False,False,frequency ceiling,False
+SR1-033,rejected,0,0,175,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-034,rejected,0,0,130,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-035,rejected,0,0,1504,0,,False,False,frequency ceiling,False
+SR1-036,rejected,0,0,911,0,,False,False,frequency ceiling,False
+SR1-037,rejected,0,0,6,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-038,rejected,0,0,2,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-039,rejected,0,0,219,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-040,rejected,0,0,185,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-041,rejected,0,0,1211,0,,False,False,frequency ceiling,False
+SR1-042,rejected,0,0,713,0,,False,False,frequency ceiling,False
+SR1-043,rejected,0,0,1009,0,,False,False,frequency ceiling,False
+SR1-044,rejected,0,0,630,0,,False,False,frequency ceiling,False
+SR1-045,rejected,0,0,11,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-046,rejected,0,0,7,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-047,rejected,0,0,266,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-048,rejected,0,0,163,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-049,rejected,0,0,1069,0,,False,False,frequency ceiling,False
+SR1-050,rejected,0,0,286,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-051,rejected,0,0,248,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-052,rejected,0,0,35,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-053,rejected,0,0,777,0,,False,False,frequency ceiling,False
+SR1-054,rejected,0,0,543,0,,False,False,frequency ceiling,False
+SR1-055,rejected,0,0,1288,0,,False,False,frequency ceiling,False
+SR1-056,rejected,0,0,974,0,,False,False,frequency ceiling,False
+SR1-057,rejected,0,0,743,0,,False,False,frequency ceiling,False
+SR1-058,rejected,0,0,22,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-059,rejected,0,0,1731,0,,False,False,frequency ceiling,False
+SR1-060,rejected,0,0,682,0,,False,False,frequency ceiling,False
+SR1-061,rejected,0,0,1308,0,,False,False,frequency ceiling,False
+SR1-062,rejected,0,1,894,0,,False,False,frequency ceiling,False
+SR1-063,rejected,0,0,1253,0,,False,False,frequency ceiling,False
+SR1-064,rejected,0,0,549,0,,False,False,frequency ceiling,False
+SR1-065,rejected,0,0,1185,0,,False,False,frequency ceiling,False
+SR1-066,rejected,0,0,679,0,,False,False,frequency ceiling,False
+SR1-067,rejected,0,0,1380,0,,False,False,frequency ceiling,False
+SR1-068,rejected,0,0,355,0,,False,False,frequency ceiling,False
+SR1-069,rejected,0,0,820,0,,False,False,frequency ceiling,False
+SR1-070,rejected,0,0,472,0,,False,False,frequency ceiling,False
+SR1-071,rejected,0,0,921,0,,False,False,frequency ceiling,False
+SR1-072,rejected,0,0,265,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-073,rejected,0,0,1306,0,,False,False,frequency ceiling,False
+SR1-074,rejected,0,0,330,0,,False,False,frequency ceiling,False
+SR1-075,rejected,0,0,975,0,,False,False,frequency ceiling,False
+SR1-076,rejected,0,0,118,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-077,rejected,0,0,683,0,,False,False,frequency ceiling,False
+SR1-078,rejected,0,0,146,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-079,rejected,0,0,1451,0,,False,False,frequency ceiling,False
+SR1-080,rejected,0,0,566,0,,False,False,frequency ceiling,False
+SR1-081,rejected,0,0,1743,0,,False,False,frequency ceiling,False
+SR1-082,rejected,0,0,1363,0,,False,False,frequency ceiling,False
+SR1-083,rejected,0,0,1404,0,,False,False,frequency ceiling,False
+SR1-084,rejected,0,0,435,0,,False,False,frequency ceiling,False
+SR1-085,rejected,0,0,497,0,,False,False,frequency ceiling,False
+SR1-086,rejected,0,0,468,0,,False,False,frequency ceiling,False
+SR1-087,rejected,0,0,1728,0,,False,False,frequency ceiling,False
+SR1-088,rejected,0,0,1393,0,,False,False,frequency ceiling,False
+SR1-089,rejected,0,0,1192,0,,False,False,frequency ceiling,False
+SR1-090,rejected,0,0,929,0,,False,False,frequency ceiling,False
+SR1-091,rejected,0,0,475,0,,False,False,frequency ceiling,False
+SR1-092,rejected,0,0,137,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR1-093,rejected,0,0,1414,0,,False,False,frequency ceiling,False
+SR1-094,rejected,0,0,1131,0,,False,False,frequency ceiling,False
+SR1-095,rejected,0,0,1634,0,,False,False,frequency ceiling,False
+SR1-096,rejected,0,0,530,0,,False,False,frequency ceiling,False
+SR1-097,rejected,0,0,652,0,,False,False,frequency ceiling,False
+SR1-098,rejected,0,0,564,0,,False,False,frequency ceiling,False
+SR1-099,rejected,0,0,1023,0,,False,False,frequency ceiling,False
+SR1-100,rejected,0,0,926,0,,False,False,frequency ceiling,False
+SR2-001,rejected,0,0,642,0,,False,False,frequency ceiling,False
+SR2-002,rejected,0,0,144,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-003,rejected,0,0,618,0,,False,False,frequency ceiling,False
+SR2-004,rejected,0,0,181,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-005,rejected,0,0,23,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-006,rejected,0,0,3,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-007,rejected,0,0,0,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-008,rejected,0,0,111,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-009,rejected,0,0,20,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-010,rejected,0,0,8,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-011,rejected,0,0,529,0,,False,False,frequency ceiling,False
+SR2-012,rejected,0,0,447,0,,False,False,frequency ceiling,False
+SR2-013,rejected,0,0,45,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-014,rejected,0,0,180,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-015,rejected,0,0,33,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-016,rejected,0,0,151,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-017,rejected,0,0,649,0,,False,False,frequency ceiling,False
+SR2-018,rejected,0,0,140,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-019,rejected,0,0,868,0,,False,False,frequency ceiling,False
+SR2-020,rejected,0,0,13,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-021,rejected,0,0,21,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-022,rejected,0,0,2,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-023,rejected,0,0,592,0,,False,False,frequency ceiling,False
+SR2-024,rejected,0,0,126,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-025,rejected,0,0,107,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-026,rejected,0,0,0,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-027,rejected,0,0,285,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-028,rejected,0,0,1,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-029,rejected,0,0,577,0,,False,False,frequency ceiling,False
+SR2-030,rejected,0,0,49,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-031,rejected,0,0,28,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-032,rejected,0,0,246,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-033,rejected,0,0,3,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-034,rejected,0,0,4,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-035,rejected,0,0,818,0,,False,False,frequency ceiling,False
+SR2-036,rejected,0,0,1,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-037,rejected,0,0,1,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-038,rejected,0,0,0,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-039,rejected,0,0,1,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-040,rejected,0,0,95,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-041,rejected,0,0,643,0,,False,False,frequency ceiling,False
+SR2-042,rejected,0,0,374,0,,False,False,frequency ceiling,False
+SR2-043,rejected,0,0,537,0,,False,False,frequency ceiling,False
+SR2-044,rejected,0,0,328,0,,False,False,frequency ceiling,False
+SR2-045,rejected,0,0,6,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-046,rejected,0,0,4,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-047,rejected,0,0,132,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-048,rejected,0,0,8,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-049,rejected,0,0,556,0,,False,False,frequency ceiling,False
+SR2-050,rejected,0,0,26,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-051,rejected,0,0,0,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-052,rejected,0,0,16,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-053,rejected,0,0,400,0,,False,False,frequency ceiling,False
+SR2-054,rejected,0,0,18,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-055,rejected,0,0,57,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-056,rejected,0,0,171,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-057,rejected,0,0,0,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-058,rejected,0,0,1,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-059,rejected,0,0,924,0,,False,False,frequency ceiling,False
+SR2-060,rejected,0,0,386,0,,False,False,frequency ceiling,False
+SR2-061,rejected,0,0,668,0,,False,False,frequency ceiling,False
+SR2-062,rejected,0,0,45,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-063,rejected,0,0,630,0,,False,False,frequency ceiling,False
+SR2-064,rejected,0,0,294,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-065,rejected,0,0,27,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-066,rejected,0,0,10,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-067,rejected,0,0,56,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-068,rejected,0,0,182,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-069,rejected,0,0,419,0,,False,False,frequency ceiling,False
+SR2-070,rejected,0,0,1,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-071,rejected,0,0,16,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-072,rejected,0,0,130,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-073,rejected,0,0,669,0,,False,False,frequency ceiling,False
+SR2-074,rejected,0,0,160,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-075,rejected,0,0,554,0,,False,False,frequency ceiling,False
+SR2-076,rejected,0,0,55,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-077,rejected,0,0,342,0,,False,False,frequency ceiling,False
+SR2-078,rejected,0,0,85,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-079,rejected,0,0,40,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-080,rejected,0,0,293,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-081,rejected,0,0,969,0,,False,False,frequency ceiling,False
+SR2-082,rejected,0,0,248,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-083,rejected,0,0,882,0,,False,False,frequency ceiling,False
+SR2-084,rejected,0,0,252,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-085,rejected,0,0,267,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-086,rejected,0,0,264,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-087,rejected,0,0,947,0,,False,False,frequency ceiling,False
+SR2-088,rejected,0,0,325,0,,False,False,frequency ceiling,False
+SR2-089,rejected,0,0,88,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-090,rejected,0,0,133,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-091,rejected,0,0,13,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-092,rejected,0,0,62,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-093,rejected,0,0,740,0,,False,False,frequency ceiling,False
+SR2-094,rejected,0,0,218,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-095,rejected,0,0,59,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-096,rejected,0,0,277,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-097,rejected,0,0,290,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-098,rejected,0,0,270,0,,False,False,insufficient cross-asset/time benchmark replication,False
+SR2-099,rejected,0,0,772,0,,False,False,frequency ceiling,False
+SR2-100,rejected,0,0,15,0,,False,False,insufficient cross-asset/time benchmark replication,False

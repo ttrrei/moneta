@@ -1,0 +1,9 @@
+{
+  "status": "passed",
+  "independent_training_fits": 600,
+  "independent_next_open_labels": 88907,
+  "independent_primary_point_estimates": 1200,
+  "independent_matched_cells": 6796,
+  "independent_feature_decisions": 200,
+  "verification_source_sha256": "63921808800b21bee90aa2791ef7676eca21d476d1bdae4a4c83dcebe77b978a"
+}

@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "portfolio_rules": 200,
+  "matrix_cells": 9000,
+  "independent_accounting_groups": 3000,
+  "independent_trade_fill_checks": 567270,
+  "native_prefix_rule_checks": 200,
+  "entry_feature_paths_verified": 600,
+  "feature_tests": 1200,
+  "portfolio_tests": 1200,
+  "joint_test_family": 6810,
+  "round2_training_only_adaptation": "verified",
+  "portfolio_replays": [
+    {
+      "round": 1,
+      "artifact_files": 313,
+      "status": "byte-identical",
+      "source_context_differences": [
+        "strategy/research_rules.py"
+      ]
+    },
+    {
+      "round": 2,
+      "artifact_files": 313,
+      "status": "byte-identical",
+      "source_context_differences": []
+    }
+  ],
+  "entry_feature_replay": "byte-identical",
+  "entry_feature_replay_result_files": 9,
+  "ledger_sha256": "3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6",
+  "verification_source_sha256": "c6e90af0cbb3f5ec5df07eba99295d24c6797ef7a1e04d10151ade5357d38fc6"
+}

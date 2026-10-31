@@ -1,0 +1,33 @@
+artifacts:
+  coverage.csv: 3d40ce7f53615e4ff20335f2902a1928ab6ead2e6dbd2c6de6bfd71b4230ec5b
+  entry_feature_decisions.csv: c3d1b7a66baaf7cdd665425d5d2b0375f0f627b6ea14149a71feedb5b820758d
+  entry_feature_tests.csv: a58a9bdef73ee59c581843f5feef05027ca33dbb9a3e063ced0aeba096b3317b
+  matched_cells.csv: 9e1dc6918d5a934c91886c175a39282a4cc04b0a9057b5624b25aa5ef6ac1248
+  portfolio_tests_joint_q.csv: c0ad94eb5bd5c7431d36bc5e025516111792d1bc5b9f9df1029de16dd03091c2
+  prior_feature_tests_joint_q.csv: 2831d1c708dd8732ba166d6a67ada55abadf1b4a9e3324de110bb5f90a79c5cd
+  protocol.yml: 8a42921c0bf54227656817273ff7873e414fcf01b692ec024f13f54263fc6781
+  registry.yml: 22a654a2a3ce908748e491fd8728ce933c88a5395377bb76a51fded9676b509d
+  training_fits.yml: a8e893769bcf9a04857e697f0cbf1c45efd7fa55d8a3e54deb2ece3b311393eb
+event_files:
+- file: data/strategy_research/SR-20261031-200/EUR_USD_entry_features_200.parquet
+  instrument: EUR_USD
+  sha256: 451380f683b2f44867630da201285b95b3f9d7f8858273d8de9eec057c4be386
+- file: data/strategy_research/SR-20261031-200/BTC_USD_entry_features_200.parquet
+  instrument: BTC_USD
+  sha256: eab18c27cc9fcf2bb67faf8c3900acbbeb6eccb78df5912c7f894b54d1804aff
+- file: data/strategy_research/SR-20261031-200/XAU_USD_entry_features_200.parquet
+  instrument: XAU_USD
+  sha256: 1333581d32e5f8c2c586279257aae864af50678dba15e5343cef3e521a33e454
+finished_at_utc: '2026-10-31T08:29:35.690229+00:00'
+joint_family_tests: 6810
+primary_tests: 1200
+registration: Feature analysis follows portfolio scope; exploratory/adaptive reused
+  development history.
+source_sha256:
+  config/strategy_event_research_200.yml: 8a42921c0bf54227656817273ff7873e414fcf01b692ec024f13f54263fc6781
+  scripts/research_entry_features_200.py: dcd26384bf77353056278bf736440884cc432a38ec699d09e3373917d70751c1
+  strategy/catalogue_research.py: dcf9dac4cefc259d823dc6227f2a1b68f05c5b80a3ffe63901db6ca973197c5b
+  strategy/entry_feature_research.py: f911f99bb354f7f6d950d3a46ec9e3d732c4c1c76f03afaa2f025611a4e00e52
+  strategy/feature_research.py: 0b6801a85a9e15f997ccf3aa087d51c87f81b83aa92bba9b4617cc3e564b9000
+  strategy/research_rules.py: c2fa7bfed474cfcbcb37ac41cabba4af1878ca8187f7a7836eeaba6f31a07bef
+status: completed

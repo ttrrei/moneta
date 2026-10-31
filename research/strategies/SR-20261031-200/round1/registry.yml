@@ -1,0 +1,2628 @@
+- id: SR1-001
+  round: 1
+  idea_id: CB-01
+  name: Squeeze episode age / trend_alignment
+  score: squeeze_age
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: compression
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-01 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: e1baa0637051e381a9a593e86958de035135e103bbe989ff3b94defe8ec5853f
+- id: SR1-002
+  round: 1
+  idea_id: CB-01
+  name: Squeeze episode age / candle_confirmation
+  score: squeeze_age
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: compression
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-01 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 8ca3ebf1c398babcdf1b4945ccbe10d2cba2d3d268a07dd700840a24a8412264
+- id: SR1-003
+  round: 1
+  idea_id: CB-02
+  name: Nested-range compression / trend_alignment
+  score: range_compression
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: compression
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-02 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 4e8e2340a5e4f82cc80aa6051d112f3473b9a47c7c04b07dd930a4611c92f1f9
+- id: SR1-004
+  round: 1
+  idea_id: CB-02
+  name: Nested-range compression / candle_confirmation
+  score: range_compression
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: compression
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-02 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: b059ba86802ab3985858fbc2daa019819a99b17883a53bd3c5db835d154187b6
+- id: SR1-005
+  round: 1
+  idea_id: CB-03
+  name: Compression-conditioned range release / trend_alignment
+  score: compressed_break_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: range_break_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-03 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 2201cedf70afdfcc52337c21a6c25fae1ed3f881951d91fa9c85995bfe0e3a3c
+- id: SR1-006
+  round: 1
+  idea_id: CB-03
+  name: Compression-conditioned range release / candle_confirmation
+  score: compressed_break_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: range_break_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-03 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: b26e9910340f2f2cccbdc1f236fc9ecc162eb2be0608371bcac2a2fe32998bb2
+- id: SR1-007
+  round: 1
+  idea_id: CB-04
+  name: Acceptance beyond a broken range / trend_alignment
+  score: break_acceptance
+  transform: identity
+  comparison_kind: tails
+  source_direction: acceptance_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-04 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: f1997536e964d7b331c1921d3cf26c283c54e8614bd0c8a4aa498b45f5fc2632
+- id: SR1-008
+  round: 1
+  idea_id: CB-04
+  name: Acceptance beyond a broken range / candle_confirmation
+  score: break_acceptance
+  transform: identity
+  comparison_kind: tails
+  source_direction: acceptance_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-04 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: db040d1a8ffeec100ed5db4b77847f746c6d07cadf076f5cec3a1dddc5b38396
+- id: SR1-009
+  round: 1
+  idea_id: CB-05
+  name: Breakout activity participation / trend_alignment
+  score: break_activity
+  transform: identity
+  comparison_kind: tails
+  source_direction: range_break_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-05 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 5626a631cd41e2c617e8341dd425401da31b6c2bc7e8df7638398c8b1c095866
+- id: SR1-010
+  round: 1
+  idea_id: CB-05
+  name: Breakout activity participation / candle_confirmation
+  score: break_activity
+  transform: identity
+  comparison_kind: tails
+  source_direction: range_break_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-05 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: cba31d6db4b38632cf3f4926f7a7add2c6833b03dc77f881bbcc3e4b0b3824e1
+- id: SR1-011
+  round: 1
+  idea_id: CB-06
+  name: Body-led versus wick-led expansion / trend_alignment
+  score: body_expansion
+  transform: absolute
+  comparison_kind: tails
+  source_direction: body_expansion_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-06 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 78464a3dc24c59522d59753af8e26624ed18ad6e8c446a207eca284d13c3997b
+- id: SR1-012
+  round: 1
+  idea_id: CB-06
+  name: Body-led versus wick-led expansion / candle_confirmation
+  score: body_expansion
+  transform: absolute
+  comparison_kind: tails
+  source_direction: body_expansion_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-06 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 7a1b91fc6b619249553a8ba1c5b89cbb95675494aef71a97bf6efafb1d9527ce
+- id: SR1-013
+  round: 1
+  idea_id: CB-07
+  name: Upside/downside variance imbalance / trend_alignment
+  score: variance_imbalance
+  transform: absolute
+  comparison_kind: tails
+  source_direction: variance_direction
+  style: compression
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-07 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 36d483cb7bd0196f5affc15e50876d4d8ea594fa1b4a498218b3ae45eaedd53c
+- id: SR1-014
+  round: 1
+  idea_id: CB-07
+  name: Upside/downside variance imbalance / candle_confirmation
+  score: variance_imbalance
+  transform: absolute
+  comparison_kind: tails
+  source_direction: variance_direction
+  style: compression
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-07 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: bdfecf0f7e649fbe40484325dc090552f1f5b45889126b0fc0b159b76bce114f
+- id: SR1-015
+  round: 1
+  idea_id: CB-08
+  name: Range versus close-volatility disagreement / trend_alignment
+  score: range_close_volatility
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: compression
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-08 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 9b712664b672c0c94c88d8acadbeff20687eec04cce75f1b04b8898e17b5b5fc
+- id: SR1-016
+  round: 1
+  idea_id: CB-08
+  name: Range versus close-volatility disagreement / candle_confirmation
+  score: range_close_volatility
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: compression
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-08 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: e9ce2b261aae2cf9b7a4ea7e191559633a38702d48a34629e004168afa0fb308
+- id: SR1-017
+  round: 1
+  idea_id: CB-09
+  name: Volatility instability / trend_alignment
+  score: volatility_instability
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: compression
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-09 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: c87faac8215c9b90b21302ea57e589594440a44f92af5fd75324642dd9a39ed1
+- id: SR1-018
+  round: 1
+  idea_id: CB-09
+  name: Volatility instability / candle_confirmation
+  score: volatility_instability
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: compression
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-09 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 692cd9b358a2a93b9c8717d48df97ae7978e8f9a61ba040602c0bca441cec79b
+- id: SR1-019
+  round: 1
+  idea_id: CB-10
+  name: Directional range-break sequence balance / trend_alignment
+  score: break_sequence_balance
+  transform: absolute
+  comparison_kind: tails
+  source_direction: break_sequence_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-10 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: f3a4608a61db6a6d42c0fc485f327d35508cd7a4d879b0646732e1f7053509d6
+- id: SR1-020
+  round: 1
+  idea_id: CB-10
+  name: Directional range-break sequence balance / candle_confirmation
+  score: break_sequence_balance
+  transform: absolute
+  comparison_kind: tails
+  source_direction: break_sequence_direction
+  style: compression
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: CB-10 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: e6a533eb077c7b32406c3ee2c762fcc11982dfed2ffdc9849532da12162a988c
+- id: SR1-021
+  round: 1
+  idea_id: MR-01
+  name: Robust median stretch / trend_alignment
+  score: median_stretch
+  transform: absolute
+  comparison_kind: tails
+  source_direction: median_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-01 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a05cc228c860efe530b2f5f8ccb5ca71a5b47c3bb8d592f7c0207aa5441c8ded
+- id: SR1-022
+  round: 1
+  idea_id: MR-01
+  name: Robust median stretch / candle_confirmation
+  score: median_stretch
+  transform: absolute
+  comparison_kind: tails
+  source_direction: median_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-01 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 2db5ab9df3b81287449481dc35535fb0a3a9a33739aa57a6b4932fada022a98a
+- id: SR1-023
+  round: 1
+  idea_id: MR-02
+  name: Causal regression residual / trend_alignment
+  score: regression_residual
+  transform: absolute
+  comparison_kind: tails
+  source_direction: regression_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-02 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 7ba3a8fa426caa6090a3714103073729589b759f602373da0c725f978167b35a
+- id: SR1-024
+  round: 1
+  idea_id: MR-02
+  name: Causal regression residual / candle_confirmation
+  score: regression_residual
+  transform: absolute
+  comparison_kind: tails
+  source_direction: regression_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-02 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: c96b7d62e309e8e64d982003126577b7c864a486144469701fe65d4c639fa2a1
+- id: SR1-025
+  round: 1
+  idea_id: MR-03
+  name: Session-VWAP stretch by session phase / trend_alignment
+  score: session_vwap_stretch
+  transform: absolute
+  comparison_kind: tails
+  source_direction: vwap_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-03 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 283481bbeaab7f4fad60f62d4d516e9969cc7af2a41c09b4e0791fb52a86d011
+- id: SR1-026
+  round: 1
+  idea_id: MR-03
+  name: Session-VWAP stretch by session phase / candle_confirmation
+  score: session_vwap_stretch
+  transform: absolute
+  comparison_kind: tails
+  source_direction: vwap_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-03 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: fa7b43c9da7fc71ca7f67cb9a3a9fe74a12c466b69df3da8d6e973153bd6cfdf
+- id: SR1-027
+  round: 1
+  idea_id: MR-04
+  name: Oscillator extremes conditional on trend efficiency / trend_alignment
+  score: oscillator_regime
+  transform: identity
+  comparison_kind: tails
+  source_direction: rsi_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-04 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 0c3443a1d99db7c623a4594eb4c537a34a87b3ed6df9ba149f5f741b047f1c47
+- id: SR1-028
+  round: 1
+  idea_id: MR-04
+  name: Oscillator extremes conditional on trend efficiency / candle_confirmation
+  score: oscillator_regime
+  transform: identity
+  comparison_kind: tails
+  source_direction: rsi_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-04 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a44d70557e0707ecc4f029d38ba6ef88d57b9a1fb1421c2f228ecc86d449a8f8
+- id: SR1-029
+  round: 1
+  idea_id: MR-05
+  name: "Price\u2013oscillator disagreement / trend_alignment"
+  score: oscillator_disagreement
+  transform: identity
+  comparison_kind: categorical
+  source_direction: price_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-05 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: dbd8bab194cae403f6cc2592b8f30b0adf3cba2194d5fcc4f4affd83657ae153
+- id: SR1-030
+  round: 1
+  idea_id: MR-05
+  name: "Price\u2013oscillator disagreement / candle_confirmation"
+  score: oscillator_disagreement
+  transform: identity
+  comparison_kind: categorical
+  source_direction: price_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-05 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 14c0d4527cb7148d994328d3493210ca824112aed511d0d69efe996842285ff6
+- id: SR1-031
+  round: 1
+  idea_id: MR-06
+  name: Cross-asset residual stretch / trend_alignment
+  score: peer_residual_stretch
+  transform: absolute
+  comparison_kind: tails
+  source_direction: peer_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-06 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: f2718acfba91e07672d2afd3d29dff1ff7f17fef1f85a5154f62efc5c03b5091
+- id: SR1-032
+  round: 1
+  idea_id: MR-06
+  name: Cross-asset residual stretch / candle_confirmation
+  score: peer_residual_stretch
+  transform: absolute
+  comparison_kind: tails
+  source_direction: peer_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-06 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: cd0d04dc5cfa1558494d9c03090cf8a4b94cffb62bcb2d5e9bad5d8d96a0709c
+- id: SR1-033
+  round: 1
+  idea_id: MR-07
+  name: Post-shock loss of speed / trend_alignment
+  score: shock_decay
+  transform: identity
+  comparison_kind: tails
+  source_direction: shock_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-07 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 3dd38992ffeddb9ec1741801bd9d916f7a9e04e57b0b2b08e2e6ee67f739c7a2
+- id: SR1-034
+  round: 1
+  idea_id: MR-07
+  name: Post-shock loss of speed / candle_confirmation
+  score: shock_decay
+  transform: identity
+  comparison_kind: tails
+  source_direction: shock_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-07 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 3b3f7e93778403cffedf90e861e32f7fcc0d149e5918d420a90fa0e45524db91
+- id: SR1-035
+  round: 1
+  idea_id: MR-08
+  name: "Price\u2013activity-pressure disagreement / trend_alignment"
+  score: activity_disagreement
+  transform: identity
+  comparison_kind: categorical
+  source_direction: price_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-08 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 5507ca45597454793cac7fe49723185c8e9136a263908887b9e04d890253a8e1
+- id: SR1-036
+  round: 1
+  idea_id: MR-08
+  name: "Price\u2013activity-pressure disagreement / candle_confirmation"
+  score: activity_disagreement
+  transform: identity
+  comparison_kind: categorical
+  source_direction: price_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-08 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: ea16c083a798432c8b930273aaf6ad82cdbe246b380be11cad2004ce8e82152d
+- id: SR1-037
+  round: 1
+  idea_id: MR-09
+  name: Session-open displacement recovery / trend_alignment
+  score: session_displacement_remaining
+  transform: absolute
+  comparison_kind: tails
+  source_direction: session_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-09 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 0133ad8ae1dcf47fb81909c94520ec07bdbf585511e76c6293f350a3392079a4
+- id: SR1-038
+  round: 1
+  idea_id: MR-09
+  name: Session-open displacement recovery / candle_confirmation
+  score: session_displacement_remaining
+  transform: absolute
+  comparison_kind: tails
+  source_direction: session_reversal_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-09 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 8f450915bb4e6c6fa52759d1966c09d8e165512fe9edac4c778b037ad7201fe6
+- id: SR1-039
+  round: 1
+  idea_id: MR-10
+  name: Mean reclaim after persistent stretch / trend_alignment
+  score: mean_reclaim_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: mean_reclaim_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-10 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: faaf866fcd0404e3917f295202518006c10ea40a8fbc9d934ea98c1aa8194c02
+- id: SR1-040
+  round: 1
+  idea_id: MR-10
+  name: Mean reclaim after persistent stretch / candle_confirmation
+  score: mean_reclaim_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: mean_reclaim_direction
+  style: mean_reversion
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: MR-10 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 9157d951b1d1af64911c1acfe340b164921b47e6483c3536033934db944bf5d2
+- id: SR1-041
+  round: 1
+  idea_id: PA-01
+  name: Accumulated wick imbalance / trend_alignment
+  score: wick_imbalance
+  transform: absolute
+  comparison_kind: tails
+  source_direction: wick_reversal_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-01 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 6d443fafedbdd8ce3e65bdfd044226052b6f3ba9e78f01e70139813a9852389f
+- id: SR1-042
+  round: 1
+  idea_id: PA-01
+  name: Accumulated wick imbalance / candle_confirmation
+  score: wick_imbalance
+  transform: absolute
+  comparison_kind: tails
+  source_direction: wick_reversal_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-01 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 45dd7d6110de801696cc1833fc34ac29e3d1dbe230eb28bb214a3c1c13052186
+- id: SR1-043
+  round: 1
+  idea_id: PA-02
+  name: Body-engulfing reversal strength / trend_alignment
+  score: engulfing_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: body_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-02 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 95d4d94cf2f8cd8ae799069d7e7f6156dfc49d68a40057aee0805de68156213f
+- id: SR1-044
+  round: 1
+  idea_id: PA-02
+  name: Body-engulfing reversal strength / candle_confirmation
+  score: engulfing_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: body_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-02 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 04cdbce2a794e94c811746de2fd984383bbdd7b9242085e7e973b6fd0ff49183
+- id: SR1-045
+  round: 1
+  idea_id: PA-03
+  name: Mother-bar containment release / trend_alignment
+  score: containment_release_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: range_break_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-03 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: e58f64e6efc9794f4d675117d2045652a37342fb22e6bea16a3aefa9ce099cfa
+- id: SR1-046
+  round: 1
+  idea_id: PA-03
+  name: Mother-bar containment release / candle_confirmation
+  score: containment_release_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: range_break_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-03 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: d4819f63bcef332e77a4615e660da165d94543d1e1aa2edf87727e7bb10ca90f
+- id: SR1-047
+  round: 1
+  idea_id: PA-04
+  name: Outside-bar settlement / trend_alignment
+  score: outside_settlement
+  transform: absolute
+  comparison_kind: tails
+  source_direction: outside_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-04 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: b434f52a7f18028b275e005ee6be41f0171624dda5d2853e0b02cd14fd51097a
+- id: SR1-048
+  round: 1
+  idea_id: PA-04
+  name: Outside-bar settlement / candle_confirmation
+  score: outside_settlement
+  transform: absolute
+  comparison_kind: tails
+  source_direction: outside_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-04 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 8f19e93ccc4dbd1f4040f508c306edf4eba5db29ad2a253d5e2da33428f54b09
+- id: SR1-049
+  round: 1
+  idea_id: PA-05
+  name: Repeated tests of a frozen boundary / trend_alignment
+  score: boundary_tests
+  transform: identity
+  comparison_kind: tails
+  source_direction: contact_reversal_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-05 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: e8e1dfa89a612de2120b7fe51dc3878894a24a5db0c7da3944faea232c6dd6b9
+- id: SR1-050
+  round: 1
+  idea_id: PA-05
+  name: Repeated tests of a frozen boundary / candle_confirmation
+  score: boundary_tests
+  transform: identity
+  comparison_kind: tails
+  source_direction: contact_reversal_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-05 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 3de3581b057a5cdd8b26e105ba3e4026ca367d1cc587f452377e2e3e54bdb336
+- id: SR1-051
+  round: 1
+  idea_id: PA-06
+  name: First revisit of confirmed structure / trend_alignment
+  score: first_revisit_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: revisit_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-06 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a7a5a720effb4cb085801b894195b1e2a0746636d7ea03895cdc65bcc6632ce4
+- id: SR1-052
+  round: 1
+  idea_id: PA-06
+  name: First revisit of confirmed structure / candle_confirmation
+  score: first_revisit_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: revisit_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-06 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 3e7482a698ce4edcd48bdf02e39b45ab8cb1012841961cc24ef7db6b53c3fead
+- id: SR1-053
+  round: 1
+  idea_id: PA-07
+  name: Next-bar confirmation of a strong close / trend_alignment
+  score: close_confirmation
+  transform: identity
+  comparison_kind: tails
+  source_direction: prior_clv_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-07 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: d99e589d0be08adbcdd46daeb009b847e11630c3367453b90736af326edbc12a
+- id: SR1-054
+  round: 1
+  idea_id: PA-07
+  name: Next-bar confirmation of a strong close / candle_confirmation
+  score: close_confirmation
+  transform: identity
+  comparison_kind: tails
+  source_direction: prior_clv_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-07 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a9da8c154975b2c9c70cfaa6d259620320588b229fe2ee29361d8bdddf13fc80
+- id: SR1-055
+  round: 1
+  idea_id: PA-08
+  name: Wick-to-body transition / trend_alignment
+  score: body_share_transition
+  transform: identity
+  comparison_kind: tails
+  source_direction: recent_body_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-08 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 01d284ca253cacd62a083f1515da30b5833abee696daf0a879ba1551b29ae6d1
+- id: SR1-056
+  round: 1
+  idea_id: PA-08
+  name: Wick-to-body transition / candle_confirmation
+  score: body_share_transition
+  transform: identity
+  comparison_kind: tails
+  source_direction: recent_body_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-08 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 38d4478e05fc92001f47fdf8c7da306e9ab72fca4994f5ba7774d1173951da64
+- id: SR1-057
+  round: 1
+  idea_id: PA-09
+  name: Prior-extreme sweep with inside close / trend_alignment
+  score: sweep_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: rejection_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-09 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: bf6770ba01d3365ac25267fa6923b2ca3d15cd8469a2f17b321643bea4c32cd2
+- id: SR1-058
+  round: 1
+  idea_id: PA-09
+  name: Prior-extreme sweep with inside close / candle_confirmation
+  score: sweep_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: rejection_direction
+  style: candle_structure
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-09 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: c34b048820cc66c468fb7f68c158b9d93ff68ce7147095d2990b376b9f50edfb
+- id: SR1-059
+  round: 1
+  idea_id: PA-10
+  name: Confirmed-level clustering / trend_alignment
+  score: level_cluster_density
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: candle_structure
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-10 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 034c7ddea839a1100f73dc56035945db032d562b2067ceb6762b8de706bf4430
+- id: SR1-060
+  round: 1
+  idea_id: PA-10
+  name: Confirmed-level clustering / candle_confirmation
+  score: level_cluster_density
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: candle_structure
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PA-10 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a15cf56c7189877fb33180ee6314c8eb22e3d63291a144f4abdfd1eddad8d7a4
+- id: SR1-061
+  round: 1
+  idea_id: PS-01
+  name: Return-sign memory / trend_alignment
+  score: sign_memory
+  transform: identity
+  comparison_kind: tails
+  source_direction: last_return_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-01 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a697104213f3817a3c286ea613fb99767957d1e7bb9b2251a84444bb2614eb1d
+- id: SR1-062
+  round: 1
+  idea_id: PS-01
+  name: Return-sign memory / candle_confirmation
+  score: sign_memory
+  transform: identity
+  comparison_kind: tails
+  source_direction: last_return_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-01 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 121fd5eb297ababe21a6137b91dcd19de49e3d1f2c96d902af2fb6e9e4815d46
+- id: SR1-063
+  round: 1
+  idea_id: PS-02
+  name: Directional run age / trend_alignment
+  score: return_run_age
+  transform: absolute
+  comparison_kind: tails
+  source_direction: last_return_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: -1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-02 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 368e313a9e4a51e1ba18bce61abdb7c2774c59ec69f600e602db09bab3d231ab
+- id: SR1-064
+  round: 1
+  idea_id: PS-02
+  name: Directional run age / candle_confirmation
+  score: return_run_age
+  transform: absolute
+  comparison_kind: tails
+  source_direction: last_return_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: -1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-02 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 48fae53ae7446a6f81df0e39242062f5fb8aff0aa2f9d2032185e3e8c5bbbef7
+- id: SR1-065
+  round: 1
+  idea_id: PS-03
+  name: Sign-transition entropy / trend_alignment
+  score: transition_entropy
+  transform: identity
+  comparison_kind: tails
+  source_direction: last_return_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: -1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-03 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: e4532f03b25475a0dddb098cc799ecf87ee626d7822ef9e7b2bca2c350d0738c
+- id: SR1-066
+  round: 1
+  idea_id: PS-03
+  name: Sign-transition entropy / candle_confirmation
+  score: transition_entropy
+  transform: identity
+  comparison_kind: tails
+  source_direction: last_return_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: -1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-03 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 895a7602abdbaae30b69d35b1532065e7a59c322c99ad61c491f308cf5bafdf1
+- id: SR1-067
+  round: 1
+  idea_id: PS-04
+  name: Path turning intensity / trend_alignment
+  score: turning_intensity
+  transform: identity
+  comparison_kind: tails
+  source_direction: six_return_direction
+  style: persistence
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-04 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 06fca0e48da923eab222e5edcd146253b9cb8ef096b675c3cd556e0a3b8a273d
+- id: SR1-068
+  round: 1
+  idea_id: PS-04
+  name: Path turning intensity / candle_confirmation
+  score: turning_intensity
+  transform: identity
+  comparison_kind: tails
+  source_direction: six_return_direction
+  style: persistence
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-04 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a4d564665bceaafab3e55d9154c106ccd1be1d1a52aa9b798e407fb7a5008c61
+- id: SR1-069
+  round: 1
+  idea_id: PS-05
+  name: Jump concentration / trend_alignment
+  score: jump_concentration
+  transform: identity
+  comparison_kind: tails
+  source_direction: jump_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: -1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-05 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 34c5941e7e51988cf8f303a2aeab6e9ef033f5bce6f573191275586fc1f23b9b
+- id: SR1-070
+  round: 1
+  idea_id: PS-05
+  name: Jump concentration / candle_confirmation
+  score: jump_concentration
+  transform: identity
+  comparison_kind: tails
+  source_direction: jump_direction
+  style: persistence
+  target_role: directed_return
+  direction_multiplier: -1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-05 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: ed3f65d5053a2e22abe21e059a4548265bf8044d9fd6c1c6ecdb203995b22033
+- id: SR1-071
+  round: 1
+  idea_id: PS-06
+  name: Return scaling across observation lengths / trend_alignment
+  score: return_scaling
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-06 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 571b537af071191fd72942e72f4d9bfc22d32e979a9ba8e6d7c0039b177a7d64
+- id: SR1-072
+  round: 1
+  idea_id: PS-06
+  name: Return scaling across observation lengths / candle_confirmation
+  score: return_scaling
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-06 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a6ce08f79c0f5b69a93ec909ef9b3d628c8454fd7d258b47d8fa515293341ba4
+- id: SR1-073
+  round: 1
+  idea_id: PS-07
+  name: Volatility memory / trend_alignment
+  score: volatility_memory
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-07 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 29806dbf0046fa93826a97b881d7b7b1497bb712ca3403ccccd759460aad1d02
+- id: SR1-074
+  round: 1
+  idea_id: PS-07
+  name: Volatility memory / candle_confirmation
+  score: volatility_memory
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-07 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 10023a689de4018287015ab7bfe78d23089240f4d6903acd4af22cf457afd856
+- id: SR1-075
+  round: 1
+  idea_id: PS-08
+  name: Session-phase activity surprise / trend_alignment
+  score: session_activity_surprise
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-08 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 9644b5df68503039296914215457254874281e23bbde16022753f2df2e95908f
+- id: SR1-076
+  round: 1
+  idea_id: PS-08
+  name: Session-phase activity surprise / candle_confirmation
+  score: session_activity_surprise
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-08 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: fb06baa70392a20a8144555d7e74f2ba1974382a3df196ab54e1013bb50b6649
+- id: SR1-077
+  round: 1
+  idea_id: PS-09
+  name: Session-initial-range utilisation / trend_alignment
+  score: initial_range_usage
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-09 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 3908957c3635f7109e1b1b0c2521e996985f29d9543f0be1c984eab00630dee8
+- id: SR1-078
+  round: 1
+  idea_id: PS-09
+  name: Session-initial-range utilisation / candle_confirmation
+  score: initial_range_usage
+  transform: identity
+  comparison_kind: tails
+  source_direction: no_direction
+  style: persistence
+  target_role: absolute_return
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-09 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 7d1885216d555ef3ac05852e710328a8800f1127e58301d6490a4f504dd3b1ac
+- id: SR1-079
+  round: 1
+  idea_id: PS-10
+  name: Between-bar versus within-bar move share / trend_alignment
+  score: between_bar_share
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: persistence
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-10 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: c4351c640b31b86d098ca820728539a01b11b63cb6807598116541a9e0b3faa4
+- id: SR1-080
+  round: 1
+  idea_id: PS-10
+  name: Between-bar versus within-bar move share / candle_confirmation
+  score: between_bar_share
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: persistence
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: PS-10 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: ba73a5373b79e2c320037e9a1a3dab6b73c03ac9402246b45c72d93a5e0a0330
+- id: SR1-081
+  round: 1
+  idea_id: TR-01
+  name: Cross-timeframe direction agreement / trend_alignment
+  score: trend_alignment
+  transform: identity
+  comparison_kind: categorical
+  source_direction: ltf_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-01 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 386f6bcef9077cce97b5a5caa89548647ba6c445bdc40387e71bc5a4834326bf
+- id: SR1-082
+  round: 1
+  idea_id: TR-01
+  name: Cross-timeframe direction agreement / candle_confirmation
+  score: trend_alignment
+  transform: identity
+  comparison_kind: categorical
+  source_direction: ltf_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-01 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 4bcd901b978e081d565e76fe30eaf3304c192e5c4b5339a1b176b6218402d3db
+- id: SR1-083
+  round: 1
+  idea_id: TR-02
+  name: HTF trend with an LTF pullback / trend_alignment
+  score: pullback_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: htf_slope_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-02 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 11d2cca8ba19112daa84f2d33b776739a42db783b6bade079851de829a18291d
+- id: SR1-084
+  round: 1
+  idea_id: TR-02
+  name: HTF trend with an LTF pullback / candle_confirmation
+  score: pullback_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: htf_slope_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-02 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 8d8f436ffd1ec2e5cb67469a1bc2c355d3db69a23bf98a31a373ca9c455b712c
+- id: SR1-085
+  round: 1
+  idea_id: TR-03
+  name: Directional trend-strength acceleration / trend_alignment
+  score: strength_acceleration_along_direction
+  transform: identity
+  comparison_kind: tails
+  source_direction: htf_di_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-03 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 4b63012b2847074d9305af1abb55572e417b1738bd88a2bf1ba13f8590c4bece
+- id: SR1-086
+  round: 1
+  idea_id: TR-03
+  name: Directional trend-strength acceleration / candle_confirmation
+  score: strength_acceleration_along_direction
+  transform: identity
+  comparison_kind: tails
+  source_direction: htf_di_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-03 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: d1ebf7db611700adaaccf47ea7e107940f9736b7e238e0809be21b2d6899eadb
+- id: SR1-087
+  round: 1
+  idea_id: TR-04
+  name: Multi-scale trend breadth / trend_alignment
+  score: trend_breadth
+  transform: absolute
+  comparison_kind: tails
+  source_direction: breadth_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-04 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 58b04d566ab6e00bd2ebc2ab5423487e79612757bf51b36d70f13cad891f144b
+- id: SR1-088
+  round: 1
+  idea_id: TR-04
+  name: Multi-scale trend breadth / candle_confirmation
+  score: trend_breadth
+  transform: absolute
+  comparison_kind: tails
+  source_direction: breadth_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-04 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: d022a48aabfabb45735ac81620002e53833edc2b2cacc778044838410490df99
+- id: SR1-089
+  round: 1
+  idea_id: TR-05
+  name: Trend age versus trend quality / trend_alignment
+  score: trend_age
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-05 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: fd10b8bcadcc06e4c1ffdca531b1578252d6b763e6cc1eca862e06efc0b2ea54
+- id: SR1-090
+  round: 1
+  idea_id: TR-05
+  name: Trend age versus trend quality / candle_confirmation
+  score: trend_age
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-05 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 504ed5d352bffb44b7545bab1dc95c04e2127872e524c9cec984d1d21a5fe330
+- id: SR1-091
+  round: 1
+  idea_id: TR-06
+  name: Pressure against confirmed HTF structure / trend_alignment
+  score: htf_structure_pressure
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: trend
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-06 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 455ab5214d02fe8c79814de200a02536daf266bd1eb2cb8c797506112acfc9e7
+- id: SR1-092
+  round: 1
+  idea_id: TR-06
+  name: Pressure against confirmed HTF structure / candle_confirmation
+  score: htf_structure_pressure
+  transform: identity
+  comparison_kind: tails
+  source_direction: ltf_direction
+  style: trend
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-06 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 49f2a0138d89f0842d55e6cdfc9ba6c0a2523162bc1522fc47d64c877d897596
+- id: SR1-093
+  round: 1
+  idea_id: TR-07
+  name: Trend curvature / trend_alignment
+  score: oriented_trend_curvature
+  transform: identity
+  comparison_kind: tails
+  source_direction: slope_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-07 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: fad0636f73462db8b54feff7177a30772db7772920337ab14a58ceb360affeb0
+- id: SR1-094
+  round: 1
+  idea_id: TR-07
+  name: Trend curvature / candle_confirmation
+  score: oriented_trend_curvature
+  transform: identity
+  comparison_kind: tails
+  source_direction: slope_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-07 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a29e44b01832535cb2d5faea432952ac73edf4731b19eb1802861769485863af
+- id: SR1-095
+  round: 1
+  idea_id: TR-08
+  name: Timeframe agreement breakdown / trend_alignment
+  score: agreement_loss_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: prior_alignment_direction
+  style: trend
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-08 supplies movement/risk context for an independent direction model;
+    trend_alignment with immediate may filter weak entries, and may fail through delay,
+    costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 5364c08dbc8dbac5f34b4320872d4a798e2f468f586f964cba543321e355c3dc
+- id: SR1-096
+  round: 1
+  idea_id: TR-08
+  name: Timeframe agreement breakdown / candle_confirmation
+  score: agreement_loss_state
+  transform: identity
+  comparison_kind: categorical
+  source_direction: prior_alignment_direction
+  style: trend
+  target_role: adverse_excursion
+  direction_multiplier: 1
+  tail: low
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-08 supplies movement/risk context for an independent direction model;
+    candle_confirmation with immediate may filter weak entries, and may fail through
+    delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 86dcb4e036ccd0cfe97a6c07545ff63ec4b519353e5b895db814982b490147ba
+- id: SR1-097
+  round: 1
+  idea_id: TR-09
+  name: Higher-timeframe range migration / trend_alignment
+  score: htf_range_migration
+  transform: absolute
+  comparison_kind: tails
+  source_direction: migration_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-09 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: a9edd07419b0ad6ef95237b30960561e8cd2351d3de4e627971451f5b4386eb0
+- id: SR1-098
+  round: 1
+  idea_id: TR-09
+  name: Higher-timeframe range migration / candle_confirmation
+  score: htf_range_migration
+  transform: absolute
+  comparison_kind: tails
+  source_direction: migration_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-09 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 967ee8730449b0b893e762b238fe776b58218b4e2fda1487e1fd4e9314aa59c0
+- id: SR1-099
+  round: 1
+  idea_id: TR-10
+  name: Trend quality mismatch across timeframes / trend_alignment
+  score: trend_quality_mismatch
+  transform: identity
+  comparison_kind: tails
+  source_direction: htf_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: trend_alignment
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-10 supplies entry direction; trend_alignment with immediate may filter
+    weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: 5d312570b97b9e42a2355e49bbf887cd8deef618c66344085eb9e5834ea2d5c4
+- id: SR1-100
+  round: 1
+  idea_id: TR-10
+  name: Trend quality mismatch across timeframes / candle_confirmation
+  score: trend_quality_mismatch
+  transform: identity
+  comparison_kind: tails
+  source_direction: htf_direction
+  style: trend
+  target_role: directed_return
+  direction_multiplier: 1
+  tail: high
+  entry_model: candle_confirmation
+  episode: immediate
+  hold_hours: 24
+  stop_atr: 1.0
+  take_profit_atr: 2.0
+  cooldown_hours: 6
+  hypothesis: TR-10 supplies entry direction; candle_confirmation with immediate may
+    filter weak entries, and may fail through delay, costs or regime change.
+  difference: New catalogue feature/context and exact hourly execution; differs from
+    prior S-series raw-indicator rules.
+  expected_full_history_trades: 20-150; empirical breaches remain failures
+  status: registered_before_outcomes
+  parent: null
+  semantic_hash: b988669e17ef1c917e786ec82eb4761c68aeb49f37a09871b33887f5b84ab54e

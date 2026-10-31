@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "pytest": {
+    "command": ".venv/bin/python -m pytest -q",
+    "passed": 757,
+    "failed": 0,
+    "elapsed_seconds": 18.55
+  },
+  "legacy_checker_mutations": {
+    "passed": 40,
+    "total": 40
+  },
+  "legacy_registry": {
+    "failures": 0,
+    "warnings": 22,
+    "warning_codes": {
+      "X15": 22
+    },
+    "scope": "132 mature S-series strategies; separate experimental cohort audit required"
+  },
+  "syntax_compilation": "passed",
+  "git_diff_check": "passed",
+  "verification_source_sha256": {
+    "tests/test_research_strategies.py": "1c801fdbe7c716f609da976797e9e8329fbe8371e6c7c5b17d761e77a375df36",
+    "tests/test_entry_feature_strategies.py": "0441e191c0b4e44fa8be27968f15ec88573e463d2434bc6596c0e1a769ef27db",
+    "scripts/verify_strategy_research_200.py": "c6e90af0cbb3f5ec5df07eba99295d24c6797ef7a1e04d10151ade5357d38fc6",
+    "scripts/verify_strategy_entry_features_200.py": "63921808800b21bee90aa2791ef7676eca21d476d1bdae4a4c83dcebe77b978a",
+    "scripts/document_strategy_research_200.py": "e17752f1ca51bc76b749102fc9b14e935b85806455c6e4d1602253cbd1da6323"
+  }
+}

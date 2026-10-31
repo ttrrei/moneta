@@ -133,6 +133,19 @@
 
 ## Configuration tally (multiple-testing burden)
 
+The user authorized an additional experimental cohort of 100 then 100
+strategies on 2026-10-31. Its [registered design](docs/strategy_research_200_20261031_design.md)
+and `research/strategies/SR-20261031-200/` preserve all planned/attempted
+definitions. Both rounds completed: 200 new configurations and 9,000 matrix
+cells. All 200 fail promotion; none accessed OOS. The project tally is now
+**1,027 configurations** (827 legacy + 200 experimental), represented by
+132 mature and 200 experimental definitions. The fifty source feature
+hypotheses are not counted again as portfolio configurations. Every new
+trial appears in the experimental table below and in the
+[joint progress CSV](../research/strategies/SR-20261031-200/strategy_progress.csv).
+See the [analysis](docs/strategy_research_200_20261031_results.md).
+This cohort does not grant finalist or OOS eligibility.
+
 > `n_tried_before` above counts **strategies**, but the sweeps evaluated each of
 > S-08…S-27 with **6 variants**, and each strategy's *best variant* was picked
 > in-sample. The honest denominator for "best of N" is the number of
@@ -146,6 +159,11 @@
 | **Configurations tried** (distinct `(strategy, variant)` pairs) | **827** | 727 prior configs + 80 sweep variants for S-103…S-112 + 20 fixed rules S-113…S-132 |
 | **Cells per configuration** | 18 | 3 instruments × 2 windows × 3 cost tiers |
 | **Total cells evaluated** | **≥ 14,886** | 827 × 18 |
+
+The table above describes the historical S-series scope. Add 200 experimental
+configurations and 9,000 cells: **1,027 configurations, at least 23,886 cells**
+overall. The 1,200 additional entry-feature contrasts are statistical research
+comparisons, not additional portfolio configurations or backtest cells.
 
 **The finalist bar is *not* corrected for multiple testing.** A configuration
 that "beats" the in-sample bar may have done so by chance among ~727
@@ -193,3 +211,215 @@ Example next row:
 | 130 | 2026-10-30 | S-130 | 1h strategy; A sustained 1h channel-position break may be more reliable when path efficiency is high. | full | **rejected** | -9.8% vs +3.1% (EUR_USD) | 129 |
 | 131 | 2026-10-30 | S-131 | 5m strategy; Directional close-location with elevated tick activity may indicate an impulse in an established regime. | full | **rejected** | -99.2% vs +3.1% (EUR_USD) | 130 |
 | 132 | 2026-10-30 | S-132 | 5m strategy; Short-window volatility expansion may signal a phase change when price location and 1h trend agree. | full | **rejected** | -66.5% vs +3.1% (EUR_USD) | 131 |
+
+<!-- BEGIN SR-20261031-200 GENERATED RECORDS -->
+
+## Experimental cohort trial log: 2026-10-31
+
+All 200 outcomes are retained below. Native 1h execution; five development
+windows and three costs per rule. None used OOS. Counts follow registration
+order within each simultaneously registered batch, including all rejections.
+The S-series parser covers the earlier table; this cohort has its own complete audit.
+
+| Research ID | Date | Hypothesis: source / model / episode | Windows | Outcome | Full benchmark wins c2 | Max full trades | n_tried_before | Configurations before | Report |
+|---|---|---|---|---|---:|---:|---:|---:|---|
+| SR1-001 | 2026-10-31 | CB-01 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1213 | 132 | 827 | [report](docs/strategy_research_200_reports/SR1-001.md) |
+| SR1-002 | 2026-10-31 | CB-01 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 301 | 133 | 828 | [report](docs/strategy_research_200_reports/SR1-002.md) |
+| SR1-003 | 2026-10-31 | CB-02 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1185 | 134 | 829 | [report](docs/strategy_research_200_reports/SR1-003.md) |
+| SR1-004 | 2026-10-31 | CB-02 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 342 | 135 | 830 | [report](docs/strategy_research_200_reports/SR1-004.md) |
+| SR1-005 | 2026-10-31 | CB-03 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 48 | 136 | 831 | [report](docs/strategy_research_200_reports/SR1-005.md) |
+| SR1-006 | 2026-10-31 | CB-03 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 43 | 137 | 832 | [report](docs/strategy_research_200_reports/SR1-006.md) |
+| SR1-007 | 2026-10-31 | CB-04 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 252 | 138 | 833 | [report](docs/strategy_research_200_reports/SR1-007.md) |
+| SR1-008 | 2026-10-31 | CB-04 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 195 | 139 | 834 | [report](docs/strategy_research_200_reports/SR1-008.md) |
+| SR1-009 | 2026-10-31 | CB-05 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 276 | 140 | 835 | [report](docs/strategy_research_200_reports/SR1-009.md) |
+| SR1-010 | 2026-10-31 | CB-05 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 219 | 141 | 836 | [report](docs/strategy_research_200_reports/SR1-010.md) |
+| SR1-011 | 2026-10-31 | CB-06 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1049 | 142 | 837 | [report](docs/strategy_research_200_reports/SR1-011.md) |
+| SR1-012 | 2026-10-31 | CB-06 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 787 | 143 | 838 | [report](docs/strategy_research_200_reports/SR1-012.md) |
+| SR1-013 | 2026-10-31 | CB-07 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1210 | 144 | 839 | [report](docs/strategy_research_200_reports/SR1-013.md) |
+| SR1-014 | 2026-10-31 | CB-07 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 334 | 145 | 840 | [report](docs/strategy_research_200_reports/SR1-014.md) |
+| SR1-015 | 2026-10-31 | CB-08 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1238 | 146 | 841 | [report](docs/strategy_research_200_reports/SR1-015.md) |
+| SR1-016 | 2026-10-31 | CB-08 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 293 | 147 | 842 | [report](docs/strategy_research_200_reports/SR1-016.md) |
+| SR1-017 | 2026-10-31 | CB-09 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1181 | 148 | 843 | [report](docs/strategy_research_200_reports/SR1-017.md) |
+| SR1-018 | 2026-10-31 | CB-09 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 268 | 149 | 844 | [report](docs/strategy_research_200_reports/SR1-018.md) |
+| SR1-019 | 2026-10-31 | CB-10 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1588 | 150 | 845 | [report](docs/strategy_research_200_reports/SR1-019.md) |
+| SR1-020 | 2026-10-31 | CB-10 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1279 | 151 | 846 | [report](docs/strategy_research_200_reports/SR1-020.md) |
+| SR1-021 | 2026-10-31 | MR-01 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1092 | 152 | 847 | [report](docs/strategy_research_200_reports/SR1-021.md) |
+| SR1-022 | 2026-10-31 | MR-01 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 6 | 153 | 848 | [report](docs/strategy_research_200_reports/SR1-022.md) |
+| SR1-023 | 2026-10-31 | MR-02 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1186 | 154 | 849 | [report](docs/strategy_research_200_reports/SR1-023.md) |
+| SR1-024 | 2026-10-31 | MR-02 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 440 | 155 | 850 | [report](docs/strategy_research_200_reports/SR1-024.md) |
+| SR1-025 | 2026-10-31 | MR-03 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 205 | 156 | 851 | [report](docs/strategy_research_200_reports/SR1-025.md) |
+| SR1-026 | 2026-10-31 | MR-03 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 256 | 157 | 852 | [report](docs/strategy_research_200_reports/SR1-026.md) |
+| SR1-027 | 2026-10-31 | MR-04 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 602 | 158 | 853 | [report](docs/strategy_research_200_reports/SR1-027.md) |
+| SR1-028 | 2026-10-31 | MR-04 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 5 | 159 | 854 | [report](docs/strategy_research_200_reports/SR1-028.md) |
+| SR1-029 | 2026-10-31 | MR-05 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1139 | 160 | 855 | [report](docs/strategy_research_200_reports/SR1-029.md) |
+| SR1-030 | 2026-10-31 | MR-05 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 167 | 161 | 856 | [report](docs/strategy_research_200_reports/SR1-030.md) |
+| SR1-031 | 2026-10-31 | MR-06 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1116 | 162 | 857 | [report](docs/strategy_research_200_reports/SR1-031.md) |
+| SR1-032 | 2026-10-31 | MR-06 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 454 | 163 | 858 | [report](docs/strategy_research_200_reports/SR1-032.md) |
+| SR1-033 | 2026-10-31 | MR-07 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 175 | 164 | 859 | [report](docs/strategy_research_200_reports/SR1-033.md) |
+| SR1-034 | 2026-10-31 | MR-07 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 130 | 165 | 860 | [report](docs/strategy_research_200_reports/SR1-034.md) |
+| SR1-035 | 2026-10-31 | MR-08 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1504 | 166 | 861 | [report](docs/strategy_research_200_reports/SR1-035.md) |
+| SR1-036 | 2026-10-31 | MR-08 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 911 | 167 | 862 | [report](docs/strategy_research_200_reports/SR1-036.md) |
+| SR1-037 | 2026-10-31 | MR-09 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 6 | 168 | 863 | [report](docs/strategy_research_200_reports/SR1-037.md) |
+| SR1-038 | 2026-10-31 | MR-09 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 2 | 169 | 864 | [report](docs/strategy_research_200_reports/SR1-038.md) |
+| SR1-039 | 2026-10-31 | MR-10 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 219 | 170 | 865 | [report](docs/strategy_research_200_reports/SR1-039.md) |
+| SR1-040 | 2026-10-31 | MR-10 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 185 | 171 | 866 | [report](docs/strategy_research_200_reports/SR1-040.md) |
+| SR1-041 | 2026-10-31 | PA-01 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1211 | 172 | 867 | [report](docs/strategy_research_200_reports/SR1-041.md) |
+| SR1-042 | 2026-10-31 | PA-01 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 713 | 173 | 868 | [report](docs/strategy_research_200_reports/SR1-042.md) |
+| SR1-043 | 2026-10-31 | PA-02 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1009 | 174 | 869 | [report](docs/strategy_research_200_reports/SR1-043.md) |
+| SR1-044 | 2026-10-31 | PA-02 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 630 | 175 | 870 | [report](docs/strategy_research_200_reports/SR1-044.md) |
+| SR1-045 | 2026-10-31 | PA-03 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 11 | 176 | 871 | [report](docs/strategy_research_200_reports/SR1-045.md) |
+| SR1-046 | 2026-10-31 | PA-03 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 7 | 177 | 872 | [report](docs/strategy_research_200_reports/SR1-046.md) |
+| SR1-047 | 2026-10-31 | PA-04 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 266 | 178 | 873 | [report](docs/strategy_research_200_reports/SR1-047.md) |
+| SR1-048 | 2026-10-31 | PA-04 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 163 | 179 | 874 | [report](docs/strategy_research_200_reports/SR1-048.md) |
+| SR1-049 | 2026-10-31 | PA-05 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1069 | 180 | 875 | [report](docs/strategy_research_200_reports/SR1-049.md) |
+| SR1-050 | 2026-10-31 | PA-05 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 286 | 181 | 876 | [report](docs/strategy_research_200_reports/SR1-050.md) |
+| SR1-051 | 2026-10-31 | PA-06 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 248 | 182 | 877 | [report](docs/strategy_research_200_reports/SR1-051.md) |
+| SR1-052 | 2026-10-31 | PA-06 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 35 | 183 | 878 | [report](docs/strategy_research_200_reports/SR1-052.md) |
+| SR1-053 | 2026-10-31 | PA-07 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 777 | 184 | 879 | [report](docs/strategy_research_200_reports/SR1-053.md) |
+| SR1-054 | 2026-10-31 | PA-07 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 543 | 185 | 880 | [report](docs/strategy_research_200_reports/SR1-054.md) |
+| SR1-055 | 2026-10-31 | PA-08 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1288 | 186 | 881 | [report](docs/strategy_research_200_reports/SR1-055.md) |
+| SR1-056 | 2026-10-31 | PA-08 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 974 | 187 | 882 | [report](docs/strategy_research_200_reports/SR1-056.md) |
+| SR1-057 | 2026-10-31 | PA-09 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 743 | 188 | 883 | [report](docs/strategy_research_200_reports/SR1-057.md) |
+| SR1-058 | 2026-10-31 | PA-09 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 22 | 189 | 884 | [report](docs/strategy_research_200_reports/SR1-058.md) |
+| SR1-059 | 2026-10-31 | PA-10 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1731 | 190 | 885 | [report](docs/strategy_research_200_reports/SR1-059.md) |
+| SR1-060 | 2026-10-31 | PA-10 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 682 | 191 | 886 | [report](docs/strategy_research_200_reports/SR1-060.md) |
+| SR1-061 | 2026-10-31 | PS-01 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1308 | 192 | 887 | [report](docs/strategy_research_200_reports/SR1-061.md) |
+| SR1-062 | 2026-10-31 | PS-01 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 894 | 193 | 888 | [report](docs/strategy_research_200_reports/SR1-062.md) |
+| SR1-063 | 2026-10-31 | PS-02 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1253 | 194 | 889 | [report](docs/strategy_research_200_reports/SR1-063.md) |
+| SR1-064 | 2026-10-31 | PS-02 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 549 | 195 | 890 | [report](docs/strategy_research_200_reports/SR1-064.md) |
+| SR1-065 | 2026-10-31 | PS-03 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1185 | 196 | 891 | [report](docs/strategy_research_200_reports/SR1-065.md) |
+| SR1-066 | 2026-10-31 | PS-03 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 679 | 197 | 892 | [report](docs/strategy_research_200_reports/SR1-066.md) |
+| SR1-067 | 2026-10-31 | PS-04 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1380 | 198 | 893 | [report](docs/strategy_research_200_reports/SR1-067.md) |
+| SR1-068 | 2026-10-31 | PS-04 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 355 | 199 | 894 | [report](docs/strategy_research_200_reports/SR1-068.md) |
+| SR1-069 | 2026-10-31 | PS-05 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 820 | 200 | 895 | [report](docs/strategy_research_200_reports/SR1-069.md) |
+| SR1-070 | 2026-10-31 | PS-05 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 472 | 201 | 896 | [report](docs/strategy_research_200_reports/SR1-070.md) |
+| SR1-071 | 2026-10-31 | PS-06 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 921 | 202 | 897 | [report](docs/strategy_research_200_reports/SR1-071.md) |
+| SR1-072 | 2026-10-31 | PS-06 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 265 | 203 | 898 | [report](docs/strategy_research_200_reports/SR1-072.md) |
+| SR1-073 | 2026-10-31 | PS-07 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1306 | 204 | 899 | [report](docs/strategy_research_200_reports/SR1-073.md) |
+| SR1-074 | 2026-10-31 | PS-07 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 330 | 205 | 900 | [report](docs/strategy_research_200_reports/SR1-074.md) |
+| SR1-075 | 2026-10-31 | PS-08 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 975 | 206 | 901 | [report](docs/strategy_research_200_reports/SR1-075.md) |
+| SR1-076 | 2026-10-31 | PS-08 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 118 | 207 | 902 | [report](docs/strategy_research_200_reports/SR1-076.md) |
+| SR1-077 | 2026-10-31 | PS-09 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 683 | 208 | 903 | [report](docs/strategy_research_200_reports/SR1-077.md) |
+| SR1-078 | 2026-10-31 | PS-09 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 146 | 209 | 904 | [report](docs/strategy_research_200_reports/SR1-078.md) |
+| SR1-079 | 2026-10-31 | PS-10 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1451 | 210 | 905 | [report](docs/strategy_research_200_reports/SR1-079.md) |
+| SR1-080 | 2026-10-31 | PS-10 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 566 | 211 | 906 | [report](docs/strategy_research_200_reports/SR1-080.md) |
+| SR1-081 | 2026-10-31 | TR-01 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1743 | 212 | 907 | [report](docs/strategy_research_200_reports/SR1-081.md) |
+| SR1-082 | 2026-10-31 | TR-01 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1363 | 213 | 908 | [report](docs/strategy_research_200_reports/SR1-082.md) |
+| SR1-083 | 2026-10-31 | TR-02 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1404 | 214 | 909 | [report](docs/strategy_research_200_reports/SR1-083.md) |
+| SR1-084 | 2026-10-31 | TR-02 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 435 | 215 | 910 | [report](docs/strategy_research_200_reports/SR1-084.md) |
+| SR1-085 | 2026-10-31 | TR-03 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 497 | 216 | 911 | [report](docs/strategy_research_200_reports/SR1-085.md) |
+| SR1-086 | 2026-10-31 | TR-03 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 468 | 217 | 912 | [report](docs/strategy_research_200_reports/SR1-086.md) |
+| SR1-087 | 2026-10-31 | TR-04 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1728 | 218 | 913 | [report](docs/strategy_research_200_reports/SR1-087.md) |
+| SR1-088 | 2026-10-31 | TR-04 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1393 | 219 | 914 | [report](docs/strategy_research_200_reports/SR1-088.md) |
+| SR1-089 | 2026-10-31 | TR-05 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1192 | 220 | 915 | [report](docs/strategy_research_200_reports/SR1-089.md) |
+| SR1-090 | 2026-10-31 | TR-05 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 929 | 221 | 916 | [report](docs/strategy_research_200_reports/SR1-090.md) |
+| SR1-091 | 2026-10-31 | TR-06 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 475 | 222 | 917 | [report](docs/strategy_research_200_reports/SR1-091.md) |
+| SR1-092 | 2026-10-31 | TR-06 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 137 | 223 | 918 | [report](docs/strategy_research_200_reports/SR1-092.md) |
+| SR1-093 | 2026-10-31 | TR-07 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1414 | 224 | 919 | [report](docs/strategy_research_200_reports/SR1-093.md) |
+| SR1-094 | 2026-10-31 | TR-07 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1131 | 225 | 920 | [report](docs/strategy_research_200_reports/SR1-094.md) |
+| SR1-095 | 2026-10-31 | TR-08 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1634 | 226 | 921 | [report](docs/strategy_research_200_reports/SR1-095.md) |
+| SR1-096 | 2026-10-31 | TR-08 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 530 | 227 | 922 | [report](docs/strategy_research_200_reports/SR1-096.md) |
+| SR1-097 | 2026-10-31 | TR-09 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 652 | 228 | 923 | [report](docs/strategy_research_200_reports/SR1-097.md) |
+| SR1-098 | 2026-10-31 | TR-09 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 564 | 229 | 924 | [report](docs/strategy_research_200_reports/SR1-098.md) |
+| SR1-099 | 2026-10-31 | TR-10 / trend_alignment / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 1023 | 230 | 925 | [report](docs/strategy_research_200_reports/SR1-099.md) |
+| SR1-100 | 2026-10-31 | TR-10 / candle_confirmation / immediate | full, recent, training, validation 1/2 | rejected | 0/3 | 926 | 231 | 926 | [report](docs/strategy_research_200_reports/SR1-100.md) |
+| SR2-001 | 2026-10-31 | CB-01 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 642 | 232 | 927 | [report](docs/strategy_research_200_reports/SR2-001.md) |
+| SR2-002 | 2026-10-31 | CB-01 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 144 | 233 | 928 | [report](docs/strategy_research_200_reports/SR2-002.md) |
+| SR2-003 | 2026-10-31 | CB-02 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 618 | 234 | 929 | [report](docs/strategy_research_200_reports/SR2-003.md) |
+| SR2-004 | 2026-10-31 | CB-02 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 181 | 235 | 930 | [report](docs/strategy_research_200_reports/SR2-004.md) |
+| SR2-005 | 2026-10-31 | CB-03 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 23 | 236 | 931 | [report](docs/strategy_research_200_reports/SR2-005.md) |
+| SR2-006 | 2026-10-31 | CB-03 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 3 | 237 | 932 | [report](docs/strategy_research_200_reports/SR2-006.md) |
+| SR2-007 | 2026-10-31 | CB-04 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 0 | 238 | 933 | [report](docs/strategy_research_200_reports/SR2-007.md) |
+| SR2-008 | 2026-10-31 | CB-04 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 111 | 239 | 934 | [report](docs/strategy_research_200_reports/SR2-008.md) |
+| SR2-009 | 2026-10-31 | CB-05 / trend_alignment / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 20 | 240 | 935 | [report](docs/strategy_research_200_reports/SR2-009.md) |
+| SR2-010 | 2026-10-31 | CB-05 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 8 | 241 | 936 | [report](docs/strategy_research_200_reports/SR2-010.md) |
+| SR2-011 | 2026-10-31 | CB-06 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 529 | 242 | 937 | [report](docs/strategy_research_200_reports/SR2-011.md) |
+| SR2-012 | 2026-10-31 | CB-06 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 447 | 243 | 938 | [report](docs/strategy_research_200_reports/SR2-012.md) |
+| SR2-013 | 2026-10-31 | CB-07 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 45 | 244 | 939 | [report](docs/strategy_research_200_reports/SR2-013.md) |
+| SR2-014 | 2026-10-31 | CB-07 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 180 | 245 | 940 | [report](docs/strategy_research_200_reports/SR2-014.md) |
+| SR2-015 | 2026-10-31 | CB-08 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 33 | 246 | 941 | [report](docs/strategy_research_200_reports/SR2-015.md) |
+| SR2-016 | 2026-10-31 | CB-08 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 151 | 247 | 942 | [report](docs/strategy_research_200_reports/SR2-016.md) |
+| SR2-017 | 2026-10-31 | CB-09 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 649 | 248 | 943 | [report](docs/strategy_research_200_reports/SR2-017.md) |
+| SR2-018 | 2026-10-31 | CB-09 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 140 | 249 | 944 | [report](docs/strategy_research_200_reports/SR2-018.md) |
+| SR2-019 | 2026-10-31 | CB-10 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 868 | 250 | 945 | [report](docs/strategy_research_200_reports/SR2-019.md) |
+| SR2-020 | 2026-10-31 | CB-10 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 13 | 251 | 946 | [report](docs/strategy_research_200_reports/SR2-020.md) |
+| SR2-021 | 2026-10-31 | MR-01 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 21 | 252 | 947 | [report](docs/strategy_research_200_reports/SR2-021.md) |
+| SR2-022 | 2026-10-31 | MR-01 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 2 | 253 | 948 | [report](docs/strategy_research_200_reports/SR2-022.md) |
+| SR2-023 | 2026-10-31 | MR-02 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 592 | 254 | 949 | [report](docs/strategy_research_200_reports/SR2-023.md) |
+| SR2-024 | 2026-10-31 | MR-02 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 126 | 255 | 950 | [report](docs/strategy_research_200_reports/SR2-024.md) |
+| SR2-025 | 2026-10-31 | MR-03 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 107 | 256 | 951 | [report](docs/strategy_research_200_reports/SR2-025.md) |
+| SR2-026 | 2026-10-31 | MR-03 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 0 | 257 | 952 | [report](docs/strategy_research_200_reports/SR2-026.md) |
+| SR2-027 | 2026-10-31 | MR-04 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 285 | 258 | 953 | [report](docs/strategy_research_200_reports/SR2-027.md) |
+| SR2-028 | 2026-10-31 | MR-04 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 1 | 259 | 954 | [report](docs/strategy_research_200_reports/SR2-028.md) |
+| SR2-029 | 2026-10-31 | MR-05 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 577 | 260 | 955 | [report](docs/strategy_research_200_reports/SR2-029.md) |
+| SR2-030 | 2026-10-31 | MR-05 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 49 | 261 | 956 | [report](docs/strategy_research_200_reports/SR2-030.md) |
+| SR2-031 | 2026-10-31 | MR-06 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 28 | 262 | 957 | [report](docs/strategy_research_200_reports/SR2-031.md) |
+| SR2-032 | 2026-10-31 | MR-06 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 246 | 263 | 958 | [report](docs/strategy_research_200_reports/SR2-032.md) |
+| SR2-033 | 2026-10-31 | MR-07 / trend_alignment / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 3 | 264 | 959 | [report](docs/strategy_research_200_reports/SR2-033.md) |
+| SR2-034 | 2026-10-31 | MR-07 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 4 | 265 | 960 | [report](docs/strategy_research_200_reports/SR2-034.md) |
+| SR2-035 | 2026-10-31 | MR-08 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 818 | 266 | 961 | [report](docs/strategy_research_200_reports/SR2-035.md) |
+| SR2-036 | 2026-10-31 | MR-08 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 1 | 267 | 962 | [report](docs/strategy_research_200_reports/SR2-036.md) |
+| SR2-037 | 2026-10-31 | MR-09 / trend_alignment / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 1 | 268 | 963 | [report](docs/strategy_research_200_reports/SR2-037.md) |
+| SR2-038 | 2026-10-31 | MR-09 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 0 | 269 | 964 | [report](docs/strategy_research_200_reports/SR2-038.md) |
+| SR2-039 | 2026-10-31 | MR-10 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 1 | 270 | 965 | [report](docs/strategy_research_200_reports/SR2-039.md) |
+| SR2-040 | 2026-10-31 | MR-10 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 95 | 271 | 966 | [report](docs/strategy_research_200_reports/SR2-040.md) |
+| SR2-041 | 2026-10-31 | PA-01 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 643 | 272 | 967 | [report](docs/strategy_research_200_reports/SR2-041.md) |
+| SR2-042 | 2026-10-31 | PA-01 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 374 | 273 | 968 | [report](docs/strategy_research_200_reports/SR2-042.md) |
+| SR2-043 | 2026-10-31 | PA-02 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 537 | 274 | 969 | [report](docs/strategy_research_200_reports/SR2-043.md) |
+| SR2-044 | 2026-10-31 | PA-02 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 328 | 275 | 970 | [report](docs/strategy_research_200_reports/SR2-044.md) |
+| SR2-045 | 2026-10-31 | PA-03 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 6 | 276 | 971 | [report](docs/strategy_research_200_reports/SR2-045.md) |
+| SR2-046 | 2026-10-31 | PA-03 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 4 | 277 | 972 | [report](docs/strategy_research_200_reports/SR2-046.md) |
+| SR2-047 | 2026-10-31 | PA-04 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 132 | 278 | 973 | [report](docs/strategy_research_200_reports/SR2-047.md) |
+| SR2-048 | 2026-10-31 | PA-04 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 8 | 279 | 974 | [report](docs/strategy_research_200_reports/SR2-048.md) |
+| SR2-049 | 2026-10-31 | PA-05 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 556 | 280 | 975 | [report](docs/strategy_research_200_reports/SR2-049.md) |
+| SR2-050 | 2026-10-31 | PA-05 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 26 | 281 | 976 | [report](docs/strategy_research_200_reports/SR2-050.md) |
+| SR2-051 | 2026-10-31 | PA-06 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 0 | 282 | 977 | [report](docs/strategy_research_200_reports/SR2-051.md) |
+| SR2-052 | 2026-10-31 | PA-06 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 16 | 283 | 978 | [report](docs/strategy_research_200_reports/SR2-052.md) |
+| SR2-053 | 2026-10-31 | PA-07 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 400 | 284 | 979 | [report](docs/strategy_research_200_reports/SR2-053.md) |
+| SR2-054 | 2026-10-31 | PA-07 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 18 | 285 | 980 | [report](docs/strategy_research_200_reports/SR2-054.md) |
+| SR2-055 | 2026-10-31 | PA-08 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 57 | 286 | 981 | [report](docs/strategy_research_200_reports/SR2-055.md) |
+| SR2-056 | 2026-10-31 | PA-08 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 171 | 287 | 982 | [report](docs/strategy_research_200_reports/SR2-056.md) |
+| SR2-057 | 2026-10-31 | PA-09 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 0 | 288 | 983 | [report](docs/strategy_research_200_reports/SR2-057.md) |
+| SR2-058 | 2026-10-31 | PA-09 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 1 | 289 | 984 | [report](docs/strategy_research_200_reports/SR2-058.md) |
+| SR2-059 | 2026-10-31 | PA-10 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 924 | 290 | 985 | [report](docs/strategy_research_200_reports/SR2-059.md) |
+| SR2-060 | 2026-10-31 | PA-10 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 386 | 291 | 986 | [report](docs/strategy_research_200_reports/SR2-060.md) |
+| SR2-061 | 2026-10-31 | PS-01 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 668 | 292 | 987 | [report](docs/strategy_research_200_reports/SR2-061.md) |
+| SR2-062 | 2026-10-31 | PS-01 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 45 | 293 | 988 | [report](docs/strategy_research_200_reports/SR2-062.md) |
+| SR2-063 | 2026-10-31 | PS-02 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 630 | 294 | 989 | [report](docs/strategy_research_200_reports/SR2-063.md) |
+| SR2-064 | 2026-10-31 | PS-02 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 294 | 295 | 990 | [report](docs/strategy_research_200_reports/SR2-064.md) |
+| SR2-065 | 2026-10-31 | PS-03 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 27 | 296 | 991 | [report](docs/strategy_research_200_reports/SR2-065.md) |
+| SR2-066 | 2026-10-31 | PS-03 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 10 | 297 | 992 | [report](docs/strategy_research_200_reports/SR2-066.md) |
+| SR2-067 | 2026-10-31 | PS-04 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 56 | 298 | 993 | [report](docs/strategy_research_200_reports/SR2-067.md) |
+| SR2-068 | 2026-10-31 | PS-04 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 182 | 299 | 994 | [report](docs/strategy_research_200_reports/SR2-068.md) |
+| SR2-069 | 2026-10-31 | PS-05 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 419 | 300 | 995 | [report](docs/strategy_research_200_reports/SR2-069.md) |
+| SR2-070 | 2026-10-31 | PS-05 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 1 | 301 | 996 | [report](docs/strategy_research_200_reports/SR2-070.md) |
+| SR2-071 | 2026-10-31 | PS-06 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 16 | 302 | 997 | [report](docs/strategy_research_200_reports/SR2-071.md) |
+| SR2-072 | 2026-10-31 | PS-06 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 130 | 303 | 998 | [report](docs/strategy_research_200_reports/SR2-072.md) |
+| SR2-073 | 2026-10-31 | PS-07 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 669 | 304 | 999 | [report](docs/strategy_research_200_reports/SR2-073.md) |
+| SR2-074 | 2026-10-31 | PS-07 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 160 | 305 | 1000 | [report](docs/strategy_research_200_reports/SR2-074.md) |
+| SR2-075 | 2026-10-31 | PS-08 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 554 | 306 | 1001 | [report](docs/strategy_research_200_reports/SR2-075.md) |
+| SR2-076 | 2026-10-31 | PS-08 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 55 | 307 | 1002 | [report](docs/strategy_research_200_reports/SR2-076.md) |
+| SR2-077 | 2026-10-31 | PS-09 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 342 | 308 | 1003 | [report](docs/strategy_research_200_reports/SR2-077.md) |
+| SR2-078 | 2026-10-31 | PS-09 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 85 | 309 | 1004 | [report](docs/strategy_research_200_reports/SR2-078.md) |
+| SR2-079 | 2026-10-31 | PS-10 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 40 | 310 | 1005 | [report](docs/strategy_research_200_reports/SR2-079.md) |
+| SR2-080 | 2026-10-31 | PS-10 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 293 | 311 | 1006 | [report](docs/strategy_research_200_reports/SR2-080.md) |
+| SR2-081 | 2026-10-31 | TR-01 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 969 | 312 | 1007 | [report](docs/strategy_research_200_reports/SR2-081.md) |
+| SR2-082 | 2026-10-31 | TR-01 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 248 | 313 | 1008 | [report](docs/strategy_research_200_reports/SR2-082.md) |
+| SR2-083 | 2026-10-31 | TR-02 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 882 | 314 | 1009 | [report](docs/strategy_research_200_reports/SR2-083.md) |
+| SR2-084 | 2026-10-31 | TR-02 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 252 | 315 | 1010 | [report](docs/strategy_research_200_reports/SR2-084.md) |
+| SR2-085 | 2026-10-31 | TR-03 / trend_alignment / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 267 | 316 | 1011 | [report](docs/strategy_research_200_reports/SR2-085.md) |
+| SR2-086 | 2026-10-31 | TR-03 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 264 | 317 | 1012 | [report](docs/strategy_research_200_reports/SR2-086.md) |
+| SR2-087 | 2026-10-31 | TR-04 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 947 | 318 | 1013 | [report](docs/strategy_research_200_reports/SR2-087.md) |
+| SR2-088 | 2026-10-31 | TR-04 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 325 | 319 | 1014 | [report](docs/strategy_research_200_reports/SR2-088.md) |
+| SR2-089 | 2026-10-31 | TR-05 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 88 | 320 | 1015 | [report](docs/strategy_research_200_reports/SR2-089.md) |
+| SR2-090 | 2026-10-31 | TR-05 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 133 | 321 | 1016 | [report](docs/strategy_research_200_reports/SR2-090.md) |
+| SR2-091 | 2026-10-31 | TR-06 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 13 | 322 | 1017 | [report](docs/strategy_research_200_reports/SR2-091.md) |
+| SR2-092 | 2026-10-31 | TR-06 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 62 | 323 | 1018 | [report](docs/strategy_research_200_reports/SR2-092.md) |
+| SR2-093 | 2026-10-31 | TR-07 / trend_alignment / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 740 | 324 | 1019 | [report](docs/strategy_research_200_reports/SR2-093.md) |
+| SR2-094 | 2026-10-31 | TR-07 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 218 | 325 | 1020 | [report](docs/strategy_research_200_reports/SR2-094.md) |
+| SR2-095 | 2026-10-31 | TR-08 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 59 | 326 | 1021 | [report](docs/strategy_research_200_reports/SR2-095.md) |
+| SR2-096 | 2026-10-31 | TR-08 / candle_confirmation / failure_reversal | full, recent, training, validation 1/2 | rejected | 0/3 | 277 | 327 | 1022 | [report](docs/strategy_research_200_reports/SR2-096.md) |
+| SR2-097 | 2026-10-31 | TR-09 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 290 | 328 | 1023 | [report](docs/strategy_research_200_reports/SR2-097.md) |
+| SR2-098 | 2026-10-31 | TR-09 / candle_confirmation / pullback_confirmation | full, recent, training, validation 1/2 | rejected | 0/3 | 270 | 329 | 1024 | [report](docs/strategy_research_200_reports/SR2-098.md) |
+| SR2-099 | 2026-10-31 | TR-10 / trend_alignment / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 772 | 330 | 1025 | [report](docs/strategy_research_200_reports/SR2-099.md) |
+| SR2-100 | 2026-10-31 | TR-10 / candle_confirmation / persistent_context | full, recent, training, validation 1/2 | rejected | 0/3 | 15 | 331 | 1026 | [report](docs/strategy_research_200_reports/SR2-100.md) |

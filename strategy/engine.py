@@ -122,6 +122,9 @@ class BacktestResult:
     raw_trades_per_year: float = 0.0
     raw_exposure_pct: float = 0.0
     raw_mean_net_position_pct: float = 0.0
+    # Optional research trace. It is omitted from the public metrics/JSON
+    # contract and allocated only when the caller explicitly requests it.
+    equity_curve: np.ndarray | None = field(default=None, repr=False)
 
     def to_dict(self) -> dict:
         """JSON-serialisable metrics block (the ``trades`` ledger is omitted)."""
@@ -224,6 +227,7 @@ def run_backtest(
     rule: SignalRule,
     cost_bps: float = 2.0,
     long_only: bool = False,
+    capture_equity: bool = False,
 ) -> BacktestResult:
     """Run the shared accounting over ``bars`` for ``rule`` at ``cost_bps``.
 
@@ -429,6 +433,7 @@ def run_backtest(
         raw_trades_per_year=tpy,
         raw_exposure_pct=exposure_raw,
         raw_mean_net_position_pct=mean_net_position_raw,
+        equity_curve=equity.copy() if capture_equity else None,
     )
 
 

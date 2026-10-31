@@ -1,0 +1,30 @@
+{
+  "status": "passed",
+  "runs": [
+    {
+      "strategy_id": "SR1-001",
+      "instrument": "EUR_USD",
+      "window": "validation_2",
+      "cost_bps": 2,
+      "n_trades": 150,
+      "status": "exact_metric_match"
+    },
+    {
+      "strategy_id": "SR2-003",
+      "instrument": "XAU_USD",
+      "window": "validation_2",
+      "cost_bps": 2,
+      "n_trades": 68,
+      "status": "exact_metric_match"
+    },
+    {
+      "strategy_id": "SR2-048",
+      "instrument": "EUR_USD",
+      "window": "validation_2",
+      "cost_bps": 2,
+      "n_trades": 0,
+      "status": "exact_metric_match"
+    }
+  ],
+  "unsupported_timeframe": "refused"
+}

@@ -1,0 +1,50 @@
+research_id: SR-20261031-200
+status: fixed_before_round1_outcomes
+rounds: 2
+strategies_per_round: 100
+execution_timeframe: 1h
+feature_timeframe: 5m
+instruments: [EUR_USD, BTC_USD, XAU_USD]
+calibration: {start: '2020-01-01', end: '2020-07-01'}
+windows:
+  full: {start: '2020-01-01', end: '2025-08-01'}
+  last_12m: {start: '2024-08-01', end: '2025-08-01'}
+  development_train: {start: '2020-07-01', end: '2023-01-01'}
+  validation_1: {start: '2023-01-01', end: '2025-01-01'}
+  validation_2: {start: '2025-01-01', end: '2025-08-01'}
+cost_bps_one_way: [0, 2, 5]
+source_batch: research/indicators/IR-20261031-CATALOGUE-B5-v1
+prior_tests: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+prior_test_count: 4410
+prior_strategy_configurations: 827
+prior_registered_strategies: 132
+feature_registry: research/indicators/CATALOGUE-50-20261031/feature_registry.yml
+positions: {maximum: 1, notional: 1, long_and_short: true}
+round1: {hold_hours: 24, stop_atr: 1.0, take_profit_atr: 2.0, cooldown_hours: 6}
+round2: {arm_hours: 6, persistence_hours: 6, hold_hours: 24, stop_atr: 1.0, take_profit_atr: 2.0, cooldown_hours: 12}
+statistics:
+  tail_quantiles: [0.2, 0.8]
+  bootstrap_replicates: 999999
+  bootstrap_block_weeks: 4
+  seed: 20261031
+  q_limit: 0.10
+  minimum_validation_trades: 10
+  minimum_active_weeks: 8
+  planned_strategy_tests: 1200
+  planned_total_tests: 5610
+  primary_target: mean_weekly_log_excess_vs_buyhold_at_2bps
+  p_value: centered_bootstrap_one_sided_positive
+  multiplicity: benjamini_yekutieli_all_prior_feature_tests_plus_200_strategies
+promotion:
+  automatic_finalist: false
+  maximum_full_history_trades: 300
+  minimum_assets: 2
+  require_both_validation_slices: true
+  require_legacy_full_and_recent_bar: true
+  oos_access: false
+round2_adaptation:
+  source_window: development_train
+  gross_negative: failure_reversal
+  empty_signal: delayed_confirmation
+  excessive_frequency_or_cost_drag: persistent_context
+  otherwise: pullback_confirmation
