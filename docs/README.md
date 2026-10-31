@@ -49,6 +49,8 @@ registry that prevents duplicate work.
 | Understand the business case, goals, scope, success criteria | [BRD.md](BRD.md) | [SAD.md](SAD.md) |
 | Understand system architecture, data flow, components, invariants | [SAD.md](SAD.md) | [indicators.md](indicators.md) |
 | **Generate a new strategy** (AI task: "follow the action list and do the downstream jobs") | `strategy/generated_strategy.md` (the *what*) → `strategy/WORKFLOW.md` (the *how*: steps 0–7 with gates) | `strategy/STRATEGY_REGISTRY.md`, [data_profile.md](data_profile.md) |
+| **Declare a new strategy** (preferred path — a strategy is *data*, not a file) | [`config/strategy_specs.yml`](../config/strategy_specs.yml) → `strategy/rule_spec.py` | [REFACTOR_PLAN.md](REFACTOR_PLAN.md) (why the spec language is the target architecture) |
+| Understand the **refactor direction** and why the strategy catalogue is being restructured | [REFACTOR_PLAN.md](REFACTOR_PLAN.md) | `strategy/rule_spec.py`, `strategy/rule_engine.py` |
 | Design / code / test a **new strategy** by hand | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
 | Understand the **feature/indicator engine** (305/270 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` + `library/` (custom: Supertrend, PSAR) |
 | Research **P1 indicators and conditional returns** | [indicator_research_20261031_report.md](indicator_research_20261031_report.md) | [indicator_research_P1_spec.md](indicator_research_P1_spec.md), `config/indicator_research.yml` |
@@ -107,6 +109,9 @@ moneta/
 │   ├── STRATEGY_BACKGROUND.md   ← read before coding a strategy (authoritative)
 │   ├── STRATEGY_REGISTRY.md     ← register/check strategies (authoritative)
 │   ├── engine.py                ← SHARED BACKTEST ENGINE (accounting + metrics; tested)
+│   ├── rule_spec.py             ← CANONICAL STRATEGY SPEC (a strategy is data, not code)
+│   ├── rule_engine.py           ← vectorised spec evaluation (bit-exact vs the per-bar oracle)
+│   ├── strategy_spec_runner.py  ← run a spec end-to-end (load once / compute once / reuse cost tiers)
 │   ├── trial_log.md             ← every attempt + "best-of-N" count (OOS discipline)
 │   ├── code/strategy_rsi.py     ← reference strategy (S-01), built on engine.py
 │   └── docs/strategy_rsi_report.md
@@ -123,6 +128,7 @@ moneta/
 │   ├── setting.example.yml      ← template (oci.par_url, oanda.*); setting.yml is git-ignored
 │   ├── history_map.yml          ← per-instrument backfill ranges
 │   ├── indicators.yml           ← indicator/feature spec (matches pipeline/indicators.py)
+│   ├── strategy_specs.yml       ← THE STRATEGY CATALOGUE (declarative specs; S-113..S-132)
 │   └── strategies.yml           ← evaluation windows + OOS holdout + trial-log rules
 ├── tests/                       ← pytest suite: pipeline + engine + metrics + strategy rules + OOS gate + custom indicators (no network)
 └── data/                        ← Parquet tables + metadata.duckdb (git-ignored contents)
