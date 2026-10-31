@@ -258,14 +258,24 @@ def run_strategy(
     cost_bps: float,
     long_only: bool,
     meta: dict | None = None,
+    *,
+    positions: np.ndarray | None = None,
 ) -> dict:
     """Run the shared engine over an already-built ``bars``/``rule`` pair.
 
     A frame can be reused across cost tiers, but each evaluation must receive
     a fresh rule. Signals and accounting are currently evaluated per cost tier;
     the scoped cache only removes repeated data reads.
+
+    ``positions``
+        An optional pre-computed position array (one entry per bar: the
+        position intended at that bar's open). When given, the engine skips
+        the per-bar rule call and the *same* array can be reused across every
+        cost tier of the same (strategy, instrument, window). This is the
+        "space for time" path — see :mod:`strategy.rule_engine`.
     """
-    result = run_backtest(bars, rule, cost_bps=cost_bps, long_only=long_only)
+    result = run_backtest(bars, rule, cost_bps=cost_bps, long_only=long_only,
+                          positions=positions)
     out = dict(meta or {})
     out["n_bars_blocked"] = int(bars.no_entry_mask.sum()) if bars.no_entry_mask is not None else 0
     out.update(result.to_dict())

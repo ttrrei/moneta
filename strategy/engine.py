@@ -224,10 +224,12 @@ def _max_drawdown(equity: np.ndarray) -> float:
 
 def run_backtest(
     bars: BarFrame,
-    rule: SignalRule,
+    rule: SignalRule | None = None,
     cost_bps: float = 2.0,
     long_only: bool = False,
     capture_equity: bool = False,
+    *,
+    positions: np.ndarray | None = None,
 ) -> BacktestResult:
     """Run the shared accounting over ``bars`` for ``rule`` at ``cost_bps``.
 
@@ -246,6 +248,25 @@ def run_backtest(
     The per-bar account equity is the compounded value of closed trades times
     the mark-to-market of any open trade — this drives ``total_return_pct`` and
     ``max_drawdown_pct``.
+
+    Two ways to supply the signal
+    -----------------------------
+    ``rule``
+        A :class:`SignalRule` whose ``desired_position(i)`` is called once per
+        bar. This is the original contract and remains fully supported.
+    ``positions``
+        A pre-computed ``int8`` array of length ``n``, where element ``i`` is
+        the position intended at the open of bar ``i``. Passing it skips the
+        per-bar Python call entirely. This is the "space for time" path: the
+        signal is materialised **once** per (strategy, instrument, window) and
+        reused across every cost tier, instead of being recomputed per tier.
+        The array must be exactly what ``rule.desired_position`` would have
+        produced — :func:`strategy.rule_engine.positions_from_spec` builds
+        such an array, and ``tests/test_rule_engine.py`` proves it matches the
+        per-bar oracle bar for bar.
+
+    The accounting itself is identical on both paths: the array is only a
+    cheaper way to obtain the same ``desired`` series.
     """
     o = np.asarray(bars.open, dtype=np.float64)
     c = np.asarray(bars.close, dtype=np.float64)
@@ -265,7 +286,14 @@ def run_backtest(
     # clamp ``0 if long_only and rule(...) < 0 else rule(...)`` evaluated it
     # twice whenever the answer was >= 0, which silently broke any rule with
     # side effects (legacy review 1.6).
-    desired = np.array([rule.desired_position(i) for i in range(n)], dtype=np.int8)
+    if positions is not None:
+        desired = np.asarray(positions, dtype=np.int8)
+        if desired.ndim != 1 or len(desired) != n:
+            raise ValueError("positions must be a 1-D array with one entry per bar")
+    elif rule is not None:
+        desired = np.array([rule.desired_position(i) for i in range(n)], dtype=np.int8)
+    else:
+        raise ValueError("run_backtest needs either a rule or a positions array")
     if long_only:
         desired = np.maximum(desired, 0)
 

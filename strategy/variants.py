@@ -8,7 +8,7 @@ from __future__ import annotations
 import importlib
 import inspect
 from copy import deepcopy
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
 
@@ -1209,7 +1209,11 @@ def resolve(strategy: str, variant: str = "base", *, cfg: dict | None = None,
     run_kwargs = deepcopy(params)
     if 113 <= int(sid[1:]) <= 132:
         from strategy.strategy_diverse_lib import RULES
-        params = {"rule_spec": asdict(RULES[sid])}
+        # Hash the *signal* only. The spec's annotation (family / role /
+        # lineage) is deliberately excluded, so relabelling a strategy can
+        # never change the identity of an already-pinned OOS run.
+        from strategy.rule_spec import signal_identity
+        params = {"rule_spec": signal_identity(RULES[sid])}
         run_kwargs = {}
     elif sid == "s01":
         params = {"rsi_column": "rsi_24", "enter_below": 30.0, "exit_above": 55.0}

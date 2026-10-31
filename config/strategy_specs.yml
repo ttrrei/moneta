@@ -1,0 +1,840 @@
+# config/strategy_specs.yml — the declarative strategy catalogue.
+#
+# A strategy here is DATA, not code. Each entry states:
+#
+#   hypothesis      the falsifiable claim this strategy trades;
+#   expected_trades the prior on opportunity frequency (a range);
+#   difference      what makes it distinct from an already-tried idea —
+#                   this is the human-readable dedup rationale, and it is
+#                   checked against the registry by scripts/check_results.py;
+#   family / role / side / horizon
+#                   the axes of the hypothesis space. `family` is what keeps
+#                   the *distribution* of research balanced (see
+#                   docs/REFACTOR_PLAN.md, stage R4); `role` is the regime the
+#                   idea is for, which is what makes a later iteration
+#                   targeted rather than a blind knob turn.
+#
+# The condition vocabulary is closed (strategy/rule_spec.py): above, below,
+# cross_up, cross_down, cross_above, cross_below. Every condition is causal
+# by construction — it compares bar j with bar j-1 at most.
+#
+# To add a strategy: copy an existing entry, change the hypothesis and the
+# conditions, and register it in strategy/STRATEGY_REGISTRY.md. Do NOT add a
+# new strategy_*_lib.py file — the shared runner (strategy/strategy_spec_runner.py)
+# already knows how to execute anything in this file.
+#
+# S-113..S-132 were migrated out of strategy/strategy_diverse_lib.py, which
+# previously held them as Python literals.
+
+strategies:
+  S-113:
+    sid: S-113
+    slug: aroon_adx_1h
+    name: 1h Aroon direction with ADX regime
+    timeframe: 1h
+    columns:
+    - aroon_up_24
+    - aroon_down_24
+    - adx_24
+    family: momentum
+    role: 1h ADX-confirmed directional regime
+    side: both
+    horizon: slow
+    hypothesis: Aroon direction changes may persist longer when 1h ADX confirms a directional regime.
+    expected_trades: 20–180
+    difference: 1h Aroon cross plus ADX confirmation; not a single-indicator Aroon flip.
+    enter_long:
+    - - aroon_up_24
+      - cross_above
+      - aroon_down_24
+    - - adx_24
+      - above
+      - 20
+    enter_short:
+    - - aroon_up_24
+      - cross_below
+      - aroon_down_24
+    - - adx_24
+      - above
+      - 20
+    exit_long:
+    - - aroon_up_24
+      - cross_below
+      - aroon_down_24
+    exit_short:
+    - - aroon_up_24
+      - cross_above
+      - aroon_down_24
+  S-114:
+    sid: S-114
+    slug: htf_ema_pullback
+    name: Higher-timeframe trend pullback
+    timeframe: 5m
+    columns:
+    - ema_dist_24
+    - h1_ema_dist_24
+    family: reversion
+    role: 5m pullback inside an established 1h trend
+    side: both
+    horizon: intraday
+    hypothesis: A 5m pullback recovery aligned with closed 1h direction may avoid counter-trend entries.
+    expected_trades: 20–220
+    difference: Pullback recovery in ATR-normalized EMA distance with a closed 1h context gate.
+    enter_long:
+    - - ema_dist_24
+      - cross_up
+      - -0.5
+    - - h1_ema_dist_24
+      - above
+      - 0
+    enter_short:
+    - - ema_dist_24
+      - cross_down
+      - 0.5
+    - - h1_ema_dist_24
+      - below
+      - 0
+    exit_long:
+    - - ema_dist_24
+      - cross_down
+      - 0
+    exit_short:
+    - - ema_dist_24
+      - cross_up
+      - 0
+  S-115:
+    sid: S-115
+    slug: htf_channel_break
+    name: Higher-timeframe-gated channel break
+    timeframe: 5m
+    columns:
+    - dist_high_24
+    - dist_low_24
+    - h1_adx_24
+    - dc_pos_24
+    family: breakout
+    role: 24-bar extreme break in a strong 1h regime
+    side: both
+    horizon: intraday
+    hypothesis: A break of the prior 24-bar extreme may persist when closed 1h ADX confirms trend strength.
+    expected_trades: 10–160
+    difference: Prior-extreme break plus 1h regime confirmation; distinct from raw channel followers.
+    enter_long:
+    - - dist_high_24
+      - cross_up
+      - 0
+    - - h1_adx_24
+      - above
+      - 20
+    enter_short:
+    - - dist_low_24
+      - cross_down
+      - 0
+    - - h1_adx_24
+      - above
+      - 20
+    exit_long:
+    - - dc_pos_24
+      - cross_down
+      - 0.5
+    exit_short:
+    - - dc_pos_24
+      - cross_up
+      - 0.5
+  S-116:
+    sid: S-116
+    slug: squeeze_clv_htf
+    name: Squeeze release with close-location direction
+    timeframe: 5m
+    columns:
+    - sqz_on_24
+    - bar_clv
+    - h1_ema_dist_24
+    family: breakout
+    role: squeeze release aligned with the closed 1h direction
+    side: both
+    horizon: intraday
+    hypothesis: Compression release with close-location aligned with 1h direction may filter weak breakouts.
+    expected_trades: 10–160
+    difference: Squeeze release requires close-location and 1h trend alignment.
+    enter_long:
+    - - sqz_on_24
+      - cross_down
+      - 0.5
+    - - bar_clv
+      - above
+      - 0.6
+    - - h1_ema_dist_24
+      - above
+      - 0
+    enter_short:
+    - - sqz_on_24
+      - cross_down
+      - 0.5
+    - - bar_clv
+      - below
+      - -0.6
+    - - h1_ema_dist_24
+      - below
+      - 0
+    exit_long:
+    - - sqz_on_24
+      - above
+      - 0.5
+    exit_short:
+    - - sqz_on_24
+      - above
+      - 0.5
+  S-117:
+    sid: S-117
+    slug: vwap_range_reclaim
+    name: Low-trend VWAP reclaim
+    timeframe: 5m
+    columns:
+    - close
+    - vwap
+    - h1_adx_24
+    family: reversion
+    role: weak 1h trend regime (low 1h ADX)
+    side: both
+    horizon: fast
+    hypothesis: In weak 1h trend regimes, a VWAP reclaim may capture intraday mean reversion.
+    expected_trades: 30–240
+    difference: VWAP crossing only under low 1h ADX; not a VWAP-stretch threshold retune.
+    enter_long:
+    - - close
+      - cross_above
+      - vwap
+    - - h1_adx_24
+      - below
+      - 20
+    enter_short:
+    - - close
+      - cross_below
+      - vwap
+    - - h1_adx_24
+      - below
+      - 20
+    exit_long:
+    - - close
+      - cross_below
+      - vwap
+    exit_short:
+    - - close
+      - cross_above
+      - vwap
+  S-118:
+    sid: S-118
+    slug: bb_chop_reversion
+    name: Band re-entry in a choppy regime
+    timeframe: 5m
+    columns:
+    - bb_pctb_24
+    - chop_24
+    - h1_adx_24
+    family: reversion
+    role: choppy local regime and weak 1h trend
+    side: both
+    horizon: intraday
+    hypothesis: Band re-entry may mean-revert when both local and 1h regimes are non-trending.
+    expected_trades: 20–180
+    difference: Bollinger %B re-entry requires local choppiness and weak 1h ADX.
+    enter_long:
+    - - bb_pctb_24
+      - cross_up
+      - 0.05
+    - - chop_24
+      - above
+      - 55
+    - - h1_adx_24
+      - below
+      - 20
+    enter_short:
+    - - bb_pctb_24
+      - cross_down
+      - 0.95
+    - - chop_24
+      - above
+      - 55
+    - - h1_adx_24
+      - below
+      - 20
+    exit_long:
+    - - bb_pctb_24
+      - cross_up
+      - 0.5
+    exit_short:
+    - - bb_pctb_24
+      - cross_down
+      - 0.5
+  S-119:
+    sid: S-119
+    slug: channel_position_continuation
+    name: Channel-position continuation
+    timeframe: 5m
+    columns:
+    - dist_high_60
+    - dist_low_60
+    - h1_ema_dist_24
+    family: breakout
+    role: 60-bar extreme break with 1h agreement
+    side: both
+    horizon: intraday
+    hypothesis: A break of the prior 60-bar extreme may continue when the closed 1h context agrees.
+    expected_trades: 10–140
+    difference: 60-bar prior-extreme breakout with explicit 1h direction and bilateral entries.
+    enter_long:
+    - - dist_high_60
+      - cross_up
+      - 0
+    - - h1_ema_dist_24
+      - above
+      - 0
+    enter_short:
+    - - dist_low_60
+      - cross_down
+      - 0
+    - - h1_ema_dist_24
+      - below
+      - 0
+    exit_long:
+    - - dist_high_60
+      - cross_down
+      - 0
+    exit_short:
+    - - dist_low_60
+      - cross_up
+      - 0
+  S-120:
+    sid: S-120
+    slug: dmi_regime_cross
+    name: Directional-movement cross with ADX filter
+    timeframe: 5m
+    columns:
+    - plus_di_60
+    - minus_di_60
+    - adx_60
+    family: momentum
+    role: established 60-bar ADX regime
+    side: both
+    horizon: slow
+    hypothesis: A slow directional-movement cross may reduce false starts when 60-bar ADX is established.
+    expected_trades: 10–160
+    difference: DI cross paired with a slow ADX regime gate.
+    enter_long:
+    - - plus_di_60
+      - cross_above
+      - minus_di_60
+    - - adx_60
+      - above
+      - 20
+    enter_short:
+    - - plus_di_60
+      - cross_below
+      - minus_di_60
+    - - adx_60
+      - above
+      - 20
+    exit_long:
+    - - plus_di_60
+      - cross_below
+      - minus_di_60
+    exit_short:
+    - - plus_di_60
+      - cross_above
+      - minus_di_60
+  S-121:
+    sid: S-121
+    slug: macd_er_1h
+    name: 1h MACD momentum in efficient regimes
+    timeframe: 1h
+    columns:
+    - macd_hist_atr_12_60
+    - er_24
+    family: momentum
+    role: directionally efficient 1h path
+    side: both
+    horizon: slow
+    hypothesis: A normalized 1h MACD zero-cross may persist when the path is directionally efficient.
+    expected_trades: 10–140
+    difference: 1h normalized MACD cross confirmed by efficiency ratio.
+    enter_long:
+    - - macd_hist_atr_12_60
+      - cross_up
+      - 0
+    - - er_24
+      - above
+      - 0.25
+    enter_short:
+    - - macd_hist_atr_12_60
+      - cross_down
+      - 0
+    - - er_24
+      - above
+      - 0.25
+    exit_long:
+    - - macd_hist_atr_12_60
+      - cross_down
+      - 0
+    exit_short:
+    - - macd_hist_atr_12_60
+      - cross_up
+      - 0
+  S-122:
+    sid: S-122
+    slug: psar_htf_alignment
+    name: PSAR reversal aligned with 1h trend
+    timeframe: 5m
+    columns:
+    - psar_dir_0p01_0p1
+    - h1_st_dir_24_3
+    family: momentum
+    role: PSAR flip with 1h SuperTrend agreement
+    side: both
+    horizon: intraday
+    hypothesis: A slow PSAR reversal may be more selective when the closed 1h SuperTrend agrees.
+    expected_trades: 15–160
+    difference: Slow-PSAR direction flip gated by independent 1h SuperTrend context.
+    enter_long:
+    - - psar_dir_0p01_0p1
+      - cross_up
+      - 0
+    - - h1_st_dir_24_3
+      - above
+      - 0
+    enter_short:
+    - - psar_dir_0p01_0p1
+      - cross_down
+      - 0
+    - - h1_st_dir_24_3
+      - below
+      - 0
+    exit_long:
+    - - psar_dir_0p01_0p1
+      - cross_down
+      - 0
+    exit_short:
+    - - psar_dir_0p01_0p1
+      - cross_up
+      - 0
+  S-123:
+    sid: S-123
+    slug: wick_band_reversal
+    name: Wick rejection at Bollinger extremes
+    timeframe: 5m
+    columns:
+    - bar_lower_wick_ratio
+    - bar_upper_wick_ratio
+    - bar_clv
+    - bb_pctb_60
+    family: reversion
+    role: failed extension at Bollinger extremes
+    side: both
+    horizon: intraday
+    hypothesis: Extreme band location plus rejection wick and close location may identify failed extensions.
+    expected_trades: 10–120
+    difference: Candlestick rejection pattern plus 60-bar band location.
+    enter_long:
+    - - bar_lower_wick_ratio
+      - above
+      - 0.6
+    - - bar_clv
+      - above
+      - 0.5
+    - - bb_pctb_60
+      - below
+      - 0.1
+    enter_short:
+    - - bar_upper_wick_ratio
+      - above
+      - 0.6
+    - - bar_clv
+      - below
+      - -0.5
+    - - bb_pctb_60
+      - above
+      - 0.9
+    exit_long:
+    - - bb_pctb_60
+      - cross_up
+      - 0.5
+    exit_short:
+    - - bb_pctb_60
+      - cross_down
+      - 0.5
+  S-124:
+    sid: S-124
+    slug: squeeze_volume_break
+    name: Squeeze release with activity-confirmed break
+    timeframe: 5m
+    columns:
+    - sqz_on_60
+    - dist_high_60
+    - dist_low_60
+    - vol_rel_60
+    - dc_pos_60
+    family: breakout
+    role: squeeze release with activity and an extreme break
+    side: both
+    horizon: intraday
+    hypothesis: A 60-bar squeeze release with activity and an extreme break may avoid low-energy false
+      breaks.
+    expected_trades: 5–100
+    difference: Compression release, tick-activity proxy, and prior-channel break.
+    enter_long:
+    - - sqz_on_60
+      - cross_down
+      - 0.5
+    - - dist_high_60
+      - cross_up
+      - 0
+    - - vol_rel_60
+      - above
+      - 1.2
+    enter_short:
+    - - sqz_on_60
+      - cross_down
+      - 0.5
+    - - dist_low_60
+      - cross_down
+      - 0
+    - - vol_rel_60
+      - above
+      - 1.2
+    exit_long:
+    - - dc_pos_60
+      - cross_down
+      - 0.5
+    exit_short:
+    - - dc_pos_60
+      - cross_up
+      - 0.5
+  S-125:
+    sid: S-125
+    slug: ema_dist_htf
+    name: ATR-normalized EMA trend with 1h SuperTrend
+    timeframe: 5m
+    columns:
+    - ema_dist_60
+    - h1_st_dir_120_3
+    family: momentum
+    role: 1h SuperTrend agreement
+    side: both
+    horizon: slow
+    hypothesis: A sustained normalized EMA-distance transition may carry when the slower 1h SuperTrend
+      agrees.
+    expected_trades: 10–130
+    difference: Slow EMA-distance transition plus higher-timeframe SuperTrend.
+    enter_long:
+    - - ema_dist_60
+      - cross_up
+      - 0
+    - - h1_st_dir_120_3
+      - above
+      - 0
+    enter_short:
+    - - ema_dist_60
+      - cross_down
+      - 0
+    - - h1_st_dir_120_3
+      - below
+      - 0
+    exit_long:
+    - - ema_dist_60
+      - cross_down
+      - 0
+    exit_short:
+    - - ema_dist_60
+      - cross_up
+      - 0
+  S-126:
+    sid: S-126
+    slug: atr_expansion_break
+    name: ATR expansion plus prior-extreme breakout
+    timeframe: 5m
+    columns:
+    - atr_pct_24
+    - atr_pct_60
+    - dist_high_24
+    - dist_low_24
+    - dc_pos_24
+    family: breakout
+    role: local ATR expansion against its slower baseline
+    side: both
+    horizon: intraday
+    hypothesis: Local volatility expansion relative to its slower baseline may confirm a channel break.
+    expected_trades: 5–120
+    difference: Relative volatility expansion and prior-extreme break, distinct from fixed ATR bands.
+    enter_long:
+    - - atr_pct_24
+      - cross_above
+      - atr_pct_60
+    - - dist_high_24
+      - cross_up
+      - 0
+    enter_short:
+    - - atr_pct_24
+      - cross_above
+      - atr_pct_60
+    - - dist_low_24
+      - cross_down
+      - 0
+    exit_long:
+    - - dc_pos_24
+      - cross_down
+      - 0.5
+    exit_short:
+    - - dc_pos_24
+      - cross_up
+      - 0.5
+  S-127:
+    sid: S-127
+    slug: cmf_htf_flow
+    name: Money-flow zero-cross with 1h trend alignment
+    timeframe: 5m
+    columns:
+    - cmf_12
+    - h1_ema_dist_24
+    family: flow
+    role: money-flow regime change with 1h agreement
+    side: both
+    horizon: intraday
+    hypothesis: A shorter money-flow regime change may be useful only when closed 1h price trend agrees.
+    expected_trades: 10–150
+    difference: CMF crossing with independent higher-timeframe trend gate.
+    enter_long:
+    - - cmf_12
+      - cross_up
+      - 0
+    - - h1_ema_dist_24
+      - above
+      - 0
+    enter_short:
+    - - cmf_12
+      - cross_down
+      - 0
+    - - h1_ema_dist_24
+      - below
+      - 0
+    exit_long:
+    - - cmf_12
+      - cross_down
+      - 0
+    exit_short:
+    - - cmf_12
+      - cross_up
+      - 0
+  S-128:
+    sid: S-128
+    slug: vwap_trend_reclaim
+    name: VWAP reclaim in strong 1h trend
+    timeframe: 5m
+    columns:
+    - close
+    - vwap
+    - h1_adx_24
+    - h1_ema_dist_24
+    family: reversion
+    role: strong 1h trend regime (VWAP reclaim as resumption)
+    side: both
+    horizon: fast
+    hypothesis: A session VWAP reclaim may be trend resumption when the closed 1h regime is strong and
+      aligned.
+    expected_trades: 10–120
+    difference: Session VWAP crossing with strong-ADX and 1h direction.
+    enter_long:
+    - - close
+      - cross_above
+      - vwap
+    - - h1_adx_24
+      - above
+      - 25
+    - - h1_ema_dist_24
+      - above
+      - 0
+    enter_short:
+    - - close
+      - cross_below
+      - vwap
+    - - h1_adx_24
+      - above
+      - 25
+    - - h1_ema_dist_24
+      - below
+      - 0
+    exit_long:
+    - - close
+      - cross_below
+      - vwap
+    exit_short:
+    - - close
+      - cross_above
+      - vwap
+  S-129:
+    sid: S-129
+    slug: htf_channel_break_120
+    name: 1h SuperTrend with 5m 120-bar breakout
+    timeframe: 5m
+    columns:
+    - h1_st_dir_24_3
+    - dist_high_120
+    - dist_low_120
+    - dc_pos_120
+    family: breakout
+    role: 120-bar extreme break with 1h SuperTrend agreement
+    side: both
+    horizon: slow
+    hypothesis: A long-window 5m extreme break may persist when the closed 1h SuperTrend agrees.
+    expected_trades: 10–120
+    difference: 120-bar prior-extreme breakout gated by 1h SuperTrend; distinct from the 24-bar ADX-gated
+      break.
+    enter_long:
+    - - dist_high_120
+      - cross_up
+      - 0
+    - - h1_st_dir_24_3
+      - above
+      - 0
+    enter_short:
+    - - dist_low_120
+      - cross_down
+      - 0
+    - - h1_st_dir_24_3
+      - below
+      - 0
+    exit_long:
+    - - dc_pos_120
+      - cross_down
+      - 0.5
+    exit_short:
+    - - dc_pos_120
+      - cross_up
+      - 0.5
+  S-130:
+    sid: S-130
+    slug: channel_efficiency_1h
+    name: 1h channel-position break in efficient trend
+    timeframe: 1h
+    columns:
+    - dc_pos_60
+    - er_60
+    family: breakout
+    role: efficient 1h trend
+    side: both
+    horizon: slow
+    hypothesis: A sustained 1h channel-position break may be more reliable when path efficiency is high.
+    expected_trades: 5–100
+    difference: 60-bar channel position and efficiency ratio on 1h bars.
+    enter_long:
+    - - dc_pos_60
+      - cross_up
+      - 0.8
+    - - er_60
+      - above
+      - 0.3
+    enter_short:
+    - - dc_pos_60
+      - cross_down
+      - 0.2
+    - - er_60
+      - above
+      - 0.3
+    exit_long:
+    - - dc_pos_60
+      - cross_down
+      - 0.5
+    exit_short:
+    - - dc_pos_60
+      - cross_up
+      - 0.5
+  S-131:
+    sid: S-131
+    slug: clv_activity_impulse
+    name: Close-location impulse with tick-activity confirmation
+    timeframe: 5m
+    columns:
+    - bar_clv
+    - vol_rel_6
+    - h1_adx_24
+    family: flow
+    role: elevated tick activity in an established regime
+    side: both
+    horizon: fast
+    hypothesis: Directional close-location with elevated tick activity may indicate an impulse in an established
+      regime.
+    expected_trades: 10–160
+    difference: Candle close-location and tick-activity proxy with independent 1h regime gate.
+    enter_long:
+    - - bar_clv
+      - cross_up
+      - 0.7
+    - - vol_rel_6
+      - above
+      - 1.2
+    - - h1_adx_24
+      - above
+      - 20
+    enter_short:
+    - - bar_clv
+      - cross_down
+      - -0.7
+    - - vol_rel_6
+      - above
+      - 1.2
+    - - h1_adx_24
+      - above
+      - 20
+    exit_long:
+    - - bar_clv
+      - cross_down
+      - 0
+    exit_short:
+    - - bar_clv
+      - cross_up
+      - 0
+  S-132:
+    sid: S-132
+    slug: bandwidth_expansion_htf
+    name: Band-width expansion aligned with 1h trend
+    timeframe: 5m
+    columns:
+    - bb_width_12
+    - bb_width_60
+    - h1_ema_dist_24
+    - dc_pos_24
+    family: volatility
+    role: bandwidth expansion phase change with 1h agreement
+    side: both
+    horizon: intraday
+    hypothesis: Short-window volatility expansion may signal a phase change when price location and 1h
+      trend agree.
+    expected_trades: 10–150
+    difference: Relative bandwidth expansion, channel location, and independent 1h direction.
+    enter_long:
+    - - bb_width_12
+      - cross_above
+      - bb_width_60
+    - - dc_pos_24
+      - above
+      - 0.6
+    - - h1_ema_dist_24
+      - above
+      - 0
+    enter_short:
+    - - bb_width_12
+      - cross_above
+      - bb_width_60
+    - - dc_pos_24
+      - below
+      - 0.4
+    - - h1_ema_dist_24
+      - below
+      - 0
+    exit_long:
+    - - dc_pos_24
+      - cross_down
+      - 0.5
+    exit_short:
+    - - dc_pos_24
+      - cross_up
+      - 0.5
