@@ -1,5 +1,10 @@
 # 8-Iteration Improvement Sweep — S-43 .. S-57 (2026-11-03)
 
+> Date provenance: `2026-11-03` is a historical batch identifier. Its CSV was
+> recorded by `804964d 2026-10-30T16:31:36+11:00`; the exact run time is unavailable. Full and
+> last_12m overlap. Signal corrections and evidence limits are described in
+> [the independent verification](../../docs/review_verification_20261031.md).
+
 Fifteen more new strategies (S-43 .. S-57) were designed, unit-tested, and
 then each was evaluated over **8 improvement iterations** on the shared
 in-sample matrix. This is the fourth batch in the series; S-08 .. S-17 were

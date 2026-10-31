@@ -461,6 +461,11 @@ def _finalize_fixture(tmp_path, monkeypatch, strategy="s01", status="finalist",
         "oos:\n  holdout_id: 'oos1'\n  holdout_start: '2025-08-01'\n"
         "  holdout_end: '2026-10-22'\n  max_strategies_per_holdout: 1\n"
         "strategies:\n  S-01: {timeframe: '5m'}\n  S-02: {timeframe: '1h'}\n")
+    import yaml
+    config = yaml.safe_load(cfg_path.read_text())
+    for spec in config["strategies"].values():
+        spec.update(oos_variant="base", oos_config_hash=rm.config_hash("5m", False, {}))
+    cfg_path.write_text(yaml.safe_dump(config))
     registry = tmp_path / "STRATEGY_REGISTRY.md"
     registry.write_text(
         "# Registry\n| ID | Name | Timeframe | Status |\n"
@@ -581,7 +586,7 @@ def test_oos_gate_refuses_after_any_consumption_walk_all_records(tmp_path, monke
     paths = _finalize_fixture(tmp_path, monkeypatch)
     ledger_p = paths["ledger"]
     rm._check_oos_once("s01")          # first run: allowed
-    rm._reserve_oos("s01", {"content_hash": 1}, {"n": 1})
+    rm._reserve_oos("s01", {"content_hash": 1}, {"variant": "base", "config_hash": rm.config_hash("5m", False, {})})
     with pytest.raises(SystemExit, match="already consumed holdout oos1"):
         rm._check_oos_once("s01")
     # Append more records (e.g. a completed record plus a different strategy's
@@ -609,7 +614,7 @@ def test_oos_gate_data_rebuild_does_not_reopen(tmp_path, monkeypatch):
     import strategy.run_matrix as rm
     _finalize_fixture(tmp_path, monkeypatch)
     rm._check_oos_once("s01", {"content_hash": 111}, {})
-    rm._reserve_oos("s01", {"content_hash": 111}, {})
+    rm._reserve_oos("s01", {"content_hash": 111}, {"variant": "base", "config_hash": rm.config_hash("5m", False, {})})
     # Same strategy + holdout, but the data was rebuilt to a new path/hash:
     # the lock is keyed on the holdout, not the data, so it is STILL refused.
     rebuilt = {"content_hash": 999, "path": "rebuilt.parquet"}
@@ -623,7 +628,7 @@ def test_oos_gate_d1_cap_refuses_second_strategy(tmp_path, monkeypatch):
     import strategy.run_matrix as rm
     _finalize_fixture(tmp_path, monkeypatch)
     rm._check_oos_once("s01")
-    rm._reserve_oos("s01", {"content_hash": 1}, {})
+    rm._reserve_oos("s01", {"content_hash": 1}, {"variant": "base", "config_hash": rm.config_hash("5m", False, {})})
     with pytest.raises(SystemExit, match="spent"):
         rm._check_oos_once("s02")
 
@@ -634,7 +639,7 @@ def test_oos_gate_crash_after_reserve_still_refuses(tmp_path, monkeypatch):
     import strategy.run_matrix as rm
     _finalize_fixture(tmp_path, monkeypatch)
     rm._check_oos_once("s01")
-    rm._reserve_oos("s01", {"content_hash": 1}, {})  # no _complete_oos -> stays reserved
+    rm._reserve_oos("s01", {"content_hash": 1}, {"variant": "base", "config_hash": rm.config_hash("5m", False, {})})  # no _complete_oos -> stays reserved
     ledger = rm._load_oos_ledger()
     assert ledger["consumptions"][0]["status"] == "reserved"
     with pytest.raises(SystemExit, match="already consumed holdout oos1"):
@@ -645,7 +650,7 @@ def test_oos_gate_complete_marks_completed(tmp_path, monkeypatch):
     """_complete_oos flips the latest `reserved` record to `completed`."""
     import strategy.run_matrix as rm
     _finalize_fixture(tmp_path, monkeypatch)
-    rm._reserve_oos("s01", {"content_hash": 1}, {})
+    rm._reserve_oos("s01", {"content_hash": 1}, {"variant": "base", "config_hash": rm.config_hash("5m", False, {})})
     rm._complete_oos("s01")
     ledger = rm._load_oos_ledger()
     assert ledger["consumptions"][0]["status"] == "completed"
@@ -921,10 +926,8 @@ def _reserve_env(tmp_path, monkeypatch, pinned=None):
     cfg = {
         "oos": {"holdout_id": "oos1", "holdout_start": "2025-08-01",
                 "holdout_end": "2026-10-22", "max_strategies_per_holdout": 1},
-        "strategies": {"S-99": {"timeframe": "5m"}}
-                       if pinned is None
-                       else {"S-99": {"timeframe": "5m",
-                                      "oos_config_hash": pinned}},
+        "strategies": {"S-99": {"timeframe": "5m", "oos_variant": "base",
+                                  "oos_config_hash": pinned or rm.config_hash("5m", False, {})}},
     }
     ledger = tmp_path / "oos_ledger.json"
     ledger.write_text('{"version": 1, "consumptions": []}')
@@ -934,13 +937,13 @@ def _reserve_env(tmp_path, monkeypatch, pinned=None):
 
 
 def test_reserve_records_config_hash(tmp_path, monkeypatch):
-    """An un-pinned reserve records the manifest's config_hash on the ledger
+    """A pinned reserve records the manifest's config_hash on the ledger
     record (additive — existing ledger semantics unchanged)."""
     import strategy.run_matrix as rm
     ledger = _reserve_env(tmp_path, monkeypatch)
     h = rm.config_hash("5m", False, {})
     rec = rm._reserve_oos("s99", {"fingerprint": "x"},
-                          {"strategy": "s99", "config_hash": h})
+                          {"strategy": "s99", "variant": "base", "config_hash": h})
     assert rec["config_hash"] == h
     import json
     saved = json.loads(ledger.read_text())
@@ -959,10 +962,10 @@ def test_reserve_refuses_when_pin_mismatches(tmp_path, monkeypatch):
     wrong = rm.config_hash("5m", False, {})  # different config
     with pytest.raises(SystemExit, match="pinned to OOS config_hash"):
         rm._reserve_oos("s99", {"fingerprint": "x"},
-                        {"strategy": "s99", "config_hash": wrong})
+                        {"strategy": "s99", "variant": "base", "config_hash": wrong})
     # and a manifest with no hash at all is refused too
     with pytest.raises(SystemExit, match="carries no config_hash"):
-        rm._reserve_oos("s99", {"fingerprint": "x"}, {"strategy": "s99"})
+        rm._reserve_oos("s99", {"fingerprint": "x"}, {"strategy": "s99", "variant": "base"})
 
 
 def test_reserve_allows_when_pin_matches(tmp_path, monkeypatch):
@@ -972,7 +975,7 @@ def test_reserve_allows_when_pin_matches(tmp_path, monkeypatch):
     pinned = rm.config_hash("5m", True, {"k": 0.3})
     ledger = _reserve_env(tmp_path, monkeypatch, pinned=pinned)
     rec = rm._reserve_oos("s99", {"fingerprint": "x"},
-                          {"strategy": "s99", "config_hash": pinned})
+                          {"strategy": "s99", "variant": "base", "config_hash": pinned})
     assert rec["config_hash"] == pinned
 
 
@@ -1297,6 +1300,11 @@ def test_reserve_oos_concurrent_only_one_wins(tmp_path, monkeypatch):
         "  holdout_end: '2026-10-22'\n  max_strategies_per_holdout: 1\n"
         "windows:\n  oos: {since: '2025-08-01', until: '2026-10-23'}\n"
         "strategies:\n  S-01: {timeframe: '5m'}\n  S-02: {timeframe: '1h'}\n")
+    import yaml
+    config = yaml.safe_load(cfg.read_text())
+    for spec in config["strategies"].values():
+        spec.update(oos_variant="base", oos_config_hash=rm.config_hash("5m", False, {}))
+    cfg.write_text(yaml.safe_dump(config))
     ledger = tmp_path / "oos_ledger.json"
     ledger.write_text(json.dumps(
         {"version": 1, "consumptions": []}), encoding="utf-8")
@@ -1309,7 +1317,7 @@ def test_reserve_oos_concurrent_only_one_wins(tmp_path, monkeypatch):
     def _reserve(sid):
         barrier.wait()
         try:
-            rm._reserve_oos(sid, {"n": 1}, {"x": 1})
+            rm._reserve_oos(sid, {"n": 1}, {"variant": "base", "config_hash": rm.config_hash("5m", False, {})})
             results["ok"] += 1
         except SystemExit:
             results["err"] += 1

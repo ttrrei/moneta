@@ -51,10 +51,9 @@ class H1EdistState:
         if not np.isfinite(self.ed[j]):
             return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
             prev = self.ed[j-1] if j >= 1 else np.nan
             in_band = self.ed[j] > 0 and self.ed[j] < self.k_in

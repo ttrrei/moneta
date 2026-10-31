@@ -77,6 +77,8 @@ def load_bars(
 
     from strategy import oos_token as _oos
     _oos.assert_access(until, oos_token)
+    _since = _oos.normalize_bound(since) if since else None
+    _until = _oos.normalize_bound(until) if until else None
 
     conn = duckdb.connect()
     try:
@@ -85,10 +87,10 @@ def load_bars(
         conn.execute("SET TimeZone = 'UTC'")
         where = ["instrument = ?", RSI_COL + " IS NOT NULL"]
         params: list = [parquet, instrument]
-        if since:
+        if _since:
             where.append("time >= ?")
-            params.append(since)
-        if until:
+            params.append(_since)
+        if _until:
             if _oos.is_holdout_until(until):
                 # OOS/holdout read: exclusive end (first day after the
                 # holdout) → ``time < until`` excludes that day's first bar.
@@ -96,7 +98,7 @@ def load_bars(
             else:
                 # In-sample read: ``until`` is the *inclusive* last bar's date.
                 where.append("time <= ?")
-            params.append(until)
+            params.append(_until)
         sql = (
             "SELECT time, open, close, is_gap_bar, is_near_market_close, " + RSI_COL +
             " FROM read_parquet(?) WHERE " + " AND ".join(where) +

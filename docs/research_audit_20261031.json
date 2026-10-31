@@ -1,0 +1,188 @@
+{
+  "cross_market_configs_in_both_overlapping_windows": [
+    {
+      "strategy": "s109",
+      "variant": "ema_gate"
+    },
+    {
+      "strategy": "s55",
+      "variant": "looser"
+    }
+  ],
+  "descriptive_failure_buckets": {
+    "empty_signal": 15,
+    "no_win_and_over_54_trades_per_year": 1274,
+    "one_instrument_win": 62,
+    "other_no_win": 239,
+    "two_or_more_instrument_wins": 10
+  },
+  "diverse_batch_cells_at_2bps": 120,
+  "diverse_batch_winning_cells_at_2bps": 0,
+  "ledger_sha256": "3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6",
+  "registered_strategies": 132,
+  "s109_ema_gate_at_2bps": [
+    {
+      "buyhold_return_pct": "1538.05",
+      "cost_bps": "2.0",
+      "edge_vs_bh_pct": "-646.19",
+      "error": "",
+      "exposure_pct": "87.49",
+      "instrument": "BTC_USD",
+      "max_drawdown_pct": "66.6",
+      "n_trades": "94",
+      "sharpe_weekly": "1.03",
+      "strategy": "s109",
+      "total_return_pct": "891.86",
+      "trades_per_year": "16.86",
+      "variant": "ema_gate",
+      "win_rate_pct": "55.32",
+      "window": "full"
+    },
+    {
+      "buyhold_return_pct": "82.36",
+      "cost_bps": "2.0",
+      "edge_vs_bh_pct": "-21.62",
+      "error": "",
+      "exposure_pct": "96.24",
+      "instrument": "BTC_USD",
+      "max_drawdown_pct": "34.82",
+      "n_trades": "9",
+      "sharpe_weekly": "1.55",
+      "strategy": "s109",
+      "total_return_pct": "60.74",
+      "trades_per_year": "9.03",
+      "variant": "ema_gate",
+      "win_rate_pct": "66.67",
+      "window": "last_12m"
+    },
+    {
+      "buyhold_return_pct": "2.32",
+      "cost_bps": "2.0",
+      "edge_vs_bh_pct": "4.03",
+      "error": "",
+      "exposure_pct": "97.53",
+      "instrument": "EUR_USD",
+      "max_drawdown_pct": "22.82",
+      "n_trades": "17",
+      "sharpe_weekly": "0.18",
+      "strategy": "s109",
+      "total_return_pct": "6.35",
+      "trades_per_year": "3.05",
+      "variant": "ema_gate",
+      "win_rate_pct": "41.18",
+      "window": "full"
+    },
+    {
+      "buyhold_return_pct": "5.62",
+      "cost_bps": "2.0",
+      "edge_vs_bh_pct": "3.81",
+      "error": "",
+      "exposure_pct": "93.8",
+      "instrument": "EUR_USD",
+      "max_drawdown_pct": "9.17",
+      "n_trades": "3",
+      "sharpe_weekly": "0.96",
+      "strategy": "s109",
+      "total_return_pct": "9.43",
+      "trades_per_year": "3.01",
+      "variant": "ema_gate",
+      "win_rate_pct": "66.67",
+      "window": "last_12m"
+    },
+    {
+      "buyhold_return_pct": "113.27",
+      "cost_bps": "2.0",
+      "edge_vs_bh_pct": "5.38",
+      "error": "",
+      "exposure_pct": "97.68",
+      "instrument": "XAU_USD",
+      "max_drawdown_pct": "23.13",
+      "n_trades": "20",
+      "sharpe_weekly": "0.93",
+      "strategy": "s109",
+      "total_return_pct": "118.65",
+      "trades_per_year": "3.59",
+      "variant": "ema_gate",
+      "win_rate_pct": "55.0",
+      "window": "full"
+    },
+    {
+      "buyhold_return_pct": "34.41",
+      "cost_bps": "2.0",
+      "edge_vs_bh_pct": "2.02",
+      "error": "",
+      "exposure_pct": "98.6",
+      "instrument": "XAU_USD",
+      "max_drawdown_pct": "10.64",
+      "n_trades": "2",
+      "sharpe_weekly": "2.0",
+      "strategy": "s109",
+      "total_return_pct": "36.43",
+      "trades_per_year": "2.01",
+      "variant": "ema_gate",
+      "win_rate_pct": "100.0",
+      "window": "last_12m"
+    }
+  ],
+  "scope": "committed research evidence only; no market data or holdout read",
+  "statuses": {
+    "parked": 2,
+    "rejected": 130
+  },
+  "sweep_cells_at_2bps": 4800,
+  "sweep_distinct_configs": 800,
+  "sweep_groups_at_2bps": 1600,
+  "sweep_repeated_identical_cells": 1080,
+  "sweep_sources": [
+    {
+      "path": "strategy/results/iterations_2026-10-30.csv",
+      "rows": 1080,
+      "sha256": "922d6b887ad40ce62a992b01b83361b042c052059d79c969f8646b7d86a77a4c"
+    },
+    {
+      "path": "strategy/results/iterations_2026-11-01.csv",
+      "rows": 2160,
+      "sha256": "d7caf48d1b669e0cd2b80d232d5a7fe2bcf8834a38d481c4b9288a92cb524154"
+    },
+    {
+      "path": "strategy/results/iterations_2026-11-02.csv",
+      "rows": 2160,
+      "sha256": "f9f68449e6423cf3f3e2297f41c9ec1b3ed5017d76be0080ec5fcab00bc7d421"
+    },
+    {
+      "path": "strategy/results/iterations_2026-11-03.csv",
+      "rows": 2160,
+      "sha256": "a638a5318212323d4f75c04379870e2447be48deb7aa0d19390c69867efa5d48"
+    },
+    {
+      "path": "strategy/results/iterations_2026-11-04.csv",
+      "rows": 2160,
+      "sha256": "cb1a889b49975a061b134def8131a52924003d3b101d34473bfa091074f40525"
+    },
+    {
+      "path": "strategy/results/iterations_2026-11-05.csv",
+      "rows": 2160,
+      "sha256": "e6eab0fbb25bd4733761753fbb262ae3d8b841af4212ca4b394bdb9d4e67e96b"
+    },
+    {
+      "path": "strategy/results/iterations_2026-11-06.csv",
+      "rows": 2160,
+      "sha256": "c9ab152f0c0fdffa2c25de6426ff16fbcd0a86f97c1db2721e73ea9f107301e7"
+    },
+    {
+      "path": "strategy/results/iterations_2026-11-07.csv",
+      "rows": 1440,
+      "sha256": "f07d9cdcd9afe79c5981cf477c06cce9ac40cb3f0750e5e136f38ef9425657c8"
+    }
+  ],
+  "sweep_stored_rows": 15480,
+  "sweep_unique_cells": 14400,
+  "trial_dates": {
+    "2026-10-28": 3,
+    "2026-10-29": 4,
+    "2026-10-30": 125
+  },
+  "trial_rows": 132,
+  "winning_cells_at_2bps": 83,
+  "winning_cells_with_at_most_two_trades": 17
+}

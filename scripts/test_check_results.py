@@ -332,6 +332,11 @@ def _void_with_output(w: Path) -> None:
 CASES = [
     ("baseline: a legal repo must PASS", set(), 0, None, lambda w: None),
 
+    ("rejected strategy missing from no-repeat table -> X17", {"X17"}, 1, None,
+     lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md",
+                          "5m SuperTrend 24/2 follower (S-05)",
+                          "5m SuperTrend 24/2 follower (record removed)")),
+
     ("window cap did not apply -> W3 + W4", {"W3", "W4"}, 1, None,
      lambda w: edit_csv(w / "strategy/results/S05/summary.csv",
                         lambda r: {**r, "end": "2026-10-24 07:55:00+11:00"}
@@ -384,7 +389,7 @@ CASES = [
     # §1.6 (check F): a `finalist` must actually beat the in-sample bar.
     # S-05 beats 0 of 3 instruments at 2 bps (and has 10402 trades), so making
     # it a `finalist` must be flagged as not satisfying the promotion bar.
-    ("finalist row fails the in-sample bar -> F", {"F"}, 1, None,
+    ("unpinned finalist fails the in-sample bar and pin check -> F + X16", {"F", "X16"}, 1, None,
      lambda w: replace_in(w / "strategy/STRATEGY_REGISTRY.md", S05_ROW,
                           S05_ROW.replace("**rejected**", "**finalist**"))),
 

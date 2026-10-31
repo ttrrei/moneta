@@ -73,8 +73,8 @@ class WillRState:
                 crossed = w < self.enter_below and (w0 >= self.enter_below
                                                     if np.isfinite(w0) else True)
                 gate_ok = True
-                if self.ema_gate and np.isfinite(self.ema[j]):
-                    gate_ok = self.close[j] > self.ema[j]
+                if self.ema_gate:
+                    gate_ok = strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
                 if crossed and gate_ok:
                     self.state = 1
         elif np.isfinite(w0) and w > self.exit_above and w0 <= self.exit_above:

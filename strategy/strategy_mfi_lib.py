@@ -69,8 +69,8 @@ class MfiState:
             crossed = m < self.enter_below and (m0 >= self.enter_below
                                                 if np.isfinite(m0) else True)
             gate_ok = True
-            if self.ema_gate and np.isfinite(self.ema[j]):
-                gate_ok = self.close[j] > self.ema[j]
+            if self.ema_gate:
+                gate_ok = strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
             if crossed and gate_ok:
                 self.state = 1
         elif m >= self.exit_above:

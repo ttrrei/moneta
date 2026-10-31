@@ -1,5 +1,10 @@
 # 6-Iteration Improvement Sweep — S-18 .. S-27 (2026-11-01)
 
+> Date provenance: `2026-11-01` is a historical batch identifier. Its CSV was
+> recorded by `e6350d5 2026-10-30T07:44:56+11:00`; the exact run time is unavailable. Full and
+> last_12m overlap. Signal corrections and evidence limits are described in
+> [the independent verification](../../docs/review_verification_20261031.md).
+
 Ten more new strategies (S-18 .. S-27) were designed, unit-tested, and then each
 was evaluated over **6 improvement iterations** on the shared in-sample matrix.
 This is the second batch in the same session; S-08 .. S-17 were the first

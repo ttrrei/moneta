@@ -59,12 +59,11 @@ class DcMidState:
             if not (np.isfinite(self.close_sig[j-1]) and np.isfinite(self.mid[j-1])):
                 return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
-            if self.close_sig[j] > self.mid[j] and self.close_sig[j-1] <= self.mid[j-1]:
+            if j >= 1 and self.close_sig[j] > self.mid[j] and self.close_sig[j-1] <= self.mid[j-1]:
                 self.state = 1
 
         elif self.close_sig[j] <= self.mid[j]:

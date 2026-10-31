@@ -4,8 +4,8 @@ Thin CLI over :mod:`strategy.strategy_stdist_lib` — the rule and all
 accounting live there (shared engine, shared strategy core). Run from the
 repo root::
 
-    python strategy/code/strategy_stdist.py.py
-    python strategy/code/strategy_stdist.py.py --instrument BTC_USD --cost-bps 0
+    python strategy/code/strategy_stdist.py
+    python strategy/code/strategy_stdist.py --instrument BTC_USD --cost-bps 0
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ def main() -> None:
                          "Off by default to match the documented baseline.")
     ap.add_argument("--ema-gate", action="store_true",
                     help="only enter while the previous closed bar's close > ema_24.")
-        ap.add_argument("--th_in", type=float, default=0.5,
+    ap.add_argument("--th_in", type=float, default=0.5,
                     help="th_in (default 0.5)")
     ap.add_argument("--th_exit", type=float, default=-0.5,
                     help="th_exit (default -0.5)")

@@ -57,10 +57,9 @@ class DiSpreadState:
             if not (np.isfinite(self.pdi[j-1]) and np.isfinite(self.mdi[j-1])):
                 return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
             prev_spread = (self.pdi[j-1] - self.mdi[j-1]) if j >= 1 else np.nan
             if (self.pdi[j] - self.mdi[j]) > self.k_in and (not np.isfinite(prev_spread) or (self.pdi[j-1] - self.mdi[j-1]) <= self.k_in):

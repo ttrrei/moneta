@@ -4,8 +4,8 @@ Thin CLI over :mod:`strategy.strategy_kcbreak_lib` — the rule and all
 accounting live there (shared engine, shared strategy core). Run from the
 repo root::
 
-    python strategy/code/strategy_kcbreak.py.py
-    python strategy/code/strategy_kcbreak.py.py --instrument BTC_USD --cost-bps 0
+    python strategy/code/strategy_kcbreak.py
+    python strategy/code/strategy_kcbreak.py --instrument BTC_USD --cost-bps 0
 """
 
 from __future__ import annotations

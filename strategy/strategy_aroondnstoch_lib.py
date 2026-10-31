@@ -65,10 +65,9 @@ class AroonStochState:
             if not (np.isfinite(self.ad[j-1]) and np.isfinite(self.k[j-1])):
                 return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
             prev_ok = (self.ad[j-1] < self.k_in and self.k[j-1] > self.d_in and self.close_sig[j-1] > self.ema_sig[j-1]) if j >= 1 else False
             if self.ad[j] < self.k_in and self.k[j] > self.d_in and self.close_sig[j] > self.ema_sig[j] and not prev_ok:

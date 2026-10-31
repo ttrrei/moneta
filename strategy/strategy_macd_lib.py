@@ -77,8 +77,8 @@ class MacdState:
                 ok = False
             elif ok and self.atr_min > 0 and a > 0:
                 ok = abs(h) / a >= self.atr_min
-            if ok and self.ema_gate and np.isfinite(self.ema[j]):
-                ok = self.close[j] > self.ema[j]
+            if ok and self.ema_gate:
+                ok = strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
             if ok:
                 self.state = 1
         else:

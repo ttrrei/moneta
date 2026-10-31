@@ -61,10 +61,9 @@ class VolConvergeState:
         if not np.isfinite(self.ema_sig[j]):
             return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
             if self.volr[j] < self.vmin and self.close_sig[j] > self.ema_sig[j]:
                 self.state = 1

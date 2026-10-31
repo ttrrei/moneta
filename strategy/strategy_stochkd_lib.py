@@ -57,10 +57,9 @@ class StochKdState:
             if not (np.isfinite(self.k[j-1]) and np.isfinite(self.d[j-1])):
                 return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
             prev_ok = (self.k[j-1] > self.d[j-1]) if j >= 1 else False
             if self.k[j] > self.d[j] and self.k[j] < self.k_in and not prev_ok:

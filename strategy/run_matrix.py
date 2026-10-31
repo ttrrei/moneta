@@ -38,7 +38,7 @@ import json
 import re
 import sys
 import threading
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 try:
@@ -54,6 +54,7 @@ if str(_REPO_ROOT) not in sys.path:
 import strategy.registry as registry_mod  # noqa: E402  (shared gate parsing, §1.6)
 import strategy.schema as schema         # noqa: E402  (shared CSV contract + OOS pass/fail, §2.4/§3.2)
 import strategy.oos_token as _oos_token_mod  # noqa: E402  (data-layer holdout gate + token mint)
+from strategy.variants import STRATEGIES as _SWEEP_MODULES, get_runner, resolve
 
 CONFIG_PATH = _REPO_ROOT / "config" / "strategies.yml"
 TRIAL_LOG = _REPO_ROOT / "strategy" / "trial_log.md"
@@ -289,6 +290,13 @@ _register_s26()
 _register_s27()
 _register_diverse_batch()
 
+# Legacy sweep strategies use the same callable and variant resolver here.
+for _sid in _SWEEP_MODULES:
+    if _sid not in _STRATEGIES:
+        def _legacy_runner(*, _strategy=_sid, **kwargs):
+            return get_runner(_strategy)(**kwargs)
+        _STRATEGIES[_sid] = {"label": _sid.upper(), "run": _legacy_runner}
+
 
 def _load_config() -> dict:
     import yaml
@@ -397,8 +405,8 @@ def _talib_version() -> str | None:
         return None
 
 
-def _data_fingerprint(parquet: str) -> dict:
-    """Audit identity of the OOS dataset (repo_review_20261029 §2.3).
+def _data_fingerprint(parquet: str, window: str = "oos") -> dict:
+    """Audit identity of a declared evaluation window (default: OOS).
 
     The fingerprint is an **audit field** — it is recorded in the ledger but is
     *not* part of the lock key (the lock is keyed on (strategy, holdout_id),
@@ -406,20 +414,27 @@ def _data_fingerprint(parquet: str) -> dict:
     consumption saw, and so a genuinely different holdout is distinguishable.
 
     It hashes the OHLCV columns — ``instrument, time, open, high, low, close,
-    volume`` (whichever exist) — over the holdout interval only, using DuckDB's
+    volume`` (whichever exist) — over the selected interval only, using DuckDB's
     64-bit ``hash()`` summed as an order-independent :class:`HUGEINT` (a
     rebuild that only reorders rows keeps the same hash). ``open`` and ``close``
     must both be present — if either is missing the fingerprint fails loudly
     (the engine fills at ``open[T+1]``, so ``open`` must be covered). Also
     recorded: row count, first/last bar, ``sha256(config/indicators.yml)``, the
     git commit of ``pipeline/indicators.py``, and the TA-Lib version.
+    In-sample runs fingerprint ``full`` and never query holdout rows.
     """
     import duckdb  # lazy: keeps the OOS-lock path importable without duckdb at module load
     p = Path(parquet)
     cfg = _load_config()
-    oos_win = (cfg.get("windows") or {}).get("oos") or {}
-    holdout_start = oos_win.get("since") or cfg["oos"].get("holdout_start")
-    holdout_until = oos_win.get("until")
+    win = (cfg.get("windows") or {}).get(window) or {}
+    holdout_start = win.get("since")
+    holdout_until = win.get("until")
+    if window == "oos":
+        holdout_start = holdout_start or cfg["oos"].get("holdout_start")
+    else:
+        _oos_token_mod.assert_access(holdout_until)
+    lower = _oos_token_mod.normalize_bound(holdout_start) if holdout_start else None
+    upper = _oos_token_mod.normalize_bound(holdout_until) if holdout_until else None
 
     cols = _parquet_columns(str(p))
     if "open" not in cols or "close" not in cols:
@@ -433,18 +448,22 @@ def _data_fingerprint(parquet: str) -> dict:
     hashed_cols = [c for c in hashed_cols if c in cols]
     row_hash = " || '#' || ".join(f"cast({c} as VARCHAR)" for c in hashed_cols)
 
-    where = ["time >= ?"]
-    params: list = [str(p), holdout_start]
-    if holdout_until:
+    where = ["TRUE"]
+    params: list = [str(p)]
+    if lower:
+        where.append("time >= ?")
+        params.append(lower)
+    if upper:
         # Exclusive end: the OOS ``until`` is the first day *after* the
         # holdout; ``time < until`` counts exactly the bars the holdout read
         # serves (consistent with the loader's half-open holdout bound).
-        where.append("time < ?")
-        params.append(holdout_until)
+        where.append("time < ?" if window == "oos" else "time <= ?")
+        params.append(upper)
     where_sql = " AND ".join(where)
 
     con = duckdb.connect()
     try:
+        con.execute("SET TimeZone = 'UTC'")
         n, tmin, tmax, h = con.execute(
             f"SELECT count(*) n, min(time) tmin, max(time) tmax, "
             f"sum(hash({row_hash}))::HUGEINT h "
@@ -455,13 +474,14 @@ def _data_fingerprint(parquet: str) -> dict:
 
     return {
         "path": str(p),
+        "window": window,
         "holdout_start": holdout_start,
         "holdout_until": holdout_until,
         "hashed_columns": hashed_cols,
         "rows": int(n),
         "tmin": str(tmin),
         "tmax": str(tmax),
-        "content_hash": int(h),
+        "content_hash": int(h) if h is not None else 0,
         "indicators_sha256": _sha256_file(_REPO_ROOT / "config" / "indicators.yml"),
         "indicators_git_commit": _git_commit_of(_REPO_ROOT / "pipeline" / "indicators.py"),
         "talib_version": _talib_version(),
@@ -556,8 +576,7 @@ def _pinned_config_hash(cfg: dict, strategy: str) -> "str | None":
 
     A pin is written by a human at promotion time (WORKFLOW Step 6, review
     follow-up #3 §C3/C4) so the OOS run is bound to the exact in-sample
-    configuration that was adjudicated. When absent, the hash is still *recorded*
-    in the ledger (audit) but nothing is refused.
+    configuration that was adjudicated. An absent pin refuses OOS access.
     """
     import strategy.registry as _reg
 
@@ -568,6 +587,26 @@ def _pinned_config_hash(cfg: dict, strategy: str) -> "str | None":
             pinned = (v or {}).get("oos_config_hash")
             return str(pinned) if pinned else None
     return None
+
+
+def _check_config_pin(cfg: dict, strategy: str, manifest: dict) -> None:
+    """Require both nomination fields before preflight or ledger mutation."""
+    sid = _registered_id(cfg, strategy)
+    spec = (cfg.get("strategies") or {}).get(sid) or {}
+    pinned = _pinned_config_hash(cfg, strategy)
+    variant = spec.get("oos_variant")
+    if not isinstance(variant, str) or not variant.strip() or not pinned \
+            or re.fullmatch(r"[0-9a-f]{64}", pinned) is None:
+        raise SystemExit(f"Strategy {strategy} requires oos_variant and a valid "
+                         "oos_config_hash before OOS; use scripts/pin_finalist.py.")
+    if manifest.get("variant") != variant:
+        raise SystemExit(f"Strategy {strategy} is pinned to OOS variant {variant!r}; "
+                         f"refusing variant {manifest.get('variant')!r}.")
+    if not manifest.get("config_hash"):
+        raise SystemExit(f"Strategy {strategy} carries no config_hash; refusing OOS.")
+    if manifest["config_hash"] != pinned:
+        raise SystemExit(f"Strategy {strategy} is pinned to OOS config_hash {pinned} "
+                         f"but the run hashes to {manifest['config_hash']}.")
 
 
 def _oos_ledger_path() -> Path:
@@ -695,33 +734,13 @@ def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> dict:
     holdout_id, max_per, h_start, h_end = _oos_holdout_spec(cfg)
     sid = registry_mod.norm_id(strategy)
 
+    _check_config_pin(cfg, strategy, manifest)
+
     with _oos_ledger_lock():
         # Re-load and re-validate under the lock — a concurrent process may
         # have appended a record after the caller's pre-check.
         ledger = _load_oos_ledger()
         consumptions = ledger["consumptions"]
-
-        # (a0) config_hash: pin the exact config the finalist runs in OOS
-        #     (review follow-up #3 §C4). The manifest carries the hash of
-        #     (timeframe, entry_guard, rule_params); when a human has pinned a
-        #     hash in config (oos_config_hash), the run is refused unless they
-        #     match — a finalist may not be evaluated on a configuration
-        #     different from the one adjudicated in-sample.
-        manifest_cfg_hash = manifest.get("config_hash")
-        pinned = _pinned_config_hash(cfg, strategy)
-        if pinned is not None:
-            if manifest_cfg_hash is None:
-                raise SystemExit(
-                    f"Strategy {sid} is pinned to OOS config_hash {pinned} "
-                    f"(config/strategies.yml) but the run carries no config_hash "
-                    f"— refusing to start (the OOS config must be pinned).")
-            if manifest_cfg_hash != pinned:
-                raise SystemExit(
-                    f"Strategy {sid} is pinned to OOS config_hash {pinned} "
-                    f"(config/strategies.yml) but the run's config hashes to "
-                    f"{manifest_cfg_hash} — refusing to evaluate a "
-                    f"configuration different from the one adjudicated "
-                    f"in-sample (review follow-up #3 §C4).")
 
         # (a) Once-per-(strategy, holdout): an active (non-voided) record for
         #     this strategy on this holdout is already in flight / consumed.
@@ -763,8 +782,8 @@ def _reserve_oos(strategy: str, fingerprint: dict, manifest: dict) -> dict:
         # config the holdout is being evaluated under — recorded at reserve
         # time so the ledger is the audit of *exactly which configuration*
         # the (one-time) holdout verdict was earned on.
-        if manifest.get("config_hash"):
-            rec["config_hash"] = manifest["config_hash"]
+        rec["config_hash"] = manifest["config_hash"]
+        rec["variant"] = manifest["variant"]
         ledger["consumptions"].append(rec)
         _save_oos_ledger(ledger)
         return rec
@@ -944,7 +963,7 @@ def _check_oos_once(strategy: str, fingerprint: dict | None = None,
 
 
 def _preflight(strategy: str, run, parquet: str, timeframe: str,
-               entry_guard: bool, cfg: dict) -> None:
+               entry_guard: bool, cfg: dict, rule_kwargs: dict | None = None) -> None:
     """Run one small IN-SAMPLE cell through the same code path as the holdout.
 
     The purpose (follow-up review, "一次普通崩溃会永久烧掉唯一的 holdout") is
@@ -970,6 +989,7 @@ def _preflight(strategy: str, run, parquet: str, timeframe: str,
             until=until,
             cost_bps=2.0,
             entry_guard=entry_guard,
+            **(rule_kwargs or {}),
         )
     except Exception as exc:  # noqa: BLE001 — any failure = don't burn the holdout
         print("FAIL")
@@ -983,15 +1003,34 @@ def _preflight(strategy: str, run, parquet: str, timeframe: str,
     print(f"ok  ({res.get('n_trades')} trades) — reserving the holdout.\n")
 
 
+def result_directory(out_dir: Path, windows: list[str], variant: str = "base") -> Path:
+    if "oos" in windows:
+        return out_dir.parent / (out_dir.name + "_oos")
+    return out_dir if variant == "base" else out_dir / "variants" / variant
+
+
+def _source_state() -> dict:
+    import subprocess
+    try:
+        commit = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=_REPO_ROOT,
+                                         text=True, stderr=subprocess.DEVNULL).strip()
+        dirty = bool(subprocess.check_output(["git", "status", "--porcelain"],
+                                            cwd=_REPO_ROOT, text=True))
+        return {"git_commit": commit, "dirty": dirty}
+    except (OSError, subprocess.CalledProcessError):
+        return {"git_commit": None, "dirty": None}
+
+
 def run_matrix(
     strategy: str,
     instruments: list[str],
     windows: list[str],
     cost_tiers: list[float],
-    timeframe: str,
-    entry_guard: bool,
+    timeframe: str | None,
+    entry_guard: bool | None,
     out_dir: Path,
     allow_partial: bool = False,
+    variant: str = "base",
 ) -> list[dict]:
     """Run every cell, persist per-cell JSON, and return the result list.
 
@@ -1009,22 +1048,30 @@ def run_matrix(
     run = _STRATEGIES[strategy]["run"]
 
     cfg = _load_config()
-
-    # Timeframe binding (repo_review_20261027 §1.7): the strategy's registered
-    # timeframe is authoritative; the CLI cannot silently run it on 5m.
-    expected = _registered_timeframe(cfg, strategy)
-    if expected is not None and expected != timeframe:
-        raise SystemExit(
-            f"Strategy {strategy.upper()} is registered for timeframe {expected} "
-            f"(config/strategies.yml); refusing to run it on {timeframe}.")
+    started_at = datetime.now(timezone.utc).isoformat()
+    source_state = _source_state()
+    try:
+        resolved = resolve(strategy, variant, cfg=cfg, timeframe=timeframe,
+                           entry_guard=entry_guard)
+    except (KeyError, ValueError) as exc:
+        raise SystemExit(str(exc)) from exc
+    timeframe, entry_guard = resolved.timeframe, resolved.entry_guard
+    run_hash = config_hash(timeframe, entry_guard, resolved.rule_params)
     parquet = {
         "5m": "data/ohlcv_5m_features/ohlcv_5m_features.parquet",
         "1h": "data/ohlcv_1h_features/ohlcv_1h_features.parquet",
     }[timeframe]
 
-    fingerprint = _data_fingerprint(parquet)
-
     is_oos = "oos" in windows
+    if is_oos and (set(windows) != {"oos"} or len(windows) != 1 or allow_partial):
+        raise SystemExit("OOS must run alone as a complete matrix; partial OOS is forbidden.")
+    for name, values in (("instruments", instruments), ("windows", windows), ("cost tiers", cost_tiers)):
+        if not values or len(values) != len(set(values)):
+            raise SystemExit(f"Matrix {name} must be non-empty and unique.")
+    if is_oos and (set(instruments) != set(INSTRUMENTS) or set(cost_tiers) != set(COST_TIERS)):
+        raise SystemExit("OOS requires all registered instruments and cost tiers.")
+    # Resolve all windows before any output or holdout reservation.
+    bounds = {window: _window_bounds(cfg, window) for window in windows}
     if is_oos:
         manifest = {
             "strategy": strategy,
@@ -1033,14 +1080,15 @@ def run_matrix(
             "cost_tiers": cost_tiers,
             "timeframe": timeframe,
             "entry_guard": entry_guard,
-            # config_hash (review follow-up #3 §C4): the canonical hash of the
-            # config this OOS run will use (timeframe + entry_guard + the
-            # strategy's rule parameters). ``run_matrix`` exposes the base
-            # rule parameters only (variants live in strategy_variants.py), so
-            # rule_params is the empty dict here — the hash is still the single
-            # definition a human pin must match.
-            "config_hash": config_hash(timeframe, entry_guard, {}),
+            "variant": variant,
+            "rule_params": resolved.rule_params,
+            "config_hash": run_hash,
         }
+        _check_config_pin(cfg, strategy, manifest)
+        # Gate before fingerprinting: a fingerprint also reads protected data.
+        _check_oos_once(strategy, None, manifest)
+    fingerprint = _data_fingerprint(parquet, "oos" if is_oos else "full")
+    if is_oos:
         # (1) Finalist gate + once-per-(strategy,holdout) lock + D1 cap +
         #     holdout-window identity: refuse unless a clean finalist, the
         #     holdout is unspent, and the window is genuinely new.
@@ -1054,7 +1102,7 @@ def run_matrix(
         #     2 bps) BEFORE reserving. If the pipeline is broken it fails here
         #     and the holdout stays unspent. A genuine crash is still
         #     invalidated by the human "voided" ledger flow (WORKFLOW Step 7.5).
-        _preflight(strategy, run, parquet, timeframe, entry_guard, cfg)
+        _preflight(strategy, run, parquet, timeframe, entry_guard, cfg, resolved.run_kwargs)
         # (2) Reserve the attempt BEFORE the holdout is loaded, so a crash
         #     mid-run still counts as consumed (a `reserved` record blocks re-runs).
         _reserve_oos(strategy, fingerprint, manifest)
@@ -1067,58 +1115,64 @@ def run_matrix(
         oos_token = _oos_token_mod.create_token(strategy, holdout_id)
         # (4) OOS output goes to its own directory so it can never overwrite
         #     the in-sample matrix.md / summary.csv.
-        out_dir = out_dir.parent / (out_dir.name + "_oos")
     else:
         oos_token = None
 
+    out_dir = result_directory(out_dir, windows, variant)
     out_dir.mkdir(parents=True, exist_ok=True)
     cells: list[dict] = []
     failures: list[tuple[str, str]] = []
 
-    for instrument in instruments:
-        for window in windows:
-            since, until = _window_bounds(cfg, window)
-            for cost in cost_tiers:
-                name = _cell_name(instrument, window, cost)
-                print(f"[{len(cells) + 1 + len(failures)}/{len(instruments) * len(windows) * len(cost_tiers)}] "
-                      f"{name} ... ", end="", flush=True)
-                try:
-                    result = run(
-                        parquet=parquet,
-                        instrument=instrument,
-                        timeframe=timeframe,
-                        since=since,
-                        until=until,
-                        cost_bps=cost,
-                        entry_guard=entry_guard,
-                        oos_token=oos_token,
-                    )
-                    result["window"] = window
-                    result["window_until"] = until
-                    result["data_fingerprint"] = fingerprint
-                    result["matrix"] = {
-                        "strategy": strategy,
-                        "instruments": instruments,
-                        "windows": windows,
-                        "cost_tiers": cost_tiers,
-                        "timeframe": timeframe,
-                        "entry_guard": entry_guard,
-                    }
-                    out_path = out_dir / f"{name}.json"
-                    out_path.write_text(json.dumps(result, indent=2))
-                    print(f"ok  ({result['n_trades']} trades, "
-                          f"{result['total_return_pct']}% vs BH {result['buyhold_return_pct']}%)")
-                    cells.append(result)
-                except SystemExit as exc:
-                    print(f"FAIL ({exc})")
-                    failures.append((name, str(exc)))
-                    if not allow_partial:
-                        raise
-                except Exception as exc:  # noqa: BLE001 — one cell must not kill the matrix
-                    print(f"ERROR ({exc!r})")
-                    failures.append((name, repr(exc)))
-                    if not allow_partial:
-                        raise
+    from strategy.strategy_lib import cache_bars
+    with cache_bars():
+        for instrument in instruments:
+            for window in windows:
+                since, until = bounds[window]
+                for cost in cost_tiers:
+                    name = _cell_name(instrument, window, cost)
+                    print(f"[{len(cells) + 1 + len(failures)}/{len(instruments) * len(windows) * len(cost_tiers)}] "
+                          f"{name} ... ", end="", flush=True)
+                    try:
+                        result = run(
+                            parquet=parquet,
+                            instrument=instrument,
+                            timeframe=timeframe,
+                            since=since,
+                            until=until,
+                            cost_bps=cost,
+                            entry_guard=entry_guard,
+                            oos_token=oos_token,
+                            **resolved.run_kwargs,
+                        )
+                        result["window"] = window
+                        result["window_until"] = until
+                        result["data_fingerprint"] = fingerprint
+                        result["variant"] = variant
+                        result["config_hash"] = run_hash
+                        result["rule_params"] = resolved.rule_params
+                        result["matrix"] = {
+                            "strategy": strategy,
+                            "instruments": instruments,
+                            "windows": windows,
+                            "cost_tiers": cost_tiers,
+                            "timeframe": timeframe,
+                            "entry_guard": entry_guard,
+                        }
+                        out_path = out_dir / f"{name}.json"
+                        out_path.write_text(json.dumps(result, indent=2))
+                        print(f"ok  ({result['n_trades']} trades, "
+                              f"{result['total_return_pct']}% vs BH {result['buyhold_return_pct']}%)")
+                        cells.append(result)
+                    except SystemExit as exc:
+                        print(f"FAIL ({exc})")
+                        failures.append((name, str(exc)))
+                        if not allow_partial:
+                            raise
+                    except Exception as exc:  # noqa: BLE001 — one cell must not kill the matrix
+                        print(f"ERROR ({exc!r})")
+                        failures.append((name, repr(exc)))
+                        if not allow_partial:
+                            raise
 
     if failures:
         print(f"\n{len(failures)} cell(s) failed: " +
@@ -1145,6 +1199,30 @@ def run_matrix(
     # still blocks re-runs, so a crash or partial run never re-opens the holdout.
     if is_oos and not failures:
         _complete_oos(strategy)
+
+    # YAML is committed by normal Git rules; per-cell JSON is ignored. Record
+    # resolved defaults and dirty state honestly instead of inventing provenance
+    # for historical runs or refusing reversible development runs.
+    import platform
+    from importlib.metadata import PackageNotFoundError, version
+    import yaml
+    versions = {}
+    for package in ("numpy", "pandas", "duckdb", "pyarrow", "TA-Lib"):
+        try:
+            versions[package] = version(package)
+        except PackageNotFoundError:
+            versions[package] = None
+    manifest = {
+        "schema_version": 1, "strategy": strategy, "variant": variant,
+        "timeframe": timeframe, "entry_guard": entry_guard,
+        "rule_params": resolved.rule_params, "config_hash": run_hash,
+        "instruments": instruments, "windows": bounds, "cost_tiers": cost_tiers,
+        "data_fingerprint": fingerprint, "source": source_state,
+        "python": platform.python_version(), "packages": versions,
+        "started_at_utc": started_at, "finished_at_utc": datetime.now(timezone.utc).isoformat(),
+        "cells_completed": len(cells), "failures": failures,
+    }
+    (out_dir / "manifest.yml").write_text(yaml.safe_dump(manifest, sort_keys=True), encoding="utf-8")
 
     return cells
 
@@ -1286,11 +1364,12 @@ def main() -> None:
     ap.add_argument("--instruments", nargs="+", default=INSTRUMENTS)
     ap.add_argument("--windows", nargs="+", default=["full", "last_12m"])
     ap.add_argument("--cost-tiers", nargs="+", type=float, default=COST_TIERS)
-    ap.add_argument("--timeframe", default="5m", choices=["5m", "1h"])
+    ap.add_argument("--variant", default="base", help="registered named variant (default: base)")
+    ap.add_argument("--timeframe", default=None, choices=["5m", "1h"])
     ap.add_argument("--out", default=None,
                     help="output dir for per-cell JSON + matrix.md + summary.csv "
                          "(default: strategy/results/<strategy>)")
-    ap.add_argument("--entry-guard", action="store_true",
+    ap.add_argument("--entry-guard", action="store_true", default=None,
                     help="enable the B6 entry guard (no new entries on gap / near-close bars). "
                          "Off by default to match the documented S-01 baseline.")
     ap.add_argument("--trial-row", action="store_true",
@@ -1315,13 +1394,15 @@ def main() -> None:
         entry_guard=args.entry_guard,
         out_dir=out_dir,
         allow_partial=args.allow_partial,
+        variant=args.variant,
     )
+    out_dir = result_directory(out_dir, args.windows, args.variant)
     md_path = out_dir / "matrix.md"
     csv_path = out_dir / "summary.csv"
     write_markdown(cells, md_path)
     write_csv(cells, csv_path)
 
-    print(f"\n{len(cells)} cells → {out_dir}/  ({out_dir.name}.json per cell, matrix.md, summary.csv)")
+    print(f"\n{len(cells)} cells → {out_dir}/  (per-cell JSON, matrix.md, summary.csv, manifest.yml)")
     if args.trial_row:
         hypothesis = args.hypothesis or f"matrix run of {_STRATEGIES[args.strategy]['label']}"
         cfg = _load_config()

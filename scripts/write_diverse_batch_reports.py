@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from strategy.strategy_diverse_lib import RULES  # noqa: E402
+from strategy.schema import validate_cell_grid
 
 INSTRUMENTS = ("EUR_USD", "BTC_USD", "XAU_USD")
 WINDOWS = ("full", "last_12m")
@@ -41,6 +42,7 @@ def _number(row: dict, key: str) -> float:
 
 def _status(rows: list[dict], max_tpy: float,
             guard_rows: list[dict] | None = None) -> tuple[str, str, int, int]:
+    validate_cell_grid(rows, INSTRUMENTS, WINDOWS, COSTS)
     guard_rows = guard_rows or rows
     at_two = [row for row in rows if _number(row, "cost_bps") == 2.0]
     wins = {
@@ -70,6 +72,7 @@ def _status(rows: list[dict], max_tpy: float,
 
 
 def _cell_table(rows: list[dict]) -> str:
+    validate_cell_grid(rows, INSTRUMENTS, WINDOWS, COSTS)
     rows_by_key = {
         (row["instrument"], row["window"], _number(row, "cost_bps")): row
         for row in rows

@@ -1,6 +1,11 @@
 # moneta
 
-> Early-stage scaffolding for **Nova**, an ultra-lightweight quantitative strategy discovery and optimization engine for forex, precious metals, crude oil, and equity indices.
+> **Nova**: a causal data pipeline and quantitative strategy research engine for forex, precious metals, crude oil, and equity indices.
+
+See the [independent verification of the three legacy reviews](docs/review_verification_20261031.md)
+for confirmed repairs, corrected research statistics and a dependency-ordered
+next-stage assessment. Historical results affected by signal repairs are
+preserved with caveats there.
 
 ## Current Status
 
@@ -38,7 +43,7 @@ Implemented and tracked in Git:
 - **Config** (`config/`): `indicators.yml` (feature spec), `strategies.yml`
   (evaluation windows + OOS holdout + trial-log rules), `history_map.yml`,
   `setting.example.yml`.
-- **Tests** (`tests/`): **222 passing** unit tests covering the pipeline
+- **Tests** (`tests/`): automated unit tests covering the pipeline
   (`extract_oci`, `extract_oanda`, `aggregate_ohlcv`), the feature engine
   (`test_indicators.py` — the six quality gates on synthetic data), and the
   shared engine's metric definitions (`test_metrics.py`). Run with `pytest -q`.
@@ -106,7 +111,7 @@ moneta/
 │   ├── results/S01|S05|S06/     ← per-cell JSON + matrix.md + summary.csv
 │   └── docs/strategy_rsi_report.md
 ├── config/                      ← indicators.yml, strategies.yml, history_map.yml
-├── tests/                       ← 161 pytest tests (pipeline + engine + metrics + strategy rules + OOS gate + data-layer holdout guard + custom indicators)
+├── tests/                       ← pytest tests (pipeline + engine + metrics + strategy rules + OOS gate + data-layer holdout guard + custom indicators)
 ├── scripts/  data/  legacy/     ← helpers / runtime artifacts / notes (git-ignored contents)
 └── requirement.txt
 ```
@@ -138,15 +143,15 @@ pip install -r requirement.txt
 Then run things from the repo root:
 
 ```bash
-# Tests (161, no network needed):
+# Tests (no network needed):
 .venv/bin/python -m pytest tests/ -q
 
 # Rebuild the feature tables (only after data or spec changes; ~5 min, streams per instrument):
 .venv/bin/python -m pipeline.indicators
 
 # Backtest the reference strategy (5m by default; --timeframe 1h for 1h bars):
-.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01
-.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --timeframe 1h
+.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01 --until 2025-07-31
+.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --timeframe 1h --until 2025-07-31
 
 # Run the standard matrix (3 instruments x 2 windows x 3 cost tiers) in one go:
 .venv/bin/python strategy/run_matrix.py --strategy s01
@@ -230,7 +235,7 @@ Done (tracked in Git):
 - [x] Gold feature wide tables — **305 / 270 columns** (`pipeline/indicators.py` + `library/`, spec in `docs/indicators.md`)
 - [x] **Shared, tested backtest engine** with standard metrics, cost handling, and buy-and-hold (`strategy/engine.py`)
 - [x] Strategy registry + background/checklist + trial log + OOS holdout discipline
-- [x] Automated tests — **222 passing** (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS gate: finalist-only + one-shot + fail-closed + machine pass/fail + **data-layer holdout guard** (a direct `load_bars(until=None)` / holdout-window read is refused without a run_matrix token, and only an *active `reserved`* ledger record grants a read) + atomic reserve (concurrency-safe) + half-open holdout bound + holdout-window identity lock + void flow)
+- [x] Automated tests — automated (pipeline, feature-engine quality gates, engine metrics, B6 entry guard, strategy rules, DST regression, OOS gate: finalist-only + one-shot + fail-closed + machine pass/fail + **data-layer holdout guard** (a direct `load_bars(until=None)` / holdout-window read is refused without a run_matrix token, and only an *active `reserved`* ledger record grants a read) + atomic reserve (concurrency-safe) + half-open holdout bound + holdout-window identity lock + void flow)
 
 Not yet done (future, see BRD §5.3 / §11):
 

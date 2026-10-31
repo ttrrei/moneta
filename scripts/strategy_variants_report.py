@@ -16,6 +16,10 @@ import argparse
 import csv
 from collections import defaultdict
 from pathlib import Path
+import sys
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from strategy.schema import validate_cell_grid
 
 
 def load(path: str) -> list[dict]:
@@ -45,7 +49,12 @@ def aggregate(rows: list[dict], cost: float) -> dict[tuple[str, str], dict]:
             "mean_trades": sum(_f(c["n_trades"]) for c in cs) / n,
             "mean_tpy": sum(_f(c["trades_per_year"]) for c in cs) / n,
             "mean_win": sum(_f(c["win_rate_pct"]) for c in cs) / n,
-            "win_instr": sum(1 for c in cs if _f(c["edge_vs_bh_pct"]) > 0),
+            "win_instr": len({c["instrument"] for c in cs if _f(c["edge_vs_bh_pct"]) > 0}),
+            "win_instr_by_window": {
+                window: len({c["instrument"] for c in cs
+                             if c["window"] == window and _f(c["edge_vs_bh_pct"]) > 0})
+                for window in ("full", "last_12m")
+            },
         }
     return out
 
@@ -56,6 +65,9 @@ def main() -> None:
     args = ap.parse_args()
 
     rows = load(args.csv)
+    validate_cell_grid(rows, ("EUR_USD", "BTC_USD", "XAU_USD"),
+                       ("full", "last_12m"), (0, 2, 5), ("strategy", "variant"))
+    print("full and last_12m overlap; they are descriptive slices, not independent validations.")
     errs = [r for r in rows if r.get("error", "").strip()]
     print(f"Loaded {len(rows)} cells ({len(errs)} with errors)\n")
 

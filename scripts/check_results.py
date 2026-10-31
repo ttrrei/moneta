@@ -1532,8 +1532,35 @@ def run(root: Path, base_ledger: Path | None = None) -> Report:
 
     # B.3: registry saturation guard (X15).
     check_saturation(registry, rep)
+    check_finalist_pins(cfg, registry, rep)
+    check_rejection_records(root, registry, rep)
 
     return rep
+
+
+def check_finalist_pins(cfg: dict, registry: dict, rep: Report) -> None:
+    """X16: every finalist must nominate a variant and a SHA-256 config pin."""
+    configured = {_norm_id_of(k): v for k, v in (cfg.get("strategies") or {}).items()}
+    for sid, row in registry.items():
+        if (row.get("status") or "").lower() != "finalist":
+            continue
+        spec = configured.get(_norm_id_of(sid)) or {}
+        variant, pin = spec.get("oos_variant"), spec.get("oos_config_hash")
+        if not isinstance(variant, str) or not variant.strip() or not isinstance(pin, str) \
+                or re.fullmatch(r"[0-9a-f]{64}", pin) is None:
+            rep.fail("X16", f"registry {sid}",
+                     "finalist requires oos_variant and a valid oos_config_hash in config/strategies.yml")
+
+
+def check_rejection_records(root: Path, registry: dict, rep: Report) -> None:
+    """X17: rejected ideas stay visible in the no-repeat table."""
+    text = (root / "strategy/STRATEGY_REGISTRY.md").read_text(encoding="utf-8")
+    section = text.partition("## Rejected combinations")[2].partition("\n## ")[0]
+    recorded = set(re.findall(r"\((S-\d+)\)", section))
+    for sid, row in registry.items():
+        if row.get("status") == "rejected" and sid not in recorded:
+            rep.fail("X17", f"registry {sid}",
+                     "rejected strategy missing from the Rejected combinations table")
 
 
 def _base_indicator(ind: str) -> str:

@@ -68,8 +68,8 @@ class CmfState:
             crossed = c > self.k and (not np.isfinite(c0) or c0 <= self.k)
             if crossed:
                 gate_ok = True
-                if self.ema_gate and np.isfinite(self.ema[j]):
-                    gate_ok = self.close[j] > self.ema[j]
+                if self.ema_gate:
+                    gate_ok = strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
                 if gate_ok:
                     self.state = 1
         elif np.isfinite(c0) and c < 0 and c0 >= 0:

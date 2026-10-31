@@ -4,8 +4,8 @@ Thin CLI over :mod:`strategy.strategy_dcwidth_lib` — the rule and all
 accounting live there (shared engine, shared strategy core). Run from the
 repo root::
 
-    python strategy/code/strategy_dcwidth.py.py
-    python strategy/code/strategy_dcwidth.py.py --instrument BTC_USD --cost-bps 0
+    python strategy/code/strategy_dcwidth.py
+    python strategy/code/strategy_dcwidth.py --instrument BTC_USD --cost-bps 0
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ def main() -> None:
                          "Off by default to match the documented baseline.")
     ap.add_argument("--ema-gate", action="store_true",
                     help="only enter while the previous closed bar's close > ema_24.")
-        ap.add_argument("--w_in", type=float, default=2.0,
+    ap.add_argument("--w_in", type=float, default=2.0,
                     help="w_in (default 2.0)")
     ap.add_argument("--w_exit", type=float, default=4.0,
                     help="w_exit (default 4.0)")

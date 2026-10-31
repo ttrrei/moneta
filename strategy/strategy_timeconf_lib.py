@@ -56,10 +56,9 @@ class TimeConfluenceState:
         if not np.isfinite(self.d[j]):
             return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
             prev_ok = (self.h[j-1] > self.k_in and self.d[j-1] > self.d_in) if j >= 1 else False
             if self.h[j] > self.k_in and self.d[j] > self.d_in and not prev_ok:

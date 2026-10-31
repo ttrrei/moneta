@@ -70,10 +70,10 @@ class RsiSlowState:
         if self.state == 0:
             if r < self.enter_below:
                 ok = True
-                if self.st_gate and np.isfinite(self.st_dir[j]):
-                    ok = self.st_dir[j] > 0.5
-                if ok and self.adx_gate and np.isfinite(self.adx[j]):
-                    ok = self.adx[j] > self.adx_at
+                if self.st_gate:
+                    ok = np.isfinite(self.st_dir[j]) and self.st_dir[j] > 0.5
+                if ok and self.adx_gate:
+                    ok = np.isfinite(self.adx[j]) and self.adx[j] > self.adx_at
                 if ok:
                     self.state = 1
         elif r >= self.exit_above:

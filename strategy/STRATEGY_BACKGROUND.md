@@ -187,7 +187,7 @@ tests/                       ← pipeline unit tests (pytest)
 
 ```bash
 # Backtest an existing strategy (pattern: self-contained CLI):
-.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01
+.venv/bin/python strategy/code/strategy_rsi.py --instrument EUR_USD --since 2023-01-01 --until 2025-07-31
 
 # Rebuild features (only after data or spec changes): ~5 min, streams per instrument
 .venv/bin/python -m pipeline.indicators

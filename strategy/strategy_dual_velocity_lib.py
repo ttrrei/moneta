@@ -70,8 +70,8 @@ class DualVelocityState:
             return self.state
         cond = self.roc[j] > 0 and self.ema_slow[j] > self.ema_slow[slow_i]
         if self.state == 0:
-            if cond and self.ema_gate and np.isfinite(self.ema_fast[j]):
-                cond = self.close[j] > self.ema_fast[j]
+            if cond and self.ema_gate:
+                cond = strategy_lib.entry_gate_allows(True, self.close, self.ema_fast, j)
             if cond:
                 self.state = 1
         elif not cond:

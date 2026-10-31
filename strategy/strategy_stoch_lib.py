@@ -67,8 +67,8 @@ class StochState:
         if self.state == 0:
             crossed_up = k > d and k0 <= d0
             gate_ok = True
-            if self.ema_gate and np.isfinite(self.ema[j]):
-                gate_ok = self.close[j] > self.ema[j]
+            if self.ema_gate:
+                gate_ok = strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
             if crossed_up and k < self.k_below and gate_ok:
                 self.state = 1
         elif k < d and k0 >= d0:

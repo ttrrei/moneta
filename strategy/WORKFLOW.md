@@ -205,6 +205,20 @@ count ≤ 300) — do not restate it here, reference it.
 
   Do not nominate a variant that was not in the adjudicated in-sample set.
 
+  The canonical resolver is `strategy/variants.py`. Run
+  `python scripts/pin_finalist.py <strategy> <variant>` to print the resolved
+  configuration and its `oos_variant` / `oos_config_hash` YAML fields. This
+  command reads no market data and changes no files or statuses. Both fields
+  are mandatory before OOS; `run_matrix --variant <name>` recomputes the hash
+  from effective parameters and refuses a mismatch. New matrix runs save a
+  `manifest.yml` alongside their outputs. Non-base in-sample runs live below
+  `<ID>/variants/<name>`; the original base evidence remains in place.
+
+  Before nomination, consult the
+  [historical signal-repair caveats](../docs/review_verification_20261031.md).
+  The full/recent windows overlap and are not independent validations. Do not
+  inspect holdout benchmarks to decide whether to nominate a strategy.
+
 - **Cross-strategy ranking (Sharpe):** the `Sharpe` column is a *trade-rate*
   Sharpe (annualised from per-trade returns) — it is **not comparable across
   strategies** and must not be used to rank them. Rank strategies on

@@ -68,12 +68,14 @@ class VwapStretchState:
             return self.state
         norm = self.d[j] / self.atr[j]
         if self.state == 0:
-            prev = self.d[j - 1] / self.atr[j] if (j > 0 and np.isfinite(self.d[j - 1])) else np.nan
+            prev = (self.d[j - 1] / self.atr[j - 1]
+                    if j > 0 and np.isfinite(self.d[j - 1])
+                    and np.isfinite(self.atr[j - 1]) and self.atr[j - 1] > 0 else np.nan)
             crossed = norm > self.k and (not np.isfinite(prev) or prev <= self.k)
             if crossed:
                 gate_ok = True
-                if self.ema_gate and np.isfinite(self.ema[j]):
-                    gate_ok = self.close[j] > self.ema[j]
+                if self.ema_gate:
+                    gate_ok = strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
                 if gate_ok:
                     self.state = 1
         elif norm < self.k_exit:

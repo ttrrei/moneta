@@ -67,10 +67,9 @@ BODY = '''class {cls}:
             return 0
         j = i - 1
 {condcheck}
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
 {entry}
         elif {exitc}:
@@ -338,7 +337,7 @@ S.append(dict(sid="S-33", title="Keltner upper-band breakout",
     "        if j >= 1:\n"
     "            if not (np.isfinite(self.close_sig[j-1]) and np.isfinite(self.upper[j-1])):\n"
     "                return self.state\n"),
-  entry="            if self.close_sig[j] > self.upper[j] and self.close_sig[j-1] <= self.upper[j-1]:\n                self.state = 1\n",
+  entry="            if j >= 1 and self.close_sig[j] > self.upper[j] and self.close_sig[j-1] <= self.upper[j-1]:\n                self.state = 1\n",
   exitc="self.close_sig[j] <= self.mid[j]",
   loadname="kcbreak",
   params=[]))
@@ -421,7 +420,7 @@ S.append(dict(sid="S-37", title="Donchian midline fresh-cross",
     "        if j >= 1:\n"
     "            if not (np.isfinite(self.close_sig[j-1]) and np.isfinite(self.mid[j-1])):\n"
     "                return self.state\n"),
-  entry="            if self.close_sig[j] > self.mid[j] and self.close_sig[j-1] <= self.mid[j-1]:\n                self.state = 1\n",
+  entry="            if j >= 1 and self.close_sig[j] > self.mid[j] and self.close_sig[j-1] <= self.mid[j-1]:\n                self.state = 1\n",
   exitc="self.close_sig[j] <= self.mid[j]",
   loadname="dcmid",
   params=[]))
@@ -468,7 +467,7 @@ S.append(dict(sid="S-39", title="Donchian-width compression dip",
     "        if j >= 1:\n"
     "            if not (np.isfinite(self.upper[j-1]) and np.isfinite(self.lower[j-1]) and np.isfinite(self.atr[j-1]) and self.atr[j-1] > 0):\n"
     "                return self.state\n"),
-  entry=("            if (self.upper[j] - self.lower[j]) < self.w_in * self.atr[j] and "
+  entry=("            if j >= 1 and (self.upper[j] - self.lower[j]) < self.w_in * self.atr[j] and "
          "(self.upper[j-1] - self.lower[j-1]) >= self.w_in * self.atr[j-1]:\n"
          "                self.state = 1\n"),
   exitc="(self.upper[j] - self.lower[j]) > self.w_exit * self.atr[j]",

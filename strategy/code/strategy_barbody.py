@@ -4,8 +4,8 @@ Thin CLI over :mod:`strategy.strategy_barbody_lib` — the rule and all
 accounting live there (shared engine, shared strategy core). Run from the
 repo root::
 
-    python strategy/code/strategy_barbody.py.py
-    python strategy/code/strategy_barbody.py.py --instrument BTC_USD --cost-bps 0
+    python strategy/code/strategy_barbody.py
+    python strategy/code/strategy_barbody.py --instrument BTC_USD --cost-bps 0
 """
 
 from __future__ import annotations
@@ -45,7 +45,7 @@ def main() -> None:
                     help="enable the B6 rule (no new entries on gap / near-market-close bars).")
     ap.add_argument("--ema-gate", action="store_true",
                     help="only enter while the previous closed bar's close > ema_24.")
-        ap.add_argument("--k_in", type=float, default=0.6,
+    ap.add_argument("--k_in", type=float, default=0.6,
                     help="k_in (default 0.6)")
     ap.add_argument("--k_exit", type=float, default=0.3,
                     help="k_exit (default 0.3)")

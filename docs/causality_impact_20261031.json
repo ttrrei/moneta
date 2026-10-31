@@ -1,0 +1,209 @@
+{
+  "scope": "Existing named configurations on local in-sample data only. Compared original HEAD and corrected first-bar rule decisions until their states converged. No strategy performance or holdout evaluation.",
+  "reference_commit": "936f7b9",
+  "comparisons": 144,
+  "all_states_converged": true,
+  "changed_comparisons": [
+    {
+      "strategy": "s33",
+      "variant": "1h",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s33",
+      "variant": "1h_ema",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s33",
+      "variant": "1h_guard",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s33",
+      "variant": "1h_ema_guard",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h",
+      "instrument": "EUR_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h",
+      "instrument": "EUR_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 6,
+      "converged": true,
+      "checked_through": 7
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h",
+      "instrument": "XAU_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 8,
+      "converged": true,
+      "checked_through": 9
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema",
+      "instrument": "EUR_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema",
+      "instrument": "EUR_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 6,
+      "converged": true,
+      "checked_through": 7
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema",
+      "instrument": "XAU_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 8,
+      "converged": true,
+      "checked_through": 9
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_guard",
+      "instrument": "EUR_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_guard",
+      "instrument": "EUR_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 6,
+      "converged": true,
+      "checked_through": 7
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_guard",
+      "instrument": "XAU_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_guard",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 8,
+      "converged": true,
+      "checked_through": 9
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema_guard",
+      "instrument": "EUR_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema_guard",
+      "instrument": "EUR_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 6,
+      "converged": true,
+      "checked_through": 7
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema_guard",
+      "instrument": "XAU_USD",
+      "window": "full",
+      "timeframe": "1h",
+      "changed_decisions": 5,
+      "converged": true,
+      "checked_through": 6
+    },
+    {
+      "strategy": "s37",
+      "variant": "1h_ema_guard",
+      "instrument": "XAU_USD",
+      "window": "last_12m",
+      "timeframe": "1h",
+      "changed_decisions": 8,
+      "converged": true,
+      "checked_through": 9
+    }
+  ],
+  "unchanged_comparisons": 124
+}

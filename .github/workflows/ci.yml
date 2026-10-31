@@ -110,3 +110,6 @@ jobs:
 
       - name: run the test suite
         run: python -m pytest tests/ -q
+
+      - name: compile all Python entry points
+        run: python -m compileall -q pipeline library strategy scripts tests

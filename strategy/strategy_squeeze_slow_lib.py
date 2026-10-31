@@ -64,8 +64,8 @@ class SqueezeSlowState:
         above_mid = (self.close[j] > self.mid[j]) if np.isfinite(self.mid[j]) else False
         if not above_mid:
             return False
-        if self.ema_gate and np.isfinite(self.ema[j]):
-            return self.close[j] > self.ema[j]
+        if self.ema_gate:
+            return strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
         return True
 
     def desired_position(self, i: int) -> int:

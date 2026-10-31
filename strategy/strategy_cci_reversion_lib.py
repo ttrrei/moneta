@@ -75,10 +75,10 @@ class CciReversionState:
             # "not below the threshold" so the cross is recognised (consistent
             # with the other oscillator rules).
             entering = entering and not (np.isfinite(c0) and c0 < self.enter_below)
-        bb = self.bb_pos[j] if np.isfinite(self.bb_pos[j]) else 0.0
+        bb = self.bb_pos[j]
         gate_ok = True
-        if self.ema_gate and np.isfinite(self.ema[j]):
-            gate_ok = self.close[j] > self.ema[j]
+        if self.ema_gate:
+            gate_ok = strategy_lib.entry_gate_allows(True, self.close, self.ema, j)
         if self.state == 0:
             self.state = 1 if (entering and bb < 0.5 and gate_ok) else 0
         elif c >= self.exit_above:

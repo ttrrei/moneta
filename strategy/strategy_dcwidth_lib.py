@@ -66,12 +66,11 @@ class DcWidthState:
             if not (np.isfinite(self.upper[j-1]) and np.isfinite(self.lower[j-1]) and np.isfinite(self.atr[j-1]) and self.atr[j-1] > 0):
                 return self.state
 
-        if self.ema_gate and self.gate_close is not None and self.gate_ema is not None and self.state == 0:
-            if (np.isfinite(self.gate_close[j]) and np.isfinite(self.gate_ema[j])
-                    and self.gate_close[j] <= self.gate_ema[j]):
-                return self.state
+        if self.state == 0 and not strategy_lib.entry_gate_allows(
+                self.ema_gate, self.gate_close, self.gate_ema, j):
+            return self.state
         if self.state == 0:
-            if (self.upper[j] - self.lower[j]) < self.w_in * self.atr[j] and (self.upper[j-1] - self.lower[j-1]) >= self.w_in * self.atr[j-1]:
+            if j >= 1 and (self.upper[j] - self.lower[j]) < self.w_in * self.atr[j] and (self.upper[j-1] - self.lower[j-1]) >= self.w_in * self.atr[j-1]:
                 self.state = 1
 
         elif (self.upper[j] - self.lower[j]) > self.w_exit * self.atr[j]:

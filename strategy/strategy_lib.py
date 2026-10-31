@@ -30,13 +30,17 @@ Note:
    calls ``rule.desired_position`` once per bar in a single sequential pass, so
    a stateful rule's internal state is meaningful *within* a run but is not
    reset between separate ``run_backtest`` calls — reusing one rule object
-   across cost tiers would leak leftover state. A fresh rule per cell is cheap
-   (the parquet read dominates) and avoids that class of subtle bug.
+   across cost tiers would leak leftover state. Keep rules fresh even when
+   their input frames are shared by a scoped in-sample cache.
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
+from collections import OrderedDict
+from contextlib import contextmanager
+from contextvars import ContextVar
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -53,6 +57,32 @@ TIMEFRAME_PARQUET = {"5m": FEATURES_PARQUET, "1h": FEATURES_1H_PARQUET}
 
 #: Columns every strategy's data load always needs (pricing + entry-guard flags).
 BASE_COLS = ("time", "open", "close", "is_gap_bar", "is_near_market_close")
+
+
+def entry_gate_allows(enabled: bool, close: np.ndarray | None,
+                      ema: np.ndarray | None, index: int) -> bool:
+    """An enabled trend gate needs both finite inputs; missing data blocks entry."""
+    return not enabled or bool(close is not None and ema is not None
+                               and np.isfinite(close[index]) and np.isfinite(ema[index])
+                               and close[index] > ema[index])
+
+_BAR_CACHE: ContextVar = ContextVar("in_sample_bar_cache", default=None)
+
+
+@contextmanager
+def cache_bars(max_bytes: int = 128 * 1024 * 1024):
+    """Bounded, thread-local reuse within one in-sample evaluation group.
+
+    Every read still passes the holdout gate. No holdout frame is cached, and
+    callers receive copies so a rule cannot mutate another cell's inputs.
+    File identity and timestamps invalidate entries after a data replacement.
+    The cache is discarded on leaving this scope; nothing is persisted.
+    """
+    token = _BAR_CACHE.set({"frames": OrderedDict(), "bytes": 0, "limit": max_bytes})
+    try:
+        yield
+    finally:
+        _BAR_CACHE.reset(token)
 
 
 def detect_bar_seconds(df: pd.DataFrame) -> int:
@@ -109,6 +139,21 @@ def load_bars(
     _since = _oos.normalize_bound(since) if since else None
     _until = _oos.normalize_bound(until) if until else None
 
+    cache = _BAR_CACHE.get() if not _oos.is_holdout_until(until) else None
+    key = None
+    if cache is not None:
+        try:
+            path = Path(parquet).resolve()
+            stat = path.stat()
+            key = (str(path), stat.st_dev, stat.st_ino, stat.st_size,
+                   stat.st_mtime_ns, stat.st_ctime_ns, instrument,
+                   tuple(feature_cols), tuple(not_null_cols or ()), _since, _until)
+        except OSError:
+            pass  # Globs/remote paths remain normal uncached DuckDB reads.
+        if key in cache["frames"]:
+            cache["frames"].move_to_end(key)
+            return cache["frames"][key].copy(deep=True)
+
     cols = list(BASE_COLS) + [c for c in feature_cols if c not in BASE_COLS]
     conn = duckdb.connect()
     try:
@@ -141,9 +186,18 @@ def load_bars(
             " FROM read_parquet(?) WHERE " + " AND ".join(where) +
             " ORDER BY time"
         )
-        return conn.execute(sql, params).fetch_df()
+        frame = conn.execute(sql, params).fetch_df()
     finally:
         conn.close()
+    if cache is not None and key is not None:
+        size = int(frame.memory_usage(index=True, deep=True).sum())
+        if size <= cache["limit"]:
+            while cache["frames"] and cache["bytes"] + size > cache["limit"]:
+                _, previous = cache["frames"].popitem(last=False)
+                cache["bytes"] -= int(previous.memory_usage(index=True, deep=True).sum())
+            cache["frames"][key] = frame.copy(deep=True)
+            cache["bytes"] += size
+    return frame
 
 
 def make_bars(df: pd.DataFrame, timeframe: str, entry_guard: bool = False) -> BarFrame:
@@ -216,9 +270,9 @@ def run_strategy(
 ) -> dict:
     """Run the shared engine over an already-built ``bars``/``rule`` pair.
 
-    Splitting the build from the run is what lets a matrix cell load the parquet
-    and evaluate the signal *once* per instrument/window and reuse it across the
-    cost tiers (the positions are identical; only the cost changes).
+    A frame can be reused across cost tiers, but each evaluation must receive
+    a fresh rule. Signals and accounting are currently evaluated per cost tier;
+    the scoped cache only removes repeated data reads.
     """
     result = run_backtest(bars, rule, cost_bps=cost_bps, long_only=long_only)
     out = dict(meta or {})

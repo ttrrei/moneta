@@ -11,6 +11,9 @@ the two from drifting apart (the S01/S05/S06 "old schema" bug of §3.3).
 
 from __future__ import annotations
 
+from itertools import product
+from math import isfinite
+
 __all__ = [
     "SUMMARY_FIELDS",
     "OOS_FIELDS",
@@ -21,7 +24,43 @@ __all__ = [
     "compute_oos_fields",
     "is_oos_cells",
     "csv_fieldnames",
+    "validate_cell_grid",
 ]
+
+
+def validate_cell_grid(rows: list[dict], instruments, windows, cost_tiers,
+                       group_fields: tuple[str, ...] = ()) -> None:
+    """Reject missing, duplicate, unexpected, failed or non-numeric cells.
+
+    Each group (e.g. strategy/variant) must contain the entire declared grid.
+    This validation runs before report dictionaries can discard duplicates.
+    """
+    expected = set(product(instruments, windows, map(float, cost_tiers)))
+    groups: dict[tuple, set] = {}
+    if not rows or not expected:
+        raise ValueError("empty result matrix")
+    for row in rows:
+        group = tuple(row.get(field) for field in group_fields)
+        if any(value in (None, "") for value in group):
+            raise ValueError(f"missing group identity: {group}")
+        if str(row.get("error") or "").strip():
+            raise ValueError(f"failed cell in {group}: {row['error']}")
+        try:
+            key = (row["instrument"], row["window"], float(row["cost_bps"]))
+            for field in ("n_trades", "trades_per_year", "total_return_pct", "buyhold_return_pct"):
+                if not isfinite(float(row[field])):
+                    raise ValueError(field)
+        except (KeyError, TypeError, ValueError) as exc:
+            raise ValueError(f"invalid result cell in {group}: {exc}") from exc
+        seen = groups.setdefault(group, set())
+        if key in seen:
+            raise ValueError(f"duplicate cell in {group}: {key}")
+        if key not in expected:
+            raise ValueError(f"unexpected cell in {group}: {key}")
+        seen.add(key)
+    for group, seen in groups.items():
+        if missing := expected - seen:
+            raise ValueError(f"missing {len(missing)} cells in {group}: {sorted(missing)}")
 
 # ---------------------------------------------------------------------------
 # Field lists — the single source of truth for a committed summary.csv header.
