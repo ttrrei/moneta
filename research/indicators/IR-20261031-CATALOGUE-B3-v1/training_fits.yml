@@ -1,0 +1,528 @@
+- control_edges:
+  - 0.10405356188615161
+  - 0.23327079415321345
+  idea_id: TR-05
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 4.0
+  - 27.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3550047513462148
+  - 0.33490203176614325
+  - 0.31009321688764196
+- control_edges:
+  - 0.27243002992613935
+  - 0.6164305751526773
+  idea_id: TR-07
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - -0.2806481384303502
+  - 0.5427343767971126
+  training_common_support_mass: 1.0
+  weights:
+  - 0.30907356421774623
+  - 0.2921074240448244
+  - 0.39881901173742934
+- control_edges:
+  - 8.98218282063802
+  - 19.818593343098957
+  idea_id: MR-05
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges: []
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3333349035494736
+  - 0.3333301929010528
+  - 0.3333349035494736
+- control_edges:
+  - 1.4570882783312669
+  - 1.792147790236877
+  idea_id: MR-07
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - -0.700907080576638
+  - 0.8439904044999509
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3857677902621723
+  - 0.3491171749598716
+  - 0.2651150347779561
+- control_edges:
+  - 0.22505017462839977
+  - 0.5915022019369736
+  idea_id: CB-04
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.16666666666666666
+  - 1.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.31817407596661557
+  - 0.31766308976324303
+  - 0.3641628342701414
+- control_edges:
+  - 0.23201167949477303
+  - 0.6233601050991894
+  idea_id: CB-05
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 1.0036089420318604
+  - 1.7377504110336304
+  training_common_support_mass: 1.0
+  weights:
+  - 0.34423856398378694
+  - 0.2918355529820498
+  - 0.3639258830341633
+- control_edges:
+  - 0.4523809523809081
+  - 0.8280373831775565
+  idea_id: PA-04
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 1
+  - 2
+  tail_edges:
+  - 0.34561594724655154
+  - 0.908417558670044
+  training_common_support_mass: 0.6120771796093378
+  weights:
+  - 0.48764351041058573
+  - 0.5123564895894143
+- control_edges:
+  - 0.5227797890681058
+  - 1.1903089276443641
+  idea_id: PA-05
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 1.0
+  - 2.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3333379278025113
+  - 0.3333241443949773
+  - 0.3333379278025113
+- control_edges:
+  - 0.10418754070997238
+  - 0.23254139721393585
+  idea_id: PS-04
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 1.3275124045582871
+  - 1.6113330716470449
+  training_common_support_mass: 1.0
+  weights:
+  - 0.32674810553260514
+  - 0.32493600628532326
+  - 0.3483158881820716
+- control_edges:
+  - 2.781291760469275e-06
+  - 5.78651715003089e-06
+  idea_id: PS-06
+  identified: true
+  instrument: BTC_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.6936863381924303
+  - 1.038982407919316
+  training_common_support_mass: 1.0
+  weights:
+  - 0.32464332483286235
+  - 0.3532634916258874
+  - 0.32209318354125027
+- control_edges:
+  - 0.1105121299624443
+  - 0.24475523829460144
+  idea_id: TR-05
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 3.0
+  - 24.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3381572544203184
+  - 0.3309850995295808
+  - 0.3308576460501008
+- control_edges:
+  - 0.311557130112838
+  - 0.6955872515682575
+  idea_id: TR-07
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - -0.28414610653135886
+  - 0.5906705456708082
+  training_common_support_mass: 1.0
+  weights:
+  - 0.31978079765298495
+  - 0.3139824527414132
+  - 0.3662367496056018
+- control_edges:
+  - 9.120831807454426
+  - 20.188082377115887
+  idea_id: MR-05
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges: []
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3333333333333333
+  - 0.3333333333333333
+  - 0.3333333333333333
+- control_edges:
+  - 1.5287157853077784
+  - 1.853147441193981
+  idea_id: MR-07
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - -0.8281249999999079
+  - 0.9285714285717118
+  training_common_support_mass: 1.0
+  weights:
+  - 0.37184284377923293
+  - 0.35734331150608045
+  - 0.2708138447146866
+- control_edges:
+  - 0.20326357270016085
+  - 0.543101346634537
+  idea_id: CB-04
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.16666666666666666
+  - 1.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.310448321140499
+  - 0.321328081035453
+  - 0.368223597824048
+- control_edges:
+  - 0.21661839509444464
+  - 0.56608946332738
+  idea_id: CB-05
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.8527003765106201
+  - 1.7431527614593507
+  training_common_support_mass: 1.0
+  weights:
+  - 0.344011544011544
+  - 0.29927849927849925
+  - 0.3567099567099567
+- control_edges:
+  - 0.4487179487179122
+  - 0.8076923076927018
+  idea_id: PA-04
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 1
+  - 2
+  tail_edges:
+  - 0.3333333432674408
+  - 0.914893627166748
+  training_common_support_mass: 0.5901129943502825
+  weights:
+  - 0.4492580181905218
+  - 0.5507419818094782
+- control_edges:
+  - 0.5038234230635904
+  - 1.2040334789466063
+  idea_id: PA-05
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 1.0
+  - 2.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3333283508467736
+  - 0.3333283508467736
+  - 0.3333432983064528
+- control_edges:
+  - 0.11227153986692429
+  - 0.2467532455921173
+  idea_id: PS-04
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 1.3141703421026543
+  - 1.5985820181166144
+  training_common_support_mass: 1.0
+  weights:
+  - 0.325373957822462
+  - 0.326400809220206
+  - 0.34822523295733204
+- control_edges:
+  - 8.065642047902584e-08
+  - 1.5382956948323258e-07
+  idea_id: PS-06
+  identified: true
+  instrument: EUR_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.7034099129697299
+  - 1.0657601506445007
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3082732903552016
+  - 0.3653457211477689
+  - 0.32638098849702946
+- control_edges:
+  - 0.1067789370814959
+  - 0.237717866897583
+  idea_id: TR-05
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 4.0
+  - 24.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3478815586624847
+  - 0.3343469246717346
+  - 0.3177715166657807
+- control_edges:
+  - 0.292172170312229
+  - 0.6611155603706165
+  idea_id: TR-07
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - -0.2721268319730503
+  - 0.5641624514652908
+  training_common_support_mass: 1.0
+  weights:
+  - 0.31449359559576173
+  - 0.3108833374830553
+  - 0.37462306692118297
+- control_edges:
+  - 9.004709879557291
+  - 19.88860193888346
+  idea_id: MR-05
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges: []
+  training_common_support_mass: 1.0
+  weights:
+  - 0.33333508403361345
+  - 0.3333298319327731
+  - 0.33333508403361345
+- control_edges:
+  - 1.5389977176876224
+  - 1.8809492242805357
+  idea_id: MR-07
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - -0.763256285939858
+  - 0.9014120622576245
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3794435857805255
+  - 0.3426584234930448
+  - 0.2778979907264297
+- control_edges:
+  - 0.2047537454825103
+  - 0.5416729548041882
+  idea_id: CB-04
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.16666666666666666
+  - 1.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3226256983240223
+  - 0.31544293695131687
+  - 0.3619313647246608
+- control_edges:
+  - 0.21854712450444444
+  - 0.5746656400991448
+  idea_id: CB-05
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.8229396343231201
+  - 2.09368634223938
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3405842137973897
+  - 0.2964574269732753
+  - 0.362958359229335
+- control_edges:
+  - 0.43734369843125687
+  - 0.8110920689321611
+  idea_id: PA-04
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 1
+  - 2
+  tail_edges:
+  - 0.3191489279270172
+  - 0.9127232789993286
+  training_common_support_mass: 0.6058736144440635
+  weights:
+  - 0.46076952093549606
+  - 0.5392304790645039
+- control_edges:
+  - 0.5136621354612566
+  - 1.213785627975279
+  idea_id: PA-05
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 1.0
+  - 2.0
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3333386206458981
+  - 0.33332275870820377
+  - 0.3333386206458981
+- control_edges:
+  - 0.10839498539765675
+  - 0.24051898717880243
+  idea_id: PS-04
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 1.3173525751297512
+  - 1.608998346306941
+  training_common_support_mass: 1.0
+  weights:
+  - 0.3332164206416982
+  - 0.32604916432841285
+  - 0.340734415029889
+- control_edges:
+  - 2.8668781993455015e-07
+  - 4.975273864009487e-07
+  idea_id: PS-06
+  identified: true
+  instrument: XAU_USD
+  strata:
+  - 0
+  - 1
+  - 2
+  tail_edges:
+  - 0.6824619685758331
+  - 1.0596659857762016
+  training_common_support_mass: 1.0
+  weights:
+  - 0.31426507290161565
+  - 0.34703796138184684
+  - 0.3386969657165375

@@ -1,0 +1,1450 @@
+- idea_id: CB-01
+  name: Squeeze episode age
+  style: compression
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: absolute_return
+  score: squeeze_age
+  transform: identity
+  control: bb_width_24
+  direction: no_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 38
+  adjusted_findings: 3
+  minimum_global_q: 0.0065921848706906
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-07
+  name: Upside/downside variance imbalance
+  style: compression
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: adverse_excursion
+  score: variance_imbalance
+  transform: absolute
+  control: return_variance_24
+  direction: variance_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 1
+  minimum_global_q: 0.0065921848706906
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-01
+  name: Robust median stretch
+  style: mean_reversion
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: median_stretch
+  transform: absolute
+  control: ema_distance_abs
+  direction: median_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 19
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 1
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-02
+  name: Causal regression residual
+  style: mean_reversion
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: regression_residual
+  transform: absolute
+  control: ema_distance_abs
+  direction: regression_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-02
+  name: Body-engulfing reversal strength
+  style: candle_structure
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: engulfing_state
+  transform: identity
+  control: body_atr
+  direction: body_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 44
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-09
+  name: Prior-extreme sweep with inside close
+  style: candle_structure
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: sweep_state
+  transform: identity
+  control: rejection_clv
+  direction: rejection_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-01
+  name: Return-sign memory
+  style: persistence
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: sign_memory
+  transform: identity
+  control: er_24
+  direction: last_return_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-05
+  name: Jump concentration
+  style: persistence
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: jump_concentration
+  transform: identity
+  control: absolute_return_24
+  direction: jump_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-01
+  name: Cross-timeframe direction agreement
+  style: trend
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: trend_alignment
+  transform: identity
+  control: ltf_direction
+  direction: ltf_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-02
+  name: HTF trend with an LTF pullback
+  style: trend
+  batch: 1
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: pullback_state
+  transform: identity
+  control: pullback_depth
+  direction: htf_slope_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_features
+  protocol: config/indicator_catalogue_batch1.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-03
+  name: Directional trend-strength acceleration
+  style: trend
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: strength_acceleration_along_direction
+  transform: identity
+  control: htf_adx
+  direction: htf_di_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 39
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-04
+  name: Multi-scale trend breadth
+  style: trend
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: trend_breadth
+  transform: absolute
+  control: ema_distance_abs
+  direction: breadth_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 24
+  adjusted_findings: 0
+  minimum_global_q: 0.6369414485405201
+  supported_horizons: 1
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-03
+  name: Session-VWAP stretch by session phase
+  style: mean_reversion
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: session_vwap_stretch
+  transform: absolute
+  control: session_phase
+  direction: vwap_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 42
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 4
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-04
+  name: Oscillator extremes conditional on trend efficiency
+  style: mean_reversion
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: oscillator_regime
+  transform: identity
+  control: rsi_extremity
+  direction: rsi_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 36
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-02
+  name: Nested-range compression
+  style: compression
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: absolute_return
+  score: range_compression
+  transform: identity
+  control: atr_ratio
+  direction: no_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 42
+  adjusted_findings: 0
+  minimum_global_q: 0.9271865214231076
+  supported_horizons: 4
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-03
+  name: Compression-conditioned range release
+  style: compression
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: compressed_break_state
+  transform: identity
+  control: break_distance
+  direction: range_break_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 40
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-01
+  name: Accumulated wick imbalance
+  style: candle_structure
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: wick_imbalance
+  transform: absolute
+  control: last_wick_imbalance
+  direction: wick_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 44
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-03
+  name: Mother-bar containment release
+  style: candle_structure
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: revise
+  target: directed_return
+  score: containment_release_state
+  transform: identity
+  control: break_distance
+  direction: range_break_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 4
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 0
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Rare containment-release/range-break intersection and inadequate common-support
+    coverage across assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-02
+  name: Directional run age
+  style: persistence
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: return_run_age
+  transform: absolute
+  control: absolute_return_24
+  direction: last_return_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 0.6369414485405201
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-03
+  name: Sign-transition entropy
+  style: persistence
+  batch: 2
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: transition_entropy
+  transform: identity
+  control: transition_persistence
+  direction: last_return_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 38
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch2.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-05
+  name: Trend age versus trend quality
+  style: trend
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: trend_age
+  transform: identity
+  control: er_24
+  direction: ltf_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-07
+  name: Trend curvature
+  style: trend
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: oriented_trend_curvature
+  transform: identity
+  control: slope_magnitude
+  direction: slope_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-05
+  name: "Price\u2013oscillator disagreement"
+  style: mean_reversion
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: oscillator_disagreement
+  transform: identity
+  control: rsi_change_magnitude
+  direction: price_reversal_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 39
+  adjusted_findings: 0
+  minimum_global_q: 0.2704328863232147
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-07
+  name: Post-shock loss of speed
+  style: mean_reversion
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: shock_decay
+  transform: identity
+  control: shock_size
+  direction: shock_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 25
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 1
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-04
+  name: Acceptance beyond a broken range
+  style: compression
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: break_acceptance
+  transform: identity
+  control: break_observed_size
+  direction: acceptance_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 18
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 1
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-05
+  name: Breakout activity participation
+  style: compression
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: break_activity
+  transform: identity
+  control: break_distance
+  direction: range_break_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 18
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 1
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-04
+  name: Outside-bar settlement
+  style: candle_structure
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: revise
+  target: directed_return
+  score: outside_settlement
+  transform: absolute
+  control: outside_prior_position
+  direction: outside_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 14
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 0
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Outside-bar matched tails lack two-asset support across all three slices
+    at any horizon.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-05
+  name: Repeated tests of a frozen boundary
+  style: candle_structure
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: boundary_tests
+  transform: identity
+  control: contact_distance
+  direction: contact_reversal_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 0.7672047535222785
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-04
+  name: Path turning intensity
+  style: persistence
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: adverse_excursion
+  score: turning_intensity
+  transform: identity
+  control: er_24
+  direction: six_return_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 0.2087525209052026
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-06
+  name: Return scaling across observation lengths
+  style: persistence
+  batch: 3
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: absolute_return
+  score: return_scaling
+  transform: identity
+  control: return_variance_120
+  direction: no_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 39
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch3.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-08
+  name: Timeframe agreement breakdown
+  style: trend
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: adverse_excursion
+  score: agreement_loss_state
+  transform: identity
+  control: prior_alignment_age
+  direction: prior_alignment_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 34
+  adjusted_findings: 2
+  minimum_global_q: 0.0065921848706906
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-09
+  name: Higher-timeframe range migration
+  style: trend
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: htf_range_migration
+  transform: absolute
+  control: htf_atr_pct
+  direction: migration_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 37
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-08
+  name: "Price\u2013activity-pressure disagreement"
+  style: mean_reversion
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: activity_disagreement
+  transform: identity
+  control: cmf_magnitude
+  direction: price_reversal_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-09
+  name: Session-open displacement recovery
+  style: mean_reversion
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: revise
+  target: directed_return
+  score: session_displacement_remaining
+  transform: absolute
+  control: session_phase
+  direction: session_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 1
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 0
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Sparse eligible session displacement episodes; only 28 defined EUR/USD training
+    observations.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-06
+  name: Body-led versus wick-led expansion
+  style: compression
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: body_expansion
+  transform: absolute
+  control: atr_ratio
+  direction: body_expansion_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 42
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 4
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-08
+  name: Range versus close-volatility disagreement
+  style: compression
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: adverse_excursion
+  score: range_close_volatility
+  transform: identity
+  control: hv_24
+  direction: ltf_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 34
+  adjusted_findings: 3
+  minimum_global_q: 0.0065921848706906
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-06
+  name: First revisit of confirmed structure
+  style: candle_structure
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: first_revisit_state
+  transform: identity
+  control: revisit_distance
+  direction: revisit_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 40
+  adjusted_findings: 1
+  minimum_global_q: 0.0543855251831975
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-07
+  name: Next-bar confirmation of a strong close
+  style: candle_structure
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: close_confirmation
+  transform: identity
+  control: prior_clv_magnitude
+  direction: prior_clv_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 42
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 4
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-07
+  name: Volatility memory
+  style: persistence
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: absolute_return
+  score: volatility_memory
+  transform: identity
+  control: hv_24
+  direction: no_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 43
+  adjusted_findings: 0
+  minimum_global_q: 0.2334598154205552
+  supported_horizons: 4
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-08
+  name: Session-phase activity surprise
+  style: persistence
+  batch: 4
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: absolute_return
+  score: session_activity_surprise
+  transform: identity
+  control: vol_rel_24
+  direction: no_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 27
+  adjusted_findings: 7
+  minimum_global_q: 0.0065921848706906
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch4.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-06
+  name: Pressure against confirmed HTF structure
+  style: trend
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: adverse_excursion
+  score: htf_structure_pressure
+  transform: identity
+  control: local_structure_distance
+  direction: ltf_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 34
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: TR-10
+  name: Trend quality mismatch across timeframes
+  style: trend
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: trend_quality_mismatch
+  transform: identity
+  control: htf_er
+  direction: htf_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 38
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 3
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-06
+  name: Cross-asset residual stretch
+  style: mean_reversion
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: peer_residual_stretch
+  transform: absolute
+  control: ema_distance_abs
+  direction: peer_reversal_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 43
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 4
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: MR-10
+  name: Mean reclaim after persistent stretch
+  style: mean_reversion
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: mean_reclaim_state
+  transform: identity
+  control: mean_episode_age
+  direction: mean_reclaim_direction
+  comparison_kind: categorical
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 24
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 1
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-09
+  name: Volatility instability
+  style: compression
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: absolute_return
+  score: volatility_instability
+  transform: identity
+  control: atr_ratio
+  direction: no_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 42
+  adjusted_findings: 5
+  minimum_global_q: 0.0065921848706906
+  supported_horizons: 4
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: CB-10
+  name: Directional range-break sequence balance
+  style: compression
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: revise
+  target: directed_return
+  score: break_sequence_balance
+  transform: absolute
+  control: break_sequence_count
+  direction: break_sequence_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 0
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 0
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Discrete break-balance tail contrast has no retained training common-support
+    strata.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-08
+  name: Wick-to-body transition
+  style: candle_structure
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: reject
+  target: directed_return
+  score: body_share_transition
+  transform: identity
+  control: prior_wick_magnitude
+  direction: recent_body_direction
+  comparison_kind: tails
+  expected: positive
+  planned_comparisons: 45
+  supported_comparisons: 45
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 5
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Adequate coverage, but no same-horizon replication in both validation slices
+    on at least two assets.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PA-10
+  name: Confirmed-level clustering
+  style: candle_structure
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: revise
+  target: adverse_excursion
+  score: level_cluster_density
+  transform: identity
+  control: nearest_level_distance
+  direction: ltf_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 0
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 0
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Retained matching strata cover only about 24-29% of training candidates,
+    below the fixed 50% minimum.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-09
+  name: Session-initial-range utilisation
+  style: persistence
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: revise
+  target: absolute_return
+  score: initial_range_usage
+  transform: identity
+  control: session_phase
+  direction: no_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 14
+  adjusted_findings: 0
+  minimum_global_q: 1.0
+  supported_horizons: 0
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Initial-session completeness/phase matching leaves insufficient joint cross-asset
+    support.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv
+- idea_id: PS-10
+  name: Between-bar versus within-bar move share
+  style: persistence
+  batch: 5
+  implementation: implemented
+  tests: passed
+  validation: completed
+  decision: revise
+  target: adverse_excursion
+  score: between_bar_share
+  transform: identity
+  control: observed_return_variance_24
+  direction: ltf_direction
+  comparison_kind: tails
+  expected: train
+  planned_comparisons: 45
+  supported_comparisons: 20
+  adjusted_findings: 0
+  minimum_global_q: 0.4518435124509535
+  supported_horizons: 0
+  replicated_horizons: 0
+  strategy_promotion: false
+  reason: Observed displacement is retained, but matched arm/stratum samples lack
+    stable cross-slice support.
+  feature_module: pipeline.catalogue_extended
+  protocol: config/indicator_catalogue_batch5.yml
+  evidence: research/indicators/IR-20261031-CATALOGUE-B5-v1/comparisons.csv
+  final_evidence: research/indicators/CATALOGUE-50-20261031/comparisons_final.csv
+  cumulative_family: research/indicators/IR-20261031-CATALOGUE-B5-v1/cumulative_tests.csv

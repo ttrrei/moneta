@@ -15,3 +15,10 @@ Run artifacts and source snapshots are research evidence intended for version
 control. Derived Parquets live under the existing ignored `data/` tree.
 Use new destinations for future attempts; the runner refuses overwrites.
 No protected holdout data or OOS token was used.
+
+The [all-50 catalogue report](../../docs/indicator_catalogue_results_20261031.md)
+records the subsequent five stages, `IR-20261031-CATALOGUE-B1-v1` through
+`IR-20261031-CATALOGUE-B5-v1`. Aggregate progress, final q-values, registries,
+audits and regression evidence are in `CATALOGUE-50-20261031/`. All fifty initial
+versions were evaluated: 43 reject, 7 revise, none passed the complete
+replication rule. The earlier P1 files remain unchanged.

@@ -1,0 +1,40 @@
+adjusted_catalogue_findings: 22
+artifact_sha256:
+  README.md: 0c40655db29b2ea96bdfe7e9c9fb1dfba75cd8cf7e69ff356cf52b0851b898a0
+  adjusted_findings.csv: a537b824726314945bbdc5bb3f7d54bfc0bc83a3fbb2bd2ce1920df646a8c383
+  comparisons_final.csv: c805bcd9b45c54d2aaa2d76bac1ab128341cb209d66eb3cd3c3db2076428c11a
+  feature_registry.yml: 4654e6ba8a4e0f90416bd30a9310b2c5abf89ba5145a96d86e3d354a8ce7e79c
+  idea_progress.csv: 4460573af2c97d288a071eef0af5f825e43601b8277bfe932ae7e28847422704
+  numerical_audit.json: 18d5a21fee6acb3f6a354a46770135ba4fac8683cf8c6449d9ffb8731a3ac106
+  numerical_verification_source.py: 6647a5a85f2b62c6e2e44bb83749a7c38b4588164fab6b4698b4c21908d82264
+  regression_checks.json: c246413a419a820a92c426d9d8135045df2a2fc158a44b8c2772dca2bd4d5b52
+  session_dst_audit.json: 08a090bef668ff2b0840a86c105d83d3618ab39fb32764f7cd2fdb0458b72266
+  test_sources/test_catalogue_extended.py.txt: c8d4f224317d71db59dd4ddac30c27e85340c9afe91740c811d65a6f34008f47
+  test_sources/test_catalogue_features.py.txt: ef66d80953c2daf4321b9c6e059eecd7645b6e142c4dd961e99c00a97297e695
+  test_sources/test_catalogue_research.py.txt: ba933604a1c491eef27330dc8dd03a4bcefa61cb81173d3ee0487b2e24e966ed
+  validation_audit.json: 020755ed70ddb24a7ed82f6deb8b8239ef919c6613217381df824352f9e1cbf8
+  verification_source.py: 4e0c210d5b4ef065c46a63517d6952ed0307eda551829e495e5d8a09a8404d6b
+catalogue_comparisons: 2250
+decisions:
+  reject: 43
+  revise: 7
+document_sha256:
+  docs/indicator_catalogue_results_20261031.md: ceb5eca26ce260c27d4a313cbfa24062b6c15b1c4319bea129724f5c75b7ef30
+  docs/indicator_catalogue_validation_spec_20261031.md: acb90ee47e1b4c193ecffdcf94e2bc73ae5de65e61ec98254061fb69e0ba00e6
+  docs/indicator_idea_catalogue_20261031.md: 9f80304d4d319f792e9c3accf88a7553358163797cae46f11c40cb91b4b47c60
+finished_at_utc: '2026-10-31T07:44:26.576171+00:00'
+global_family_tests: 4410
+implemented_ideas: 50
+oos_ledger_sha256: 3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6
+parent_manifest_sha256:
+  IR-20261031-CATALOGUE-B1-v1: 44ce89a5e433403941a37dd3bec455ed4f91fd8f78a2141207192253857d17bd
+  IR-20261031-CATALOGUE-B2-v1: 8d01eeca7576ccd94888dc7086951594043b00e2a790d8b03ce324c3d386eb4c
+  IR-20261031-CATALOGUE-B3-v1: 3949dca5861c86290c0eed156bea98caf3e59a4e8d92e1f9737bb7cbcb57286e
+  IR-20261031-CATALOGUE-B4-v1: d103800d9b7ff809f9225c571d6a9d186d649352b2439592dc36e41661082090
+  IR-20261031-CATALOGUE-B5-v1: e1208d1e37bebdda69496e328705a2a9b182bd3f44bc5de188c0c623ccd46f2a
+pytest_passed: 734
+replay_data_files: 48
+replay_result_files: 45
+status: completed
+study: CATALOGUE-50-20261031
+supported_comparisons: 1708

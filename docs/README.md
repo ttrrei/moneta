@@ -16,6 +16,11 @@ covers nine feature families, empirical development results and three review
 passes. Its [definition/protocol spec](indicator_research_P1_spec.md) describes
 the additive research layer; the original Gold column counts remain unchanged.
 
+All fifty first versions in the [idea catalogue](indicator_idea_catalogue_20261031.md)
+are now implemented and evaluated. The [results/progress report](indicator_catalogue_results_20261031.md)
+records 2,250 comparisons, 734 passing tests, five deterministic replays and
+final decisions: 43 reject, 7 revise. No idea met the full replication rule.
+
 ## What is this project?
 
 **moneta / Nova** is an early-stage, ultra-lightweight **quantitative strategy
@@ -39,6 +44,8 @@ registry that prevents duplicate work.
 | Design / code / test a **new strategy** by hand | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
 | Understand the **feature/indicator engine** (305/270 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` + `library/` (custom: Supertrend, PSAR) |
 | Research **P1 indicators and conditional returns** | [indicator_research_20261031_report.md](indicator_research_20261031_report.md) | [indicator_research_P1_spec.md](indicator_research_P1_spec.md), `config/indicator_research.yml` |
+| Choose **new indicator ideas across five styles** | [indicator_idea_catalogue_20261031.md](indicator_idea_catalogue_20261031.md) | Existing P1 results and `pipeline/indicators.py` |
+| Check **all-50 implementation/testing/validation progress** | [indicator_catalogue_results_20261031.md](indicator_catalogue_results_20261031.md) | [validation contract](indicator_catalogue_validation_spec_20261031.md), `research/indicators/CATALOGUE-50-20261031/idea_progress.csv` |
 | Understand the **data** (rows, grain, dtypes, gotchas) | [data_profile.md](data_profile.md) | `pipeline/sanity_check.py`, `pipeline/profile_check.py` |
 | Review the **roadmap** and verify external recommendations | [review_verification_20261031.md](review_verification_20261031.md) | Older `repo_review_*.md` files are historical; raw reviews live in `legacy/` (git-ignored) |
 | Ingest / backfill data | `pipeline/README.md` | `pipeline/extract_oanda.py`, `load_data.py`, `aggregate_ohlcv.py` |
@@ -135,6 +142,10 @@ load all 21 instruments' 5m frames at once (>10 GB). No network is needed to bac
   folder as `indicators.yml.legacy.bak`.)
 - **`metadata.duckdb` is single-user.** Close any VS Code DuckDB panel (file lock)
   before writing to it.
+- **Session DST correction (2026-10-31):** the session helper now resolves the
+  anchor's own local date. Stored Gold VWAP has not been rebuilt; new catalogue
+  session research uses its corrected reference. See the all-50 results report
+  before assuming historical stored VWAP has the corrected grouping.
 
 ## Maintenance rule for this documentation
 

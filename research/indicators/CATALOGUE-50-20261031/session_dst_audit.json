@@ -1,0 +1,39 @@
+{
+  "status": "passed",
+  "fixture": "timezone-aware synthetic timestamps only; no market rows",
+  "gold_rebuilt": false,
+  "transitions": [
+    {
+      "transition": "spring",
+      "previous_group_boundaries_utc": [
+        "2024-03-09 22:00:00+00:00",
+        "2024-03-10 00:00:00+00:00",
+        "2024-03-10 21:00:00+00:00",
+        "2024-03-11 21:00:00+00:00"
+      ],
+      "corrected_group_boundaries_utc": [
+        "2024-03-09 22:00:00+00:00",
+        "2024-03-10 21:00:00+00:00",
+        "2024-03-11 21:00:00+00:00"
+      ],
+      "previous_nonmonotonic_ids": true,
+      "corrected_nonmonotonic_ids": false
+    },
+    {
+      "transition": "autumn",
+      "previous_group_boundaries_utc": [
+        "2024-11-02 21:00:00+00:00",
+        "2024-11-03 00:00:00+00:00",
+        "2024-11-03 22:00:00+00:00",
+        "2024-11-04 22:00:00+00:00"
+      ],
+      "corrected_group_boundaries_utc": [
+        "2024-11-02 21:00:00+00:00",
+        "2024-11-03 22:00:00+00:00",
+        "2024-11-04 22:00:00+00:00"
+      ],
+      "previous_nonmonotonic_ids": false,
+      "corrected_nonmonotonic_ids": false
+    }
+  ]
+}

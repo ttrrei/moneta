@@ -1,0 +1,11 @@
+idea_id,batch,target,decision,supported_horizons,replicated_horizons,strategy_promotion,status
+CB-01,1,absolute_return,reject,3,0,False,interim
+CB-07,1,adverse_excursion,reject,5,0,False,interim
+MR-01,1,directed_return,reject,1,0,False,interim
+MR-02,1,directed_return,reject,5,0,False,interim
+PA-02,1,directed_return,reject,5,0,False,interim
+PA-09,1,directed_return,reject,5,0,False,interim
+PS-01,1,directed_return,reject,5,0,False,interim
+PS-05,1,directed_return,reject,5,0,False,interim
+TR-01,1,directed_return,reject,5,0,False,interim
+TR-02,1,directed_return,reject,5,0,False,interim

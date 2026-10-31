@@ -1,0 +1,51 @@
+{
+  "status": "passed",
+  "batches": [
+    {
+      "batch": 1,
+      "ideas": 10,
+      "comparisons": 450,
+      "supported": 416,
+      "replay": {}
+    },
+    {
+      "batch": 2,
+      "ideas": 10,
+      "comparisons": 450,
+      "supported": 354,
+      "replay": {}
+    },
+    {
+      "batch": 3,
+      "ideas": 10,
+      "comparisons": 450,
+      "supported": 333,
+      "replay": {}
+    },
+    {
+      "batch": 4,
+      "ideas": 10,
+      "comparisons": 450,
+      "supported": 345,
+      "replay": {}
+    },
+    {
+      "batch": 5,
+      "ideas": 10,
+      "comparisons": 450,
+      "supported": 260,
+      "replay": {}
+    }
+  ],
+  "catalogue_ideas": 50,
+  "catalogue_comparisons": 2250,
+  "family_comparisons": 4410,
+  "direct_forward_label_checks": 3000,
+  "independent_matched_estimate_checks": 2250,
+  "real_prefix_checks": 15,
+  "independent_decision_checks": 50,
+  "ledger_sha256": "3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6",
+  "replay_source_context_differences": {},
+  "source_difference_explanation": "Batch 1 predates a later-batch closure-control correction and calibration-provenance metadata; active protocol/math and every result/data artifact replay identically.",
+  "verification_script_sha256": "6647a5a85f2b62c6e2e44bb83749a7c38b4588164fab6b4698b4c21908d82264"
+}

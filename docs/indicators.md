@@ -308,3 +308,20 @@ stage: default Gold tables retain 305/270 columns and their existing semantics.
 See the [empirical report and three-pass review](indicator_research_20261031_report.md)
 before using the outputs. No output qualified for promotion in this first study.
 
+## 11. Fifty-idea catalogue and session correction (2026-10-31)
+
+All fifty initial catalogue versions are implemented through
+`pipeline/catalogue_features.py` and `pipeline/catalogue_extended.py`.
+See the [results/progress report](indicator_catalogue_results_20261031.md) and
+[validation contract](indicator_catalogue_validation_spec_20261031.md) for
+controlled comparisons, null/confirmation semantics and measured decisions.
+The default Gold column counts remain 305/270; research features use separate
+development-only files.
+
+`session_anchor_ns` now chooses the actual local anchor date before timezone
+localization, fixing extra session boundaries around DST transitions. Both
+`session_reset_index` and new research session features use it. The existing
+stored Gold VWAP is historical and has not been rebuilt. New catalogue VWAP
+uses the corrected observed-bar reference; any default Gold rebuild must be
+audited and versioned before changing strategy evidence.
+

@@ -1,0 +1,140 @@
+context_rows: 258
+context_timeframe: 1h
+cost_bps_one_way:
+- 0
+- 2
+- 5
+definition_version: 1
+feature_module: pipeline.catalogue_features
+horizons:
+- 6
+- 12
+- 24
+- 60
+- 120
+ideas:
+  CB-01:
+    control: bb_width_24
+    direction: no_direction
+    expected: train
+    kind: tails
+    score: squeeze_age
+    style: compression
+    target: absolute_return
+  CB-07:
+    control: return_variance_24
+    direction: variance_direction
+    expected: train
+    kind: tails
+    score: variance_imbalance
+    style: compression
+    target: adverse_excursion
+    transform: absolute
+  MR-01:
+    control: ema_distance_abs
+    direction: median_reversal_direction
+    expected: positive
+    kind: tails
+    score: median_stretch
+    style: mean_reversion
+    target: directed_return
+    transform: absolute
+  MR-02:
+    control: ema_distance_abs
+    direction: regression_reversal_direction
+    expected: positive
+    kind: tails
+    score: regression_residual
+    style: mean_reversion
+    target: directed_return
+    transform: absolute
+  PA-02:
+    control: body_atr
+    direction: body_direction
+    expected: positive
+    kind: categorical
+    score: engulfing_state
+    style: candle_structure
+    target: directed_return
+  PA-09:
+    control: rejection_clv
+    direction: rejection_direction
+    expected: positive
+    kind: categorical
+    score: sweep_state
+    style: candle_structure
+    target: directed_return
+  PS-01:
+    control: er_24
+    direction: last_return_direction
+    expected: positive
+    kind: tails
+    score: sign_memory
+    style: persistence
+    target: directed_return
+  PS-05:
+    control: absolute_return_24
+    direction: jump_direction
+    expected: train
+    kind: tails
+    score: jump_concentration
+    style: persistence
+    target: directed_return
+  TR-01:
+    control: ltf_direction
+    direction: ltf_direction
+    expected: positive
+    kind: categorical
+    score: trend_alignment
+    style: trend
+    target: directed_return
+  TR-02:
+    control: pullback_depth
+    direction: htf_slope_direction
+    expected: positive
+    kind: categorical
+    score: pullback_state
+    style: trend
+    target: directed_return
+instruments:
+  BTC_USD: crypto
+  EUR_USD: fx
+  XAU_USD: metal
+parameters:
+  age_cap: 120
+  contact_tolerance_atr: 0.25
+  slope_lag: 6
+  window: 24
+research_id: IR-20261031-CATALOGUE-B1-v1
+splits:
+  train:
+    end: '2023-01-01'
+    start: '2020-01-01'
+  validation_1:
+    end: '2025-01-01'
+    start: '2023-01-01'
+  validation_2:
+    end: '2025-08-01'
+    start: '2025-01-01'
+statistics:
+  bootstrap_block_weeks: 4
+  bootstrap_replicates: 499999
+  control_quantiles:
+  - 0.3333333333333333
+  - 0.6666666666666666
+  min_active_weeks: 8
+  min_cell_samples: 10
+  min_samples: 30
+  min_training_support_mass: 0.5
+  multiplicity: benjamini_yekutieli_p1_plus_batch1
+  planned_catalogue_tests: 2250
+  prior_comparisons: research/indicators/IR-20261031-P1-v2/comparisons.csv
+  prior_expected_tests: 2160
+  q_limit: 0.1
+  seed: 20261031
+  tail_quantiles:
+  - 0.2
+  - 0.8
+timeframe: 5m
+batch: 1
+previous_batches: []

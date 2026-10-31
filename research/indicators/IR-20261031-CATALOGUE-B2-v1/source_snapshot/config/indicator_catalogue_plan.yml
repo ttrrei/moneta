@@ -1,0 +1,64 @@
+plan_id: CATALOGUE-50-20261031
+status: fixed_before_catalogue_outcomes
+prior_p1_tests: 2160
+planned_catalogue_tests: 2250
+planned_total_tests: 4410
+batch_ideas:
+  1:
+  - TR-01
+  - TR-02
+  - MR-01
+  - MR-02
+  - CB-01
+  - CB-07
+  - PA-02
+  - PA-09
+  - PS-01
+  - PS-05
+  2:
+  - TR-03
+  - TR-04
+  - MR-03
+  - MR-04
+  - CB-02
+  - CB-03
+  - PA-01
+  - PA-03
+  - PS-02
+  - PS-03
+  3:
+  - TR-05
+  - TR-07
+  - MR-05
+  - MR-07
+  - CB-04
+  - CB-05
+  - PA-04
+  - PA-05
+  - PS-04
+  - PS-06
+  4:
+  - TR-08
+  - TR-09
+  - MR-08
+  - MR-09
+  - CB-06
+  - CB-08
+  - PA-06
+  - PA-07
+  - PS-07
+  - PS-08
+  5:
+  - TR-06
+  - TR-10
+  - MR-06
+  - MR-10
+  - CB-09
+  - CB-10
+  - PA-08
+  - PA-10
+  - PS-09
+  - PS-10
+session_anchor_grace_minutes: 120
+structural_gap_policy: retain original P1 reset policy; report hourly sparsity, no
+  unverified calendar exceptions

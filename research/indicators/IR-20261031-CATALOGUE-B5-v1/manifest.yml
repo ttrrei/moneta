@@ -1,0 +1,165 @@
+artifacts:
+  calibrations.yml: 2eb8fb5a85a3a6833cda4950ac70adc997cf9b99091047f757388771dd680d5e
+  catalogue_decisions.csv: 0c9d04175f953c1b8d344a3162f88f873cced57c98d3c0385328f8f927706678
+  comparisons.csv: c4d585147b44ca8fdb02d51cd8b47a37d6012d52b4355ddead057b196d6e2499
+  conditional_returns.csv: a0bc8b8270b2a89d0db1a9614d47f9e40b66f3a2a01f63a0c42c599c8b0fcd43
+  coverage.csv: 0dd6b57ebca1a1463933aa39070c47e429fd204ee6b9ea8ece62fade68869d2c
+  cumulative_tests.csv: 2221e04a583fea21610cfbd47a05211f8195b1c43fae8ccde4322b48e0590a69
+  matched_cells.csv: 6839ff06abad65d3e53a7e22d05f6b706ed99631ce7dcbd12ad693d02ae6ae02
+  protocol.yml: 59f57c6717018245af3dfd3c620844e41dac86bd0f7ef95a44e75b9de338fc9c
+  training_fits.yml: e94b6fb05bbedebcf2f94bbb8983f94984b8a9fd6cb797406ff83a2a68efe76e
+batch: 5
+completed_comparisons: 450
+derived:
+- file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/BTC_USD_features.parquet
+  instrument: BTC_USD
+  rows: 409018
+  sha256: cc9051af55ee7307ca6cf6e2cb8b94a7e7e856e5fce12b3d74ef85317b19f58b
+- file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/EUR_USD_features.parquet
+  instrument: EUR_USD
+  rows: 416107
+  sha256: 8a7ee89d23aded71bd4d197010fc68f713a90a7a0bcd4310bb41e77b4ff65be9
+- file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/XAU_USD_features.parquet
+  instrument: XAU_USD
+  rows: 395556
+  sha256: 419413119a0544e3458872eef6f5027a91262f3f4845fb9ae095c3bc9819af59
+finished_at_utc: '2026-10-31T07:34:36.843479+00:00'
+inputs:
+- end: '2025-07-31 23:55:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/BTC_USD_source5m.parquet
+  frame_sha256: 88e2fb5daf10129dd2603e98558fb1ce758f3e3496998a827a78eda64ffe5cc1
+  gold_mtime_ns: 1793181791575942113
+  gold_size: 11849064176
+  instrument: BTC_USD
+  role: source5m
+  rows: 409018
+  sha256: 8c0726c9e7de4b4dd2b859e1f811a3c4e751029891642c0301223141d6602e8b
+  start: '2020-01-03 05:00:00+00:00'
+  timeframe: 5m
+- end: '2025-07-31 23:00:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/BTC_USD_source1h.parquet
+  frame_sha256: 124109e17e02169f96af11faea60b2d980dfcde8209ba0f4f57157ca4bbd24c6
+  gold_mtime_ns: 1793181791602599480
+  gold_size: 1037325789
+  instrument: BTC_USD
+  role: source1h
+  rows: 33841
+  sha256: 435c27b3f6d92500c53adce6d124d9d152283b5441e5c20160165d5a8817678a
+  start: '2020-01-23 06:00:00+00:00'
+  timeframe: 1h
+- end: '2025-07-31 23:55:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/ETH_USD_peer5m.parquet
+  frame_sha256: fb3638a5e893d64fb28c24fada8ce20e31e8770851413dd8dfc95dc30c3c4a61
+  gold_mtime_ns: 1793181791575942113
+  gold_size: 11849064176
+  instrument: ETH_USD
+  role: peer5m
+  rows: 403315
+  sha256: 5950759671db414e43a5d51f583a90c3cbf6076571575583d58e4e891917abe5
+  start: '2020-01-03 12:00:00+00:00'
+  timeframe: 5m
+- end: '2025-07-31 23:55:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/EUR_USD_source5m.parquet
+  frame_sha256: c8aed5ba56b1f874e407714f0a782f196bd21a5f025e51b77a2e3639a27c545c
+  gold_mtime_ns: 1793181791575942113
+  gold_size: 11849064176
+  instrument: EUR_USD
+  role: source5m
+  rows: 416107
+  sha256: 8ac677024b478cebeb8cb489995ce5592e3c6efa204dbeb504288690f0d2c5e8
+  start: '2020-01-03 04:20:00+00:00'
+  timeframe: 5m
+- end: '2025-07-31 23:00:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/EUR_USD_source1h.parquet
+  frame_sha256: 584f20a8ad543d376a7c924630b30c72dd6f943cd62248c5888beb99822f4315
+  gold_mtime_ns: 1793181791602599480
+  gold_size: 1037325789
+  instrument: EUR_USD
+  role: source1h
+  rows: 34410
+  sha256: 57e25e83ef05827569fc6f698960fb2d168aed6d95a81778c91952de8d0f1231
+  start: '2020-01-22 22:00:00+00:00'
+  timeframe: 1h
+- end: '2025-07-31 23:55:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/GBP_USD_peer5m.parquet
+  frame_sha256: 4c1f64ff96ee9621b21878cde283f15fd7ee6f87f8bbf18c50133c47838d7da6
+  gold_mtime_ns: 1793181791575942113
+  gold_size: 11849064176
+  instrument: GBP_USD
+  role: peer5m
+  rows: 415923
+  sha256: ae3207ccaf930287fbb5d104179e52312ad5ecc199f64b61b8eb5ab6ff2a3e87
+  start: '2020-01-03 04:10:00+00:00'
+  timeframe: 5m
+- end: '2025-07-31 23:55:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/XAU_USD_source5m.parquet
+  frame_sha256: 4ee0cb17f804ca78ffcf443567cbc7607fe4fcc6aef8b46382552996f6647fe8
+  gold_mtime_ns: 1793181791575942113
+  gold_size: 11849064176
+  instrument: XAU_USD
+  role: source5m
+  rows: 395556
+  sha256: 52cfebf8fa2d84edc6a5dab2b42c8def7e88b5bcb5ff8431184abda299ccf0ed
+  start: '2020-01-03 06:00:00+00:00'
+  timeframe: 5m
+- end: '2025-07-31 23:00:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/XAU_USD_source1h.parquet
+  frame_sha256: 72f6fc75d61cd8a8c32ad54a828edccd6e1c3a3428b545117cfbad58ed1a6d69
+  gold_mtime_ns: 1793181791602599480
+  gold_size: 1037325789
+  instrument: XAU_USD
+  role: source1h
+  rows: 32655
+  sha256: f8f4ef973e6d5f4b7dd2e78527761cb8d7dff38fc2b225b24d44209f62d2bf55
+  start: '2020-01-23 23:00:00+00:00'
+  timeframe: 1h
+- end: '2025-07-31 23:55:00+00:00'
+  file: data/indicator_research/IR-20261031-CATALOGUE-B5-v1/XAG_USD_peer5m.parquet
+  frame_sha256: afa26b19152522d67708d0292c4fa50405b5c5a6db617aa3fc928028ab4cc26b
+  gold_mtime_ns: 1793181791575942113
+  gold_size: 11849064176
+  instrument: XAG_USD
+  role: peer5m
+  rows: 395056
+  sha256: 8886e2e549042d9569e13cc0ab5261f2ed39604af65a14e71fc641b340d950a5
+  start: '2020-01-03 06:25:00+00:00'
+  timeframe: 5m
+ledger_sha256: 3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6
+numpy: 2.5.4
+pandas: 3.0.6
+planned_comparisons: 450
+planned_family: 4410
+prior_sha256:
+  research/indicators/IR-20261031-CATALOGUE-B1-v1/comparisons.csv: 854a43b60c1d6f599d71a1cc29d7ae6aa9e107de10df5089dc5f115e76d6bfff
+  research/indicators/IR-20261031-CATALOGUE-B2-v1/comparisons.csv: 2421ea786a27f64173c47b53065440b9d38bdbadc4ed109e54f9b8f69ee0a8bf
+  research/indicators/IR-20261031-CATALOGUE-B3-v1/comparisons.csv: c6ff4210c485d6ac5bb7c7f2aa824bda8ba04e9d2599bb6ed9a5503c865a52cb
+  research/indicators/IR-20261031-CATALOGUE-B4-v1/comparisons.csv: c14ec1e80732f1078fe9b05c8c99fbec10f8ffc46dfbe18e0d5fd6fa1e9d2487
+  research/indicators/IR-20261031-P1-v2/comparisons.csv: a7a037827101a77b154590b2097566a438be9eb1d15e02840473d491a498abc5
+protocol_sha256: 59f57c6717018245af3dfd3c620844e41dac86bd0f7ef95a44e75b9de338fc9c
+python: 3.12.3
+registration: local fixed catalogue and batch protocol; development history previously
+  researched; not external preregistration
+research_id: IR-20261031-CATALOGUE-B5-v1
+source_commit: 519ea9a84ade795a87ad6d9f16b5685755f40737
+source_sha256:
+  config/indicator_catalogue_batch1.yml: ae47f55dd757c2e4498997e115b65b48851ad5d3c27529f3f512123c012745a0
+  config/indicator_catalogue_batch2.yml: 462f96eb2afce58458cf4a426b0f9b38b499886f7c9732faab2b669b646d7c43
+  config/indicator_catalogue_batch3.yml: a913a153083e5305d923f0d8b7330e0e393786150b1014756a9fb8d4275b13c5
+  config/indicator_catalogue_batch4.yml: 292d838072a523bf86551ce568eb8c259f7588ba678def13d99c0b393c994dbc
+  config/indicator_catalogue_batch5.yml: 59f57c6717018245af3dfd3c620844e41dac86bd0f7ef95a44e75b9de338fc9c
+  config/indicator_catalogue_plan.yml: a4c889212803b9dd9952fad19da1de06f2bd5f91dc2df70c2bd5ca6259958376
+  config/strategies.yml: bf28f246100c8db57984b0c3364ba3a300c874fff1a182cf6067bc127d1d88a8
+  library/catalogue.py: a426186ae0bfb61320c8f011577a2c4f885e559ced2a39817f641299db38a163
+  library/market_structure.py: 97168949e9f0ee943a13fae0236d4dd7b876313490ce61e0581725885b99ef06
+  pipeline/catalogue_extended.py: abd4004206e759165604cb2961ba76a53c03510fd9e22488f853ad66586de1c5
+  pipeline/catalogue_features.py: 780ae8cc1d633dcc3b204343064cc7e4b10c8dc798cfc7f215aa6b58f53b6567
+  pipeline/indicators.py: 062e68b90ce4310a182f5bbb66bf48311a5f3e4025fefbab3224b09a58f24ced
+  requirements.lock: bd4f2fe27c196a92809858b4e688eabd851653fe42654fe800682b1cb682866b
+  scripts/research_catalogue.py: 2b2f627e11ff9b7fa6b35e720716faf27ed2726baa5d79ab358c218fbe873275
+  scripts/research_indicators.py: 6cbf82630d7f8769c8bafcaf58bfc32723894db2a30455f8e798058160bb26cf
+  strategy/catalogue_research.py: dcf9dac4cefc259d823dc6227f2a1b68f05c5b80a3ffe63901db6ca973197c5b
+  strategy/feature_research.py: 0b6801a85a9e15f997ccf3aa087d51c87f81b83aa92bba9b4617cc3e564b9000
+  strategy/oos_token.py: 0b0f86d43a3337fdf47045f9901fe410d842209c400f0edddf71b47070f44ab3
+  strategy/strategy_lib.py: 11089925148456a01372844861507fa4fcd68459df8b5024eda8aabbc5857ea7
+started_at_utc: '2026-10-31T07:32:47.267381+00:00'
+status: completed

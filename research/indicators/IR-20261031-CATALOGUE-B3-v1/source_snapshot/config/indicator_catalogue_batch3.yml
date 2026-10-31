@@ -1,0 +1,141 @@
+context_rows: 258
+context_timeframe: 1h
+cost_bps_one_way:
+- 0
+- 2
+- 5
+definition_version: 1
+feature_module: pipeline.catalogue_extended
+horizons:
+- 6
+- 12
+- 24
+- 60
+- 120
+ideas:
+  TR-05:
+    style: trend
+    score: trend_age
+    control: er_24
+    target: directed_return
+    direction: ltf_direction
+    kind: tails
+    expected: train
+  TR-07:
+    style: trend
+    score: oriented_trend_curvature
+    control: slope_magnitude
+    target: directed_return
+    direction: slope_direction
+    kind: tails
+    expected: positive
+  MR-05:
+    style: mean_reversion
+    score: oscillator_disagreement
+    control: rsi_change_magnitude
+    target: directed_return
+    direction: price_reversal_direction
+    kind: categorical
+    expected: positive
+  MR-07:
+    style: mean_reversion
+    score: shock_decay
+    control: shock_size
+    target: directed_return
+    direction: shock_reversal_direction
+    kind: tails
+    expected: positive
+  CB-04:
+    style: compression
+    score: break_acceptance
+    control: break_observed_size
+    target: directed_return
+    direction: acceptance_direction
+    kind: tails
+    expected: positive
+  CB-05:
+    style: compression
+    score: break_activity
+    control: break_distance
+    target: directed_return
+    direction: range_break_direction
+    kind: tails
+    expected: positive
+  PA-04:
+    style: candle_structure
+    score: outside_settlement
+    control: outside_prior_position
+    target: directed_return
+    direction: outside_direction
+    kind: tails
+    expected: positive
+    transform: absolute
+  PA-05:
+    style: candle_structure
+    score: boundary_tests
+    control: contact_distance
+    target: directed_return
+    direction: contact_reversal_direction
+    kind: tails
+    expected: train
+  PS-04:
+    style: persistence
+    score: turning_intensity
+    control: er_24
+    target: adverse_excursion
+    direction: six_return_direction
+    kind: tails
+    expected: positive
+  PS-06:
+    style: persistence
+    score: return_scaling
+    control: return_variance_120
+    target: absolute_return
+    direction: no_direction
+    kind: tails
+    expected: train
+instruments:
+  BTC_USD: crypto
+  EUR_USD: fx
+  XAU_USD: metal
+parameters:
+  age_cap: 120
+  contact_tolerance_atr: 0.25
+  slope_lag: 6
+  window: 24
+research_id: IR-20261031-CATALOGUE-B3-v1
+splits:
+  train:
+    end: '2023-01-01'
+    start: '2020-01-01'
+  validation_1:
+    end: '2025-01-01'
+    start: '2023-01-01'
+  validation_2:
+    end: '2025-08-01'
+    start: '2025-01-01'
+statistics:
+  bootstrap_block_weeks: 4
+  bootstrap_replicates: 499999
+  control_quantiles:
+  - 0.3333333333333333
+  - 0.6666666666666666
+  min_active_weeks: 8
+  min_cell_samples: 10
+  min_samples: 30
+  min_training_support_mass: 0.5
+  multiplicity: benjamini_yekutieli_p1_plus_batch1
+  planned_catalogue_tests: 2250
+  prior_comparisons: research/indicators/IR-20261031-P1-v2/comparisons.csv
+  prior_expected_tests: 2160
+  q_limit: 0.1
+  seed: 20261031
+  tail_quantiles:
+  - 0.2
+  - 0.8
+timeframe: 5m
+batch: 3
+previous_batches:
+- research/indicators/IR-20261031-CATALOGUE-B1-v1
+- research/indicators/IR-20261031-CATALOGUE-B2-v1
+calibration: true

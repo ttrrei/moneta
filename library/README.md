@@ -24,6 +24,7 @@ the pipeline *and* checked in isolation.
 | `psar.py` | `psar_line(h, l, accel, max)` + `psar_direction(c, sar)` | SAR line via `talib.SAR`; the direction convention + parameter rules are ours. |
 | `utils.py` | `param_tag` (0.02 → `0p02` column tag), `validate_free_params` | Shared by the modules and the pipeline. |
 | `market_structure.py` | `confirmed_structure`, `frozen_events` | Confirmed swings and frozen range/retest events; experimental additive stage, [definitions](../docs/indicator_research_P1_spec.md). |
+| `catalogue.py` | `center_stretch`, `capped_age` | Pure NumPy primitives for the [all-50 catalogue study](../docs/indicator_catalogue_results_20261031.md); experimental module imports, separate from default Gold. |
 
 ## Conventions (apply to every module here)
 

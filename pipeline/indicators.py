@@ -167,25 +167,25 @@ def _reset_utc_hour(anchor: SessionAnchor, offset_hours: np.ndarray) -> np.ndarr
     return (local - offset_hours) % 24.0
 
 
+def session_anchor_ns(ts: pd.Series, anchor: SessionAnchor) -> np.ndarray:
+    """Actual latest local anchor instant, including the previous local date.
+
+    Localize the anchor's own date before converting to UTC. Subtracting a
+    fixed UTC day or using midnight's offset fails on DST transition days.
+    """
+    local = pd.DatetimeIndex(ts).tz_convert(anchor.tz)
+    before = local.hour * 60 + local.minute < anchor.local_hour * 60 + anchor.local_minute
+    dates = [stamp.date() - pd.Timedelta(days=int(early)) for stamp, early in zip(local, before)]
+    mapping = {day: (pd.Timestamp(day) + pd.Timedelta(hours=anchor.local_hour, minutes=anchor.local_minute))
+                    .tz_localize(anchor.tz).tz_convert("UTC").value for day in set(dates)}
+    return np.asarray([mapping[day] for day in dates], dtype=np.int64)
+
+
 def session_reset_index(ts: pd.Series, anchor: SessionAnchor) -> np.ndarray:
     """For each bar (UTC) return the id of its session: the index of the most
     recent reset instant <= the bar timestamp (spec section 4.2 dynamic VWAP).
     """
-    times = ts.dt.tz_convert("UTC")
-    ns = times.to_numpy(dtype="datetime64[ns]").astype("int64")  # epoch ns, UTC
-    # One reset per day; the UTC hour of the reset depends on the *date's*
-    # DST offset (per-date, resolved via the market zone). We compute, for
-    # each bar, the reset instant of *its* day; sessions are contiguous in
-    # time so grouping by that instant is sufficient even when the UTC hour
-    # of the anchor shifts across DST dates (a bar is always compared
-    # against resets on-or-before itself).
-    DAY_NS = 86_400 * 1_000_000_000
-    day_ns = (ns // DAY_NS) * DAY_NS
-    hour = _reset_utc_hour(anchor, _utc_offset_for(anchor, pd.DatetimeIndex(times)))
-    reset_ns = day_ns + (hour * 3600.0).astype(np.int64) * 1_000_000_000
-    # A bar before its own day's reset belongs to the previous day's session.
-    prev_day_reset = reset_ns - DAY_NS
-    group = np.where(ns >= reset_ns, reset_ns, prev_day_reset)
+    group = session_anchor_ns(ts, anchor)
     # Compress the (strictly increasing) reset instants to small integer ids.
     _, ids = np.unique(group, return_inverse=True)
     return ids
