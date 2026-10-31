@@ -298,3 +298,13 @@ class BaseFeatureGroup(abc.ABC):
 - 计算 `is_gap_bar`, `is_partial`, `is_near_market_close` 断层特征；
 - 流水线集成头部自动 DropNA（截掉前 360 行）与 DuckDB/Parquet 分块流式写出。
 
+## 10. Additive P1 research layer (2026-10-31)
+
+The [P1 definition/protocol spec](indicator_research_P1_spec.md) extends the
+library with confirmed structure, frozen-boundary events and ATR ranks through
+`library/market_structure.py` and `pipeline/research_features.py`. Existing
+wick/CLV and ATR-ratio columns are reused. This is a separate development-only
+stage: default Gold tables retain 305/270 columns and their existing semantics.
+See the [empirical report and three-pass review](indicator_research_20261031_report.md)
+before using the outputs. No output qualified for promotion in this first study.
+

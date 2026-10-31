@@ -1,0 +1,89 @@
+artifacts:
+  comparisons.csv: 02dc021757e88f2928d39d5d5f5c1e9d2a7a736a4f31106100e36e7d28daeccd
+  conditional_returns.csv: d91e14154df65e9b48cac1a8fe057ec34eca9f8842571b2843a1ad64e5e1c295
+  decisions.csv: 97047a5cb2596eb835a6701c01d94532c3766ed1c42a14d98efc32cb39625a37
+  distributions.csv: 3417340907b5d82e131ff88584afdbb0d74768ddc4fc3a40ceb8509b0c445449
+  existing_feature_inventory.csv: 74da8ea1ba5e4f25d0b0d4a1d8a75f1b8e08417f101b29b93200738fe4d9d39e
+  protocol.yml: 20c48e15c73a2317cef3e24976f67ac64ebb132e97bbcbc2d37939a69ad88b27
+  training_buckets.yml: d2ecbdec6b78dac38ebbade719d4f8ef3cb74a554bf4ea1a203e9fcc5758530c
+completed_comparisons: 2160
+dirty: true
+finished_at_utc: '2026-10-31T05:41:48.045416+00:00'
+inputs:
+- derived_file: data/indicator_research/IR-20261031-P1-v1/EUR_USD_5m.parquet
+  derived_sha256: 032daf16c4215c68b2e42c024fc6c90a2a4899461e5a58e2d2e5ab35f2796c7a
+  development_frame_sha256: 2897967986a99a7b2ca9612ee014633201f925a43b2740e767911e2a34669110
+  end: '2025-07-31 23:55:00+00:00'
+  instrument: EUR_USD
+  rows: 416107
+  seconds: 6.479385
+  start: '2020-01-03 04:20:00+00:00'
+  timeframe: 5m
+- derived_file: data/indicator_research/IR-20261031-P1-v1/XAU_USD_5m.parquet
+  derived_sha256: 3b95deee98c3014d2abc01580d9e744728b5f7d635f884e1e9a2f664a4ad7f3b
+  development_frame_sha256: ff4bed1397cf4b4955e3ff846e6d654091b98448374967ba91e3e52adf018b95
+  end: '2025-07-31 23:55:00+00:00'
+  instrument: XAU_USD
+  rows: 395556
+  seconds: 6.404634
+  start: '2020-01-03 06:00:00+00:00'
+  timeframe: 5m
+- derived_file: data/indicator_research/IR-20261031-P1-v1/BTC_USD_5m.parquet
+  derived_sha256: d8f7dd9ec331d497bbec04043a9ef42b873c29ad4df0d3187d18035525d3df09
+  development_frame_sha256: c91c8135a005e2f0d92691ea41429cd1341f6d7a8126b06fc1f784971082b31d
+  end: '2025-07-31 23:55:00+00:00'
+  instrument: BTC_USD
+  rows: 409018
+  seconds: 7.012855
+  start: '2020-01-03 05:00:00+00:00'
+  timeframe: 5m
+- derived_file: data/indicator_research/IR-20261031-P1-v1/EUR_USD_1h.parquet
+  derived_sha256: 89f62a1ddd8ed10882d1cb177040242c89faca5bd6d12715f8b22d1f93e818d6
+  development_frame_sha256: cb77f4a6a94cad6697a21273be652bffc1250f241f5c6b932759cff9998301a3
+  end: '2025-07-31 23:00:00+00:00'
+  instrument: EUR_USD
+  rows: 34410
+  seconds: 0.835207
+  start: '2020-01-22 22:00:00+00:00'
+  timeframe: 1h
+- derived_file: data/indicator_research/IR-20261031-P1-v1/XAU_USD_1h.parquet
+  derived_sha256: f696517baa538e0bcf0864982e5389d3247b1656aa7697fc4cf9830dd449aeaa
+  development_frame_sha256: d6c74737a76af9867c80ee539b08df53574c9387adaeaa599c6e627bf9ee521c
+  end: '2025-07-31 23:00:00+00:00'
+  instrument: XAU_USD
+  rows: 32655
+  seconds: 0.802655
+  start: '2020-01-23 23:00:00+00:00'
+  timeframe: 1h
+- derived_file: data/indicator_research/IR-20261031-P1-v1/BTC_USD_1h.parquet
+  derived_sha256: c67a225719fa5dd1d31def1f333303ec9b8158358b20ef27a722c76d6c975018
+  development_frame_sha256: 760fd46b5c3a08d1918cf3fa17323c2d01abd111994c4c6a04e18a5b1500c000
+  end: '2025-07-31 23:00:00+00:00'
+  instrument: BTC_USD
+  rows: 33841
+  seconds: 0.857583
+  start: '2020-01-23 06:00:00+00:00'
+  timeframe: 1h
+ledger_sha256: 3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6
+numpy: 2.5.4
+pandas: 3.0.6
+planned_comparisons: 2160
+protocol_sha256: 20c48e15c73a2317cef3e24976f67ac64ebb132e97bbcbc2d37939a69ad88b27
+python: 3.12.3
+registration: local protocol/source snapshot before outcomes; not externally preregistered
+research_id: IR-20261031-P1-v1
+source_commit: 173b997d2cd9c10d9ca5b1e20c5e8247088c77e7
+source_sha256:
+  config/indicator_research.yml: 20c48e15c73a2317cef3e24976f67ac64ebb132e97bbcbc2d37939a69ad88b27
+  library/market_structure.py: 97168949e9f0ee943a13fae0236d4dd7b876313490ce61e0581725885b99ef06
+  library/psar.py: 25b3dc7a7e7220f921d205d258d1fb2c60df700ada7a80a0a4a369806806fb35
+  library/supertrend.py: f87db06cedfd65a8eb1891f98510067ab6ad8628e28cec1e4f2761efc50d4761
+  pipeline/indicators.py: bfc6666cd1a9da2a79bc2f6c1865328a9ac69371cd00f5c65c6bfc22c8a9b277
+  pipeline/research_features.py: 1cf568c17b2518e6c8bc6863037d2ed18369b7b0ed48cafc3039999f8834c3b8
+  requirements.lock: bd4f2fe27c196a92809858b4e688eabd851653fe42654fe800682b1cb682866b
+  scripts/research_indicators.py: 52ae1acb73fa476eebefe6b7b47c97dfc6f35f02e024eeaafd83b264c8fca714
+  strategy/feature_research.py: 0b6801a85a9e15f997ccf3aa087d51c87f81b83aa92bba9b4617cc3e564b9000
+  strategy/oos_token.py: 0b0f86d43a3337fdf47045f9901fe410d842209c400f0edddf71b47070f44ab3
+  strategy/strategy_lib.py: 11089925148456a01372844861507fa4fcd68459df8b5024eda8aabbc5857ea7
+started_at_utc: '2026-10-31T05:41:25.253703+00:00'
+status: completed

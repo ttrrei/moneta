@@ -1,0 +1,25 @@
+feature,feature_id,decision,supported_tf_horizon_settings,replicated_tf_horizon_settings,reason
+bar_upper_wick_ratio,FR-01,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+bar_lower_wick_ratio,FR-01,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+bar_clv,FR-01,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+atr_percentile_60,VR-01,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+atr_percentile_120,VR-01,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+vol_ratio_6_24,VR-02,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+vol_ratio_12_60,VR-02,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+vol_ratio_24_120,VR-02,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_break_strength_up,MS-03,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_break_strength_down,MS-03,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+swing_high_confirmed,MS-01,reject,9,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+swing_low_confirmed,MS-01,reject,9,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_hh,MS-02,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_lh,MS-02,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_hl,MS-02,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_ll,MS-02,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_break_up,MS-03,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+structure_break_down,MS-03,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+breakout_retest_up,MS-04,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+breakout_retest_down,MS-04,reject,5,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+range_reentry_from_above,FR-02,reject,8,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+range_reentry_from_below,FR-02,reject,8,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+failed_breakout_up,FR-03,reject,8,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.
+failed_breakout_down,FR-03,reject,7,0,Adequate coverage but no fixed cross-asset/time replication after global adjustment.

@@ -1,0 +1,397 @@
+- feature_id: MS-01
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: Confirmed turning points may identify persistent directional changes
+    after their six-bar confirmation delay.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: &id001
+    swing_left: 6
+    swing_right: 6
+    level_max_age: 120
+    event_window: 6
+    retest_tolerance_atr: 0.25
+    atr_percentile_windows:
+    - 60
+    - 120
+    range_window: 24
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - swing_high_confirmed
+  - swing_low_confirmed
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 180
+  supported_comparisons: 174
+  minimum_global_q: 0.80241619315824
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: swing_high_confirmed
+    decision: reject
+    supported_tf_horizon_settings: 9
+    replicated_tf_horizon_settings: 0
+  - feature: swing_low_confirmed
+    decision: reject
+    supported_tf_horizon_settings: 9
+    replicated_tf_horizon_settings: 0
+- feature_id: MS-02
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: Successively higher or lower confirmed pivots may distinguish continuation
+    from deterioration.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - structure_hh
+  - structure_lh
+  - structure_hl
+  - structure_ll
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 360
+  supported_comparisons: 200
+  minimum_global_q: 0.80241619315824
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: structure_hh
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+  - feature: structure_lh
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+  - feature: structure_hl
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+  - feature: structure_ll
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+- feature_id: MS-03
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: A fresh crossing and ATR-normalized distance beyond prior confirmed
+    structure may carry continuation information.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - structure_break_strength_up
+  - structure_break_strength_down
+  - structure_break_up
+  - structure_break_down
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 360
+  supported_comparisons: 208
+  minimum_global_q: 1.0
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: structure_break_strength_up
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+  - feature: structure_break_strength_down
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+  - feature: structure_break_up
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+  - feature: structure_break_down
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+- feature_id: MS-04
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: A later contact that holds the frozen breakout level may improve continuation
+    outcomes.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - breakout_retest_up
+  - breakout_retest_down
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 180
+  supported_comparisons: 100
+  minimum_global_q: 1.0
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: breakout_retest_up
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+  - feature: breakout_retest_down
+    decision: reject
+    supported_tf_horizon_settings: 5
+    replicated_tf_horizon_settings: 0
+- feature_id: VR-01
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: Current ATR rank may distinguish compressed and expanded conditional
+    return distributions.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - atr_percentile_60
+  - atr_percentile_120
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 180
+  supported_comparisons: 148
+  minimum_global_q: 1.0
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: atr_percentile_60
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+  - feature: atr_percentile_120
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+- feature_id: VR-02
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: Fast/slow ATR expansion may distinguish conditional forward return distributions.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - vol_ratio_6_24
+  - vol_ratio_12_60
+  - vol_ratio_24_120
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 270
+  supported_comparisons: 217
+  minimum_global_q: 0.80241619315824
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: vol_ratio_6_24
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+  - feature: vol_ratio_12_60
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+  - feature: vol_ratio_24_120
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+- feature_id: FR-01
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: Wick imbalance and close position may describe rejection associated
+    with different subsequent returns.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - bar_upper_wick_ratio
+  - bar_lower_wick_ratio
+  - bar_clv
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 270
+  supported_comparisons: 223
+  minimum_global_q: 0.80241619315824
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: bar_upper_wick_ratio
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+  - feature: bar_lower_wick_ratio
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+  - feature: bar_clv
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0
+- feature_id: FR-02
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: Returning inside an original frozen range may carry reversal information.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - range_reentry_from_above
+  - range_reentry_from_below
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 180
+  supported_comparisons: 168
+  minimum_global_q: 1.0
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: range_reentry_from_above
+    decision: reject
+    supported_tf_horizon_settings: 8
+    replicated_tf_horizon_settings: 0
+  - feature: range_reentry_from_below
+    decision: reject
+    supported_tf_horizon_settings: 8
+    replicated_tf_horizon_settings: 0
+- feature_id: FR-03
+  definition_version: 1
+  research_id: IR-20261031-P1-v2
+  hypothesis: A quick failed range breakout may carry reversal information distinct
+    from later re-entry.
+  definition: docs/indicator_research_P1_spec.md
+  parameters: *id001
+  inputs: closed OHLC, complete-bar/time quality, existing ATR/Donchian and reused
+    Gold columns as specified
+  outputs:
+  - failed_breakout_up
+  - failed_breakout_down
+  quality_gates:
+    status: pass
+    evidence:
+    - tests/test_research_features.py
+    - tests/test_feature_research.py
+    - review_audit.json
+    gates:
+    - formula/hand examples
+    - warmup/finite context
+    - causality
+    - grouping/time
+    - independent reference parity
+    - determinism/regression
+  planned_comparisons: 180
+  supported_comparisons: 164
+  minimum_global_q: 1.0
+  decision: reject_for_promotion_in_this_study
+  interpretation: No output met fixed validation/cross-asset replication; this is
+    not proof of zero information.
+  output_decisions:
+  - feature: failed_breakout_up
+    decision: reject
+    supported_tf_horizon_settings: 8
+    replicated_tf_horizon_settings: 0
+  - feature: failed_breakout_down
+    decision: reject
+    supported_tf_horizon_settings: 7
+    replicated_tf_horizon_settings: 0

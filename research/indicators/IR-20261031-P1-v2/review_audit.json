@@ -1,0 +1,74 @@
+{
+  "status": "passed",
+  "research_id": "IR-20261031-P1-v2",
+  "verification_script_sha256": "2511ab1ece24c99d5dc3228b34349b94d6622b8192c8c59c9ec99120be5f7a87",
+  "comparisons": 2160,
+  "conditional_rows": 5760,
+  "distribution_rows": 432,
+  "supported_comparisons": 1602,
+  "minimum_q": 0.80241619315824,
+  "significant_global_q_0_1": 0,
+  "direct_forward_label_checks": 3000,
+  "independent_atr_rank_checks": 1200,
+  "data_checks": [
+    {
+      "instrument": "EUR_USD",
+      "timeframe": "5m",
+      "rows": 416107,
+      "last_source_bar": "2025-07-31 23:55:00+00:00",
+      "checks": "passed"
+    },
+    {
+      "instrument": "XAU_USD",
+      "timeframe": "5m",
+      "rows": 395556,
+      "last_source_bar": "2025-07-31 23:55:00+00:00",
+      "checks": "passed"
+    },
+    {
+      "instrument": "BTC_USD",
+      "timeframe": "5m",
+      "rows": 409018,
+      "last_source_bar": "2025-07-31 23:55:00+00:00",
+      "checks": "passed"
+    },
+    {
+      "instrument": "EUR_USD",
+      "timeframe": "1h",
+      "rows": 34410,
+      "last_source_bar": "2025-07-31 23:00:00+00:00",
+      "checks": "passed"
+    },
+    {
+      "instrument": "XAU_USD",
+      "timeframe": "1h",
+      "rows": 32655,
+      "last_source_bar": "2025-07-31 23:00:00+00:00",
+      "checks": "passed"
+    },
+    {
+      "instrument": "BTC_USD",
+      "timeframe": "1h",
+      "rows": 33841,
+      "last_source_bar": "2025-07-31 23:00:00+00:00",
+      "checks": "passed"
+    }
+  ],
+  "replay": {
+    "comparisons.csv": "byte-identical",
+    "conditional_returns.csv": "byte-identical",
+    "decisions.csv": "byte-identical",
+    "distributions.csv": "byte-identical",
+    "existing_feature_inventory.csv": "byte-identical",
+    "protocol.yml": "byte-identical",
+    "training_buckets.yml": "byte-identical",
+    "EUR_USD_5m.parquet": "byte-identical",
+    "XAU_USD_5m.parquet": "byte-identical",
+    "BTC_USD_5m.parquet": "byte-identical",
+    "EUR_USD_1h.parquet": "byte-identical",
+    "XAU_USD_1h.parquet": "byte-identical",
+    "BTC_USD_1h.parquet": "byte-identical"
+  },
+  "ledger_sha256": "3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6",
+  "run_manifest_sha256": "19a08a4423f2de882c40d8626b276ccb492d425020f112f420febbd9bab0808e"
+}

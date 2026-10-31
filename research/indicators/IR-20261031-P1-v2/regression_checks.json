@@ -1,0 +1,28 @@
+{
+  "status": "passed",
+  "pytest": {
+    "command": ".venv/bin/python -m pytest tests/ -q",
+    "passed": 700,
+    "new_focused_tests": 30,
+    "exit_code": 0
+  },
+  "registry_mutations": {
+    "command": ".venv/bin/python scripts/test_check_results.py",
+    "passed": 40,
+    "total": 40,
+    "exit_code": 0
+  },
+  "existing_strategy_checker": {
+    "command": ".venv/bin/python scripts/check_results.py --json",
+    "failures": 0,
+    "warnings": 22,
+    "warning_codes": [
+      "X15"
+    ],
+    "exit_code": 0
+  },
+  "compileall": "passed",
+  "git_diff_check": "passed",
+  "oos_ledger_sha256": "3148000cf7f66bc564211610f3423571c484e6eae979963577a3ba6a48236cd6",
+  "scope": "Existing strategy/config/accounting sources and result artifacts were not modified; new research modules and additive development data only."
+}

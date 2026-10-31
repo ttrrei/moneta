@@ -1,0 +1,12 @@
+{
+  "status": "passed",
+  "initial_attempt": "IR-20261031-P1-v1",
+  "final_attempt": "IR-20261031-P1-v2",
+  "change": "bootstrap_replicates 1999 -> 199999; source archival and wording only in runner",
+  "unchanged": "economic definitions, parameters, full grid, dates, fitted buckets, input frames, derived features, all counts and point estimates",
+  "comparison_rows": 2160,
+  "conditional_rows": 5760,
+  "final_minimum_p": 4.5e-05,
+  "final_minimum_q": 0.80241619315824,
+  "all_adjusted_q_above_threshold": true
+}

@@ -23,6 +23,7 @@ the pipeline *and* checked in isolation.
 | `supertrend.py` | `supertrend(h, l, c, atr, mult)` → (line, direction) | Causal, path-dependent. TA-Lib has no Supertrend, so this is our own. |
 | `psar.py` | `psar_line(h, l, accel, max)` + `psar_direction(c, sar)` | SAR line via `talib.SAR`; the direction convention + parameter rules are ours. |
 | `utils.py` | `param_tag` (0.02 → `0p02` column tag), `validate_free_params` | Shared by the modules and the pipeline. |
+| `market_structure.py` | `confirmed_structure`, `frozen_events` | Confirmed swings and frozen range/retest events; experimental additive stage, [definitions](../docs/indicator_research_P1_spec.md). |
 
 ## Conventions (apply to every module here)
 
@@ -49,3 +50,9 @@ the pipeline *and* checked in isolation.
    (recompute column counts).
 5. Rebuild the feature parquets and re-run the S-01 matrix as a regression
    check (must still reproduce 944/1011/920 trades).
+
+The P1 research stage uses `pipeline/research_features.py` and its own explicit
+`config/indicator_research.yml`; it does not rebuild or add columns to default
+Gold. Its definitions, tests and measured decisions are recorded in the
+[research report](../docs/indicator_research_20261031_report.md). Promotion into
+the default feature engine would require the integration/sync steps above.

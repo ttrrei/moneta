@@ -1,0 +1,58 @@
+# Fixed locally before empirical outcomes; not an externally preregistered study.
+research_id: IR-20261031-P1-v2
+definition_version: 1
+instruments: {EUR_USD: fx, XAU_USD: metal, BTC_USD: crypto}
+timeframes: {5m: 300, 1h: 3600}
+horizons: [6, 12, 24, 60, 120]
+parameters:
+  swing_left: 6
+  swing_right: 6
+  level_max_age: 120
+  event_window: 6
+  retest_tolerance_atr: 0.25
+  atr_percentile_windows: [60, 120]
+  range_window: 24
+splits:
+  train: {start: '2020-01-01', end: '2023-01-01'}
+  validation_1: {start: '2023-01-01', end: '2025-01-01'}
+  validation_2: {start: '2025-01-01', end: '2025-08-01'}
+statistics:
+  bucket_quantiles: [0.2, 0.4, 0.6, 0.8]
+  min_samples: 30
+  min_active_weeks: 8
+  # Review-2 numerical refinement: same full hypothesis family as v1.
+  # 1/200000 can resolve an isolated q<=0.1 under 2160-test BY adjustment.
+  bootstrap_replicates: 199999
+  bootstrap_block_weeks: 4
+  seed: 20261031
+  confidence: 0.95
+  multiplicity: benjamini_yekutieli_global_all_splits
+  q_limit: 0.10
+cost_bps_one_way: [0, 2, 5]
+continuous:
+  bar_upper_wick_ratio: FR-01
+  bar_lower_wick_ratio: FR-01
+  bar_clv: FR-01
+  atr_percentile_60: VR-01
+  atr_percentile_120: VR-01
+  vol_ratio_6_24: VR-02
+  vol_ratio_12_60: VR-02
+  vol_ratio_24_120: VR-02
+  structure_break_strength_up: MS-03
+  structure_break_strength_down: MS-03
+# Direction is a fixed event-study hypothesis, not a trading rule.
+events:
+  swing_high_confirmed: {feature_id: MS-01, direction: -1}
+  swing_low_confirmed: {feature_id: MS-01, direction: 1}
+  structure_hh: {feature_id: MS-02, direction: 1}
+  structure_lh: {feature_id: MS-02, direction: -1}
+  structure_hl: {feature_id: MS-02, direction: 1}
+  structure_ll: {feature_id: MS-02, direction: -1}
+  structure_break_up: {feature_id: MS-03, direction: 1}
+  structure_break_down: {feature_id: MS-03, direction: -1}
+  breakout_retest_up: {feature_id: MS-04, direction: 1}
+  breakout_retest_down: {feature_id: MS-04, direction: -1}
+  range_reentry_from_above: {feature_id: FR-02, direction: -1}
+  range_reentry_from_below: {feature_id: FR-02, direction: 1}
+  failed_breakout_up: {feature_id: FR-03, direction: -1}
+  failed_breakout_down: {feature_id: FR-03, direction: 1}

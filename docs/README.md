@@ -11,6 +11,11 @@ The earlier [verification of all three legacy reviews](review_verification_20261
 records the first hardening pass. Its [audit](research_audit_20261031.json), now
 extended with gross/net diagnostics, is reproducible without market data.
 
+The first [P1 indicator research report](indicator_research_20261031_report.md)
+covers nine feature families, empirical development results and three review
+passes. Its [definition/protocol spec](indicator_research_P1_spec.md) describes
+the additive research layer; the original Gold column counts remain unchanged.
+
 ## What is this project?
 
 **moneta / Nova** is an early-stage, ultra-lightweight **quantitative strategy
@@ -33,6 +38,7 @@ registry that prevents duplicate work.
 | **Generate a new strategy** (AI task: "follow the action list and do the downstream jobs") | `strategy/generated_strategy.md` (the *what*) → `strategy/WORKFLOW.md` (the *how*: steps 0–7 with gates) | `strategy/STRATEGY_REGISTRY.md`, [data_profile.md](data_profile.md) |
 | Design / code / test a **new strategy** by hand | `strategy/STRATEGY_BACKGROUND.md` → `strategy/STRATEGY_REGISTRY.md` | [data_profile.md](data_profile.md) |
 | Understand the **feature/indicator engine** (305/270 columns) | [indicators.md](indicators.md) | `pipeline/indicators.py` + `library/` (custom: Supertrend, PSAR) |
+| Research **P1 indicators and conditional returns** | [indicator_research_20261031_report.md](indicator_research_20261031_report.md) | [indicator_research_P1_spec.md](indicator_research_P1_spec.md), `config/indicator_research.yml` |
 | Understand the **data** (rows, grain, dtypes, gotchas) | [data_profile.md](data_profile.md) | `pipeline/sanity_check.py`, `pipeline/profile_check.py` |
 | Review the **roadmap** and verify external recommendations | [review_verification_20261031.md](review_verification_20261031.md) | Older `repo_review_*.md` files are historical; raw reviews live in `legacy/` (git-ignored) |
 | Ingest / backfill data | `pipeline/README.md` | `pipeline/extract_oanda.py`, `load_data.py`, `aggregate_ohlcv.py` |
